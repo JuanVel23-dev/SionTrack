@@ -31,7 +31,7 @@ public class Cliente_Correos {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cliente_id" , nullable = false)
-    @JsonBackReference
+    @JsonBackReference("cliente_correos")
     @Getter @Setter
     private Clientes clientes;
 

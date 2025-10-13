@@ -39,34 +39,38 @@ public class Clientes {
     @Getter @Setter 
     private String tipo_cliente;
 
+    @Column(name = "fecha_registro", nullable = false, updatable = false)
     @Getter @Setter 
     private LocalDate fecha_registro;
     
     @OneToMany(mappedBy = "clientes", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @JsonManagedReference
+    @JsonManagedReference("cliente_telefonos")
     @Getter @Setter
     private List<Cliente_Telefonos> telefonos = new ArrayList<>();
 
     @OneToMany(mappedBy = "clientes", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @JsonManagedReference
+    @JsonManagedReference("cliente_correos")
     @Getter @Setter
     private List<Cliente_Correos> correos = new ArrayList<>();
 
     @OneToMany(mappedBy = "clientes", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @JsonManagedReference
+    @JsonManagedReference("cliente_direcciones")
     @Getter @Setter
     private List<Cliente_Direcciones> direcciones = new ArrayList<>();
 
     @OneToMany(mappedBy = "clientes", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonManagedReference
+    @JsonManagedReference("vehiculos")
     @Getter @Setter
     private List<Vehiculos> vehiculos = new ArrayList<>();
 
     @OneToMany(mappedBy = "clientes", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonManagedReference
+    @JsonManagedReference("servicios")
     @Getter @Setter
     private List<Servicios> servicios = new ArrayList<>();
     
-    
+    @PrePersist
+    protected void asignarFecha(){
+        fecha_registro = LocalDate.now();
+    }
 
 }
