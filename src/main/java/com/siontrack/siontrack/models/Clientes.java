@@ -1,7 +1,6 @@
 package com.siontrack.siontrack.models;
 
 
-import java.security.Timestamp;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,6 +32,7 @@ public class Clientes {
     @Getter @Setter 
     private String nombre;
 
+    @Column(name = "cedula_ruc" ,updatable = true)
     @Getter @Setter 
     private String cedula_ruc;
 
@@ -42,6 +42,10 @@ public class Clientes {
     @Column(name = "fecha_registro", nullable = false, updatable = false)
     @Getter @Setter 
     private LocalDate fecha_registro;
+
+    @Column(name =  "fecha_ultima_modificacion", nullable = true, updatable = true)
+    @Getter @Setter
+    private LocalDate fecha_modificacion;
     
     @OneToMany(mappedBy = "clientes", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonManagedReference("cliente_telefonos")

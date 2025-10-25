@@ -4,13 +4,14 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.siontrack.siontrack.models.Clientes;
 import com.siontrack.siontrack.services.ClienteServicios;
+
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -45,16 +46,21 @@ public class ClienteController {
 
     @PutMapping("/{id}")
     public ResponseEntity<Clientes> actualizarCliente(@PathVariable int id, @RequestBody Clientes detalleCliente) {
-        return clienteServicios.getClienteById(id)
-                .map(Clientes -> {
-                    Clientes.setNombre(detalleCliente.getNombre());
-                    Clientes.setCedula_ruc(detalleCliente.getCedula_ruc());
-                    Clientes.setTipo_cliente(detalleCliente.getTipo_cliente());
-                    Clientes.setCorreos(detalleCliente.getCorreos());
-                    Clientes.setDirecciones(detalleCliente.getDirecciones());
-                    Clientes.setTelefonos(detalleCliente.getTelefonos());
-                    return ResponseEntity.ok(clienteServicios.saveCliente(Clientes));
-                })
-                .orElse(ResponseEntity.notFound().build());
+         return clienteServicios.getClienteById(id)
+        .map(clienteExistente -> {
+            Clientes clienteActualizado = clienteServicios.actualizarCliente(clienteExistente, detalleCliente);
+            return ResponseEntity.ok(clienteActualizado);
+        })
+        .orElse(ResponseEntity.notFound().build());
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminarCliente(@PathVariable int id){
+        if(clienteServicios.getClienteById(id).isPresent()){
+            clienteServicios.deleteCliente(id);
+            return ResponseEntity.noContent().build();
+        }else{
+            return ResponseEntity.notFound().build();
+        }
     }
 }

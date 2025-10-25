@@ -1,7 +1,5 @@
 package com.siontrack.siontrack.models;
 
-
-
 import com.fasterxml.jackson.annotation.JsonBackReference;
 
 import jakarta.persistence.Entity;

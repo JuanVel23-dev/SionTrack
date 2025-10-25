@@ -62,6 +62,10 @@ public class Vehiculos {
     @OneToMany(mappedBy = "vehiculos", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Servicios> servicios = new ArrayList<>();
 
+    @PrePersist
+    protected void establecerFecha(){
+        creado_en = Timestamp.valueOf(LocalDateTime.now());
+    }
     
 
 }
