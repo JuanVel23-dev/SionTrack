@@ -62,15 +62,20 @@ public class Clientes {
     @Getter @Setter
     private List<Cliente_Direcciones> direcciones = new ArrayList<>();
 
-    @OneToMany(mappedBy = "clientes", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "clientes", cascade = CascadeType.ALL,orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonManagedReference("vehiculos")
     @Getter @Setter
     private List<Vehiculos> vehiculos = new ArrayList<>();
 
-    @OneToMany(mappedBy = "clientes", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "clientes", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonManagedReference("servicios")
     @Getter @Setter
     private List<Servicios> servicios = new ArrayList<>();
+
+    @OneToMany(mappedBy = "clientes", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonManagedReference("notificaciones")
+    @Getter @Setter
+    private List<Notificaciones> notificaciones = new ArrayList<>();
     
     @PrePersist
     protected void asignarFecha(){

@@ -5,7 +5,6 @@ package com.siontrack.siontrack.models;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -39,6 +38,5 @@ public class Pagos {
     @JoinColumn(name = "servicio_id", nullable = false, unique = true)
     @Getter @Setter
     private Servicios servicio;
-
 
 }
