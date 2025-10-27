@@ -26,7 +26,9 @@ public class ClienteController {
     @Autowired
     private ClienteServicios clienteServicios;
 
-    @PostMapping("/agregarCliente")
+    @PostMapping(value = "/agregarCliente", 
+             consumes = {"application/json", "application/json;charset=UTF-8"},
+             produces = "application/json")
     public ResponseEntity <Clientes> crearCliente(@RequestBody Clientes cliente) {
         Clientes nuevoCliente = clienteServicios.saveCliente(cliente);
         return new ResponseEntity<>(nuevoCliente, HttpStatus.CREATED);

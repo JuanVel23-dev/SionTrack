@@ -3,6 +3,8 @@ package com.siontrack.siontrack.models;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -51,18 +53,21 @@ public class Notificaciones {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cliente_id", nullable = false)
+    @JsonBackReference("notificaciones_clientes")
     @Getter
     @Setter
     private Clientes clientes;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "plantilla_id", nullable = false)
+    @JsonBackReference("notificaciones_plantillas")
     @Getter
     @Setter
     private PlantillaNotificaciones plantilla;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "servicio_id", nullable = true)
+    @JsonBackReference("notificaciones_servicios")
     private Servicios servicio;
 
     @PrePersist

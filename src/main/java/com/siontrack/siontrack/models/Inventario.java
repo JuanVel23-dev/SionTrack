@@ -1,8 +1,9 @@
 package com.siontrack.siontrack.models;
 
 
-import java.security.Timestamp;
 import java.time.LocalDateTime;
+
+import com.fasterxml.jackson.annotation.JsonBackReference;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -11,6 +12,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import lombok.Getter;
@@ -39,7 +41,14 @@ public class Inventario {
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "producto_id",nullable = false, unique = true)
+    @JsonBackReference("inventario")
+    @Getter @Setter
     private Productos producto;
+
+    @PrePersist
+    protected void onCreate() {
+        this.ultima_actualizacion = LocalDateTime.now();
+    }
 
     @PreUpdate
     protected void onUpdate() {

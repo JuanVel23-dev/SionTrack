@@ -3,6 +3,8 @@ package com.siontrack.siontrack.models;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -44,7 +46,9 @@ public class Proveedores {
     @Setter
     private String nombre_contacto;
 
-    @OneToMany(mappedBy = "proveedor", cascade = { CascadeType.PERSIST, CascadeType.MERGE }, fetch = FetchType.LAZY)
-    @Getter @Setter
+    @OneToMany(mappedBy = "proveedor",cascade = CascadeType.ALL,  fetch = FetchType.LAZY)
+    @JsonManagedReference("productos")
+    @Getter 
+    @Setter
     private List<Productos> productos = new ArrayList<>();
 }

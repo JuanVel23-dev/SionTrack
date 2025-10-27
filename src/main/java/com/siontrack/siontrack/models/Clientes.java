@@ -1,6 +1,5 @@
 package com.siontrack.siontrack.models;
 
-
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,59 +25,71 @@ public class Clientes {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Getter @Setter 
+    @Getter
+    @Setter
     private int cliente_id;
 
-    @Getter @Setter 
+    @Getter
+    @Setter
     private String nombre;
 
-    @Column(name = "cedula_ruc" ,updatable = true)
-    @Getter @Setter 
+    @Column(name = "cedula_ruc", updatable = true)
+    @Getter
+    @Setter
     private String cedula_ruc;
 
-    @Getter @Setter 
+    @Getter
+    @Setter
     private String tipo_cliente;
 
     @Column(name = "fecha_registro", nullable = false, updatable = false)
-    @Getter @Setter 
+    @Getter
+    @Setter
     private LocalDate fecha_registro;
 
-    @Column(name =  "fecha_ultima_modificacion", nullable = true, updatable = true)
-    @Getter @Setter
+    @Column(name = "fecha_ultima_modificacion", nullable = true, updatable = true)
+    @Getter
+    @Setter
     private LocalDate fecha_modificacion;
-    
+
     @OneToMany(mappedBy = "clientes", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonManagedReference("cliente_telefonos")
-    @Getter @Setter
+    @Getter
+    @Setter
     private List<Cliente_Telefonos> telefonos = new ArrayList<>();
 
     @OneToMany(mappedBy = "clientes", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonManagedReference("cliente_correos")
-    @Getter @Setter
+    @Getter
+    @Setter
     private List<Cliente_Correos> correos = new ArrayList<>();
 
     @OneToMany(mappedBy = "clientes", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonManagedReference("cliente_direcciones")
-    @Getter @Setter
+    @Getter
+    @Setter
     private List<Cliente_Direcciones> direcciones = new ArrayList<>();
 
-    @OneToMany(mappedBy = "clientes", cascade = CascadeType.ALL,orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "clientes", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonManagedReference("vehiculos")
-    @Getter @Setter
+    @Getter
+    @Setter
     private List<Vehiculos> vehiculos = new ArrayList<>();
 
     @OneToMany(mappedBy = "clientes", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonManagedReference("servicios")
-    @Getter @Setter
+    @Getter
+    @Setter
     private List<Servicios> servicios = new ArrayList<>();
 
     @OneToMany(mappedBy = "clientes", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @JsonManagedReference("notificaciones")
-    @Getter @Setter
+    @JsonManagedReference("notificaciones_clientes")
+    @Getter
+    @Setter
     private List<Notificaciones> notificaciones = new ArrayList<>();
-    
+
     @PrePersist
-    protected void asignarFecha(){
+    protected void asignarFecha() {
         fecha_registro = LocalDate.now();
     }
 

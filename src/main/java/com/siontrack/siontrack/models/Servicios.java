@@ -8,6 +8,7 @@ import java.util.List;
 
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import jakarta.persistence.CascadeType;
@@ -63,7 +64,7 @@ public class Servicios {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "vehiculo_id", nullable = false)
-    @JsonBackReference("servicios")
+    @JsonIgnore
     @Getter
     @Setter
     private Vehiculos vehiculos;
@@ -76,6 +77,7 @@ public class Servicios {
     private Clientes clientes;
 
     @OneToOne(mappedBy = "servicio", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonManagedReference("pagos")
     @Getter
     @Setter
     private Pagos pago;
@@ -87,7 +89,7 @@ public class Servicios {
     private List<Detalle_Servicio> detalles = new ArrayList<>();
 
     @OneToMany(mappedBy = "servicio", cascade = CascadeType.ALL)
-    @JsonManagedReference("notificaciones")
+    @JsonManagedReference("notificaciones_servicios")
     @Getter
     @Setter
     private List<Notificaciones> notificaciones = new ArrayList<>();

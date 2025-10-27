@@ -60,6 +60,7 @@ public class Vehiculos {
 
 
     @OneToMany(mappedBy = "vehiculos", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @Getter @Setter
     private List<Servicios> servicios = new ArrayList<>();
 
     @PrePersist

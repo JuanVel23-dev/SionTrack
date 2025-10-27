@@ -54,7 +54,7 @@ public class PlantillaNotificaciones {
     private LocalDateTime ultima_actualizacion;
 
     @OneToMany(mappedBy = "plantilla", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @JsonManagedReference("notificaciones")
+    @JsonManagedReference("notificaciones_plantillas")
     @Getter
     @Setter
     private List<Notificaciones> notificaciones = new ArrayList<>();

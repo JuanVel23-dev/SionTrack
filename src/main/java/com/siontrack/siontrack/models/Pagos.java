@@ -5,6 +5,8 @@ package com.siontrack.siontrack.models;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -36,6 +38,7 @@ public class Pagos {
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "servicio_id", nullable = false, unique = true)
+    @JsonBackReference("pagos")
     @Getter @Setter
     private Servicios servicio;
 
