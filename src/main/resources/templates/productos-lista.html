@@ -3,57 +3,157 @@
 <head>
     <meta charset="UTF-8">
     <title>Lista de Productos</title>
+    
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background-color: #f2f2f2; }
-        tr:nth-child(even) { background-color: #f9f9f9; }
-        .btn { padding: 5px 10px; text-decoration: none; border-radius: 4px; margin: 2px; display: inline-block; }
-        .btn-crear { background-color: #007bff; color: white; margin-bottom: 15px; }
-        .btn-editar { background-color: #ffc107; color: black; }
-        .btn-eliminar { background-color: #dc3545; color: white; }
+        /* --- Paleta de Colores --- */
+        :root {
+            --color-negro-fondo: #1a1a1a;
+            --color-negro-tarjeta: #2c2c2c;
+            --color-amarillo-acento: #FFD700;
+            --color-texto-principal: #FFFFFF;
+            --color-texto-secundario: #ccc;
+        }
+
+        body {
+            background-color: var(--color-negro-fondo);
+            font-family: Arial, sans-serif;
+            color: var(--color-texto-principal);
+            margin: 0;
+            padding: 40px;
+        }
+
+        /* --- Título principal --- */
+        h1 {
+            color: var(--color-amarillo-acento);
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        /* --- Contenedor principal con sombra --- */
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 30px;
+            background-color: var(--color-negro-tarjeta);
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            border-top: 5px solid var(--color-amarillo-acento);
+        }
+        
+        /* --- Estilos de la Tabla (adaptados al tema oscuro) --- */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            border: 1px solid #444;
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #333;
+            color: var(--color-amarillo-acento);
+            text-transform: uppercase;
+        }
+
+        tr:nth-child(even) {
+            background-color: #3f3f3f;
+        }
+        tr:hover {
+             background-color: #4a4a4a;
+        }
+
+        /* --- Estilos de los Botones (adaptados) --- */
+        .btn {
+            padding: 6px 12px;
+            text-decoration: none;
+            border-radius: 4px;
+            margin: 2px;
+            display: inline-block;
+            border: none;
+            cursor: pointer;
+            transition: opacity 0.3s ease;
+        }
+        .btn:hover {
+            opacity: 0.8;
+        }
+
+        .btn-crear {
+            background-color: var(--color-amarillo-acento);
+            color: var(--color-negro-fondo);
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        .btn-editar {
+            background-color: #5a5a5a;
+            color: white;
+        }
+        .btn-eliminar {
+            background-color: #a00;
+            color: white;
+        }
+        
+        .btn-volver {
+            background-color: transparent;
+            color: var(--color-amarillo-acento);
+            border: 1px solid var(--color-amarillo-acento);
+            text-decoration: none;
+            margin-bottom: 20px;
+        }
+
     </style>
 </head>
 <body>
-    <h1>Gestión de Productos</h1>
 
-    <a th:href="@{/web/productos/nuevo}" class="btn btn-crear">
-        Crear Nuevo Producto
-    </a>
+    <div class="container">
     
-    <table>
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Nombre</th>
-                <th>Categoría</th>
-                <th>Marca</th>
-                <th>Precio Venta</th>
-                <th>Stock</th> <th>Proveedor</th> <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr th:each="prod : ${productos}">
-                <td th:text="${prod.producto_id}">...</td>
-                <td th:text="${prod.nombre}">...</td>
-                <td th:text="${prod.categoria}">...</td>
-                <td th:text="${prod.marca}">...</td>
-                <td th:text="${prod.precio_venta}">...</td>
-                <td th:text="${prod.inventario?.cantidad_disponible}">N/A</td>
-                
-                <td th:text="${prod.proveedor?.nombre}">N/A</td>
-                
-                <td>
-                    <a th:href="@{/web/productos/editar/{id}(id=${prod.producto_id})}" 
-                       class="btn btn-editar">Actualizar</a>
-                    
-                    <a th:href="@{/web/productos/eliminar/{id}(id=${prod.producto_id})}" 
-                       class="btn btn-eliminar"
-                       onclick="return confirm('¿Estás seguro?')">Eliminar</a>
-                </td>
-            </tr>
-        </tbody>
-    </table>
-</body>
+        <a th:href="@{/web/dashboard}" class="btn btn-volver">
+            &larr; Volver al Dashboard
+        </a>
+
+        <h1>Gestión de Productos</h1>
+
+        <a th:href="@{/web/productos/nuevo}" class="btn btn-crear">
+            Crear Nuevo Producto
+        </a>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Categoría</th>
+                    <th>Marca</th>
+                    <th>Precio Venta</th>
+                    <th>Stock</th>
+                    <th>Proveedor</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="prod : ${productos}">
+                    <td th:text="${prod.producto_id}">...</td>
+                    <td th:text="${prod.nombre}">...</td>
+                    <td th:text="${prod.categoria}">...</td>
+                    <td th:text="${prod.marca}">...</td>
+                    <td th:text="${prod.precio_venta}">...</td>
+                    <td th:text="${prod.inventario?.cantidad_disponible}">N/A</td>
+                    <td th:text="${prod.proveedor?.nombre}">N/A</td>
+                    <td>
+                        <a th:href="@{/web/productos/editar/{id}(id=${prod.producto_id})}" 
+                           class="btn btn-editar">Actualizar</a>
+                        
+                        <a th:href="@{/web/productos/eliminar/{id}(id=${prod.producto_id})}" 
+                           class="btn btn-eliminar"
+                           onclick="return confirm('¿Estás seguro?')">Eliminar</a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        
+    </div> </body>
 </html>

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>SionTrack Dashboard</title>
+    
+    <style>
+        /* --- Paleta de Colores (Negro y Amarillo) --- */
+        :root {
+            --color-negro-fondo: #1a1a1a;    /* Un negro suave para el fondo */
+            --color-negro-tarjeta: #2c2c2c; /* Un gris muy oscuro para las tarjetas */
+            --color-amarillo-acento: #FFD700; /* Un amarillo dorado/oro */
+            --color-texto-principal: #FFFFFF;
+            --color-texto-secundario: #ccc;
+        }
+
+        body {
+            background-color: var(--color-negro-fondo);
+            font-family: Arial, sans-serif;
+            color: var(--color-texto-principal);
+            margin: 0;
+            padding: 40px;
+        }
+
+        h1 {
+            color: var(--color-amarillo-acento);
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        /* --- El Contenedor de las Tarjetas --- */
+        .dashboard-container {
+            display: flex;
+            flex-wrap: wrap; /* Permite que las tarjetas bajen si no caben */
+            justify-content: center;
+            align-items: center;
+            gap: 40px; /* Espacio entre las tarjetas */
+            margin-top: 60px;
+        }
+
+        /* --- El Diseño de las Tarjetas (Cuadros) --- */
+        .card {
+            background-color: var(--color-negro-tarjeta);
+            width: 280px; /* Ancho de cada tarjeta */
+            padding: 25px;
+            border-radius: 10px;
+            text-decoration: none; /* Quita el subrayado de los links */
+            color: var(--color-texto-principal);
+            
+            /* Borde izquierdo amarillo para acentuar */
+            border-left: 5px solid var(--color-amarillo-acento);
+            
+            /* --- 1. LA SOMBRA --- */
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            
+            /* --- 2. LA ANIMACIÓN (Transición) --- */
+            /* Esto hace que los cambios (transform y box-shadow) duren 0.3 segundos */
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card h2 {
+            margin-top: 0;
+            color: var(--color-amarillo-acento);
+        }
+
+        .card p {
+            font-size: 0.9em;
+            color: var(--color-texto-secundario);
+        }
+
+        /* --- 3. LA MAGIA DE LA ANIMACIÓN (al pasar el mouse) --- */
+        .card:hover {
+            /* La tarjeta se "levanta" 10px */
+            transform: translateY(-10px); 
+            
+            /* La sombra se hace más grande y le damos un "brillo" amarillo */
+            box-shadow: 0 10px 25px rgba(255, 215, 0, 0.25);
+        }
+
+    </style>
+</head>
+<body>
+
+    <h1>Panel de Control de SionTrack</h1>
+
+    <div class="dashboard-container">
+    
+        <a th:href="@{/web/clientes}" class="card">
+            <h2>Gestión de Clientes</h2>
+            <p>Ver, crear, editar y eliminar los clientes de la empresa.</p>
+        </a>
+        
+        <a th:href="@{/web/proveedores}" class="card">
+            <h2>Gestión de Proveedores</h2>
+            <p>Administra la lista de proveedores de productos y servicios.</p>
+        </a>
+        
+        <a th:href="@{/web/productos}" class="card">
+            <h2>Gestión de Productos</h2>
+            <p>Controla el inventario, precios y categorías de los productos.</p>
+        </a>
+        
+    </div>
+
+</body>
+</html>

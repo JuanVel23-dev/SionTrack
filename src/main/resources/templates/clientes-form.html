@@ -3,40 +3,131 @@
 <head>
     <meta charset="UTF-8">
     <title>Formulario de Cliente</title>
+    
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; max-width: 600px; }
-        form div { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input[type="text"] { width: 100%; padding: 8px; box-sizing: border-box; }
-        .btn-guardar { background-color: #28a745; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; }
-        .btn-cancelar { background-color: #6c757d; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; text-decoration: none; }
+        /* --- Paleta de Colores --- */
+        :root {
+            --color-negro-fondo: #1a1a1a;
+            --color-negro-tarjeta: #2c2c2c;
+            --color-amarillo-acento: #FFD700;
+            --color-texto-principal: #FFFFFF;
+            --color-texto-secundario: #ccc;
+        }
+
+        body {
+            background-color: var(--color-negro-fondo);
+            font-family: Arial, sans-serif;
+            color: var(--color-texto-principal);
+            margin: 0;
+            padding: 40px;
+        }
+
+        /* --- Título principal --- */
+        h1 {
+            color: var(--color-amarillo-acento);
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-top: 0; /* Ajuste para el formulario */
+        }
+
+        /* --- Contenedor principal con sombra --- */
+        .container {
+            /* Hacemos el contenedor del formulario más estrecho */
+            max-width: 700px;
+            margin: 20px auto;
+            padding: 30px;
+            background-color: var(--color-negro-tarjeta);
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            border-top: 5px solid var(--color-amarillo-acento);
+        }
+        
+        /* --- Estilos para el Formulario --- */
+        form div {
+            margin-bottom: 20px; /* Más espacio */
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: var(--color-texto-secundario); /* Texto gris claro */
+        }
+
+        /* Estilo para los inputs de texto */
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            box-sizing: border-box;
+            background-color: #3f3f3f; /* Fondo oscuro para el input */
+            color: var(--color-texto-principal); /* Texto blanco */
+            border: 1px solid #555; /* Borde sutil */
+            border-radius: 4px;
+        }
+
+        /* --- Estilos de los Botones --- */
+        .btn {
+            padding: 12px 20px; /* Botones más grandes */
+            text-decoration: none;
+            border-radius: 4px;
+            margin-right: 10px;
+            display: inline-block;
+            border: none;
+            cursor: pointer;
+            transition: opacity 0.3s ease;
+            font-weight: bold;
+            font-size: 1em;
+        }
+        .btn:hover {
+            opacity: 0.8;
+        }
+
+        /* Botón de Guardar (Amarillo) */
+        .btn-guardar { 
+            background-color: var(--color-amarillo-acento); 
+            color: var(--color-negro-fondo); 
+        }
+        
+        /* Botón de Cancelar (Gris) */
+        .btn-cancelar { 
+            background-color: #5a5a5a; 
+            color: white; 
+        }
+
     </style>
 </head>
 <body>
 
-    <form th:object="${cliente}" th:action="@{/web/clientes/guardar}" method="post">
+    <div class="container">
 
-        <input type="hidden" th:field="*{cliente_id}" />
-        <input type="hidden" th:field="*{fecha_registro}" /> <div>
-            <label for="nombre">Nombre:</label>
-            <input type="text" id="nombre" th:field="*{nombre}" required />
-        </div>
-        
-        <div>
-            <label for="cedula_ruc">Cédula / RUC:</label>
-            <input type="text" id="cedula_ruc" th:field="*{cedula_ruc}" required />
-        </div>
-        
-        <div>
-            <label for="tipo_cliente">Tipo de Cliente:</label>
-            <input type="text" id="tipo_cliente" th:field="*{tipo_cliente}" required />
-        </div>
+        <h1>Formulario de Cliente</h1>
 
-        <div>
-            <button type="submit" class="btn-guardar">Guardar</button>
-            <a th:href="@{/web/clientes}" class="btn-cancelar">Cancelar</a>
-        </div>
-    </form>
+        <form th:object="${cliente}" th:action="@{/web/clientes/guardar}" method="post">
 
-</body>
+            <input type="hidden" th:field="*{cliente_id}" />
+            <input type="hidden" th:field="*{fecha_registro}" />
+
+            <div>
+                <label for="nombre">Nombre:</label>
+                <input type="text" id="nombre" th:field="*{nombre}" required />
+            </div>
+            
+            <div>
+                <label for="cedula_ruc">Cédula / RUC:</label>
+                <input type="text" id="cedula_ruc" th:field="*{cedula_ruc}" required />
+            </div>
+            
+            <div>
+                <label for="tipo_cliente">Tipo de Cliente:</label>
+                <input type="text" id="tipo_cliente" th:field="*{tipo_cliente}" required />
+            </div>
+
+            <div>
+                <button type="submit" class="btn btn-guardar">Guardar</button>
+                <a th:href="@{/web/clientes}" class="btn btn-cancelar">Cancelar</a>
+            </div>
+        </form>
+
+    </div> </body>
 </html>

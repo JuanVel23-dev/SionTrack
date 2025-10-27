@@ -3,59 +3,159 @@
 <head>
     <meta charset="UTF-8">
     <title>Lista de Clientes</title>
+    
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background-color: #f2f2f2; }
-        tr:nth-child(even) { background-color: #f9f9f9; }
+        /* --- Paleta de Colores --- */
+        :root {
+            --color-negro-fondo: #1a1a1a;
+            --color-negro-tarjeta: #2c2c2c;
+            --color-amarillo-acento: #FFD700;
+            --color-texto-principal: #FFFFFF;
+            --color-texto-secundario: #ccc;
+        }
+
+        body {
+            background-color: var(--color-negro-fondo);
+            font-family: Arial, sans-serif;
+            color: var(--color-texto-principal);
+            margin: 0;
+            padding: 40px;
+        }
+
+        /* --- Título principal --- */
+        h1 {
+            color: var(--color-amarillo-acento);
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        /* --- Contenedor principal con sombra --- */
+        .container {
+            max-width: 1200px;
+            margin: 20px auto; /* Centramos el contenedor */
+            padding: 30px;
+            background-color: var(--color-negro-tarjeta);
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            border-top: 5px solid var(--color-amarillo-acento); /* Detalle superior */
+        }
+        
+        /* --- Estilos de la Tabla (adaptados al tema oscuro) --- */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            border: 1px solid #444; /* Borde más sutil */
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            /* Encabezado de la tabla con el color de acento */
+            background-color: #333;
+            color: var(--color-amarillo-acento);
+            text-transform: uppercase;
+        }
+
+        /* Filas intercaladas para mejor lectura */
+        tr:nth-child(even) {
+            background-color: #3f3f3f; /* Un gris un poco más claro */
+        }
+        tr:hover {
+             background-color: #4a4a4a;
+        }
+
+        /* --- Estilos de los Botones (adaptados) --- */
         .btn {
-            padding: 5px 10px;
+            padding: 6px 12px;
             text-decoration: none;
             border-radius: 4px;
             margin: 2px;
             display: inline-block;
+            border: none;
+            cursor: pointer;
+            transition: opacity 0.3s ease;
         }
-        .btn-crear { background-color: #007bff; color: white; margin-bottom: 15px; }
-        .btn-editar { background-color: #ffc107; color: black; }
-        .btn-eliminar { background-color: #dc3545; color: white; }
+        .btn:hover {
+            opacity: 0.8; /* Efecto hover sutil */
+        }
+
+        /* Botón de Crear (amarillo) */
+        .btn-crear {
+            background-color: var(--color-amarillo-acento);
+            color: var(--color-negro-fondo);
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        /* Botón de Editar (gris) */
+        .btn-editar {
+            background-color: #5a5a5a;
+            color: white;
+        }
+
+        /* Botón de Eliminar (rojo oscuro) */
+        .btn-eliminar {
+            background-color: #a00; /* Un rojo más oscuro */
+            color: white;
+        }
+        
+        /* Botón para volver al Dashboard */
+        .btn-volver {
+            background-color: transparent;
+            color: var(--color-amarillo-acento);
+            border: 1px solid var(--color-amarillo-acento);
+            text-decoration: none;
+            margin-bottom: 20px;
+        }
+
     </style>
 </head>
 <body>
 
-    <h1>Gestión de Clientes</h1>
-
-    <a th:href="@{/web/clientes/nuevo}" class="btn btn-crear">
-        Crear Nuevo Cliente
-    </a>
+    <div class="container">
     
-    <table>
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Nombre</th>
-                <th>Cédula / RUC</th>
-                <th>Tipo</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr th:each="cliente : ${clientes}">
-                <td th:text="${cliente.cliente_id}">...</td>
-                <td th:text="${cliente.nombre}">...</td>
-                <td th:text="${cliente.cedula_ruc}">...</td>
-                <td th:text="${cliente.tipo_cliente}">...</td>
-                <td>
-                    <a th:href="@{/web/clientes/editar/{id}(id=${cliente.cliente_id})}" 
-                       class="btn btn-editar">Actualizar</a>
-                    
-                    <a th:href="@{/web/clientes/eliminar/{id}(id=${cliente.cliente_id})}" 
-                       class="btn btn-eliminar"
-                       onclick="return confirm('¿Estás seguro de que deseas eliminar este cliente?')">Eliminar</a>
-                </td>
-            </tr>
-        </tbody>
-    </table>
+        <a th:href="@{/web/dashboard}" class="btn btn-volver">
+            &larr; Volver al Dashboard
+        </a>
 
-</body>
+        <h1>Gestión de Clientes</h1>
+
+        <a th:href="@{/web/clientes/nuevo}" class="btn btn-crear">
+            Crear Nuevo Cliente
+        </a>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Cédula / RUC</th>
+                    <th>Tipo</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="cliente : ${clientes}">
+                    <td th:text="${cliente.cliente_id}">...</td>
+                    <td th:text="${cliente.nombre}">...</td>
+                    <td th:text="${cliente.cedula_ruc}">...</td>
+                    <td th:text="${cliente.tipo_cliente}">...</td>
+                    <td>
+                        <a th:href="@{/web/clientes/editar/{id}(id=${cliente.cliente_id})}" 
+                           class="btn btn-editar">Actualizar</a>
+                        
+                        <a th:href="@{/web/clientes/eliminar/{id}(id=${cliente.cliente_id})}" 
+                           class="btn btn-eliminar"
+                           onclick="return confirm('¿Estás seguro de que deseas eliminar este cliente?')">Eliminar</a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        
+    </div> </body>
 </html>
