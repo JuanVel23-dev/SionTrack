@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Formulario de Cliente</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; max-width: 600px; }
+        form div { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input[type="text"] { width: 100%; padding: 8px; box-sizing: border-box; }
+        .btn-guardar { background-color: #28a745; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; }
+        .btn-cancelar { background-color: #6c757d; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; text-decoration: none; }
+    </style>
+</head>
+<body>
+
+    <form th:object="${cliente}" th:action="@{/web/clientes/guardar}" method="post">
+
+        <input type="hidden" th:field="*{cliente_id}" />
+        <input type="hidden" th:field="*{fecha_registro}" /> <div>
+            <label for="nombre">Nombre:</label>
+            <input type="text" id="nombre" th:field="*{nombre}" required />
+        </div>
+        
+        <div>
+            <label for="cedula_ruc">Cédula / RUC:</label>
+            <input type="text" id="cedula_ruc" th:field="*{cedula_ruc}" required />
+        </div>
+        
+        <div>
+            <label for="tipo_cliente">Tipo de Cliente:</label>
+            <input type="text" id="tipo_cliente" th:field="*{tipo_cliente}" required />
+        </div>
+
+        <div>
+            <button type="submit" class="btn-guardar">Guardar</button>
+            <a th:href="@{/web/clientes}" class="btn-cancelar">Cancelar</a>
+        </div>
+    </form>
+
+</body>
+</html>

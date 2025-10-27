@@ -132,4 +132,21 @@ public class ProductosServicios {
 
         return productosRepository.save(producto);
     }
+/**
+     * Nuevo método para guardar desde formularios web.
+     * Maneja tanto la creación como la actualización.
+     */
+    @Transactional
+    public Productos saveProducto(Productos producto) {
+        
+        // ¡HEMOS QUITADO EL IF!
+        // Ahora, SIEMPRE establecemos la relación del hijo (inventario) al padre (producto).
+        // Esto es crucial para que JPA no intente guardar un 'producto_id = null'.
+        if (producto.getInventario() != null) {
+            producto.getInventario().setProducto(producto);
+        }
+
+        // JPA se encarga de guardar el producto y su inventario asociado.
+        return productosRepository.save(producto);
+    }
 }

@@ -1,7 +1,5 @@
 package com.siontrack.siontrack.models;
 
-
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
