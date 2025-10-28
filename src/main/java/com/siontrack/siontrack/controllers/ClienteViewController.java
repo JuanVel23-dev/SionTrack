@@ -1,5 +1,6 @@
 package com.siontrack.siontrack.controllers;
 
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller; // ¡Importante! No es RestController
 import org.springframework.ui.Model;
@@ -8,102 +9,105 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
 import java.util.List;
 import java.time.LocalDate; // Importamos LocalDate
 
+import com.siontrack.siontrack.DTO.Request.ClienteRequestDTO;
+import com.siontrack.siontrack.DTO.Response.ClienteResponseDTO;
 import com.siontrack.siontrack.models.Clientes;
 import com.siontrack.siontrack.services.ClienteServicios;
 
 @Controller
-@RequestMapping("/web")
+@RequestMapping("/web") // Base path "/web" kept as requested
 public class ClienteViewController {
 
-    @Autowired
-    private ClienteServicios clienteServicios;
+    private final ClienteServicios clienteServicios;
+    private final ModelMapper modelMapper; // Inject ModelMapper
+
+    // Constructor Injection
+    public ClienteViewController(ClienteServicios clienteServicios, ModelMapper modelMapper) {
+        this.clienteServicios = clienteServicios;
+        this.modelMapper = modelMapper;
+    }
 
     /**
-     * READ (List)
-     * Muestra la lista de todos los clientes.
+     * READ (List) - GET /web/clientes
+     * Muestra la lista de todos los clientes usando DTOs de Respuesta.
      */
     @GetMapping("/clientes")
     public String mostrarListaClientes(Model model) {
-        List<Clientes> listaClientes = clienteServicios.obtenerListaClientes();
+        // Service returns List<ClienteResponseDTO>
+        List<ClienteResponseDTO> listaClientes = clienteServicios.obtenerListaClientes();
         model.addAttribute("clientes", listaClientes);
-        return "clientes-lista"; // Muestra /resources/templates/clientes-lista.html
+        return "clientes-lista"; // Renders /resources/templates/clientes-lista.html
     }
 
     /**
-     * CREATE (Paso 1: Mostrar formulario vacío)
-     * Muestra el formulario para crear un nuevo cliente.
+     * CREATE (Step 1: Show empty form) - GET /web/clientes/nuevo
+     * Muestra el formulario para crear usando un Request DTO vacío.
      */
     @GetMapping("/clientes/nuevo")
     public String mostrarFormularioNuevoCliente(Model model) {
-        // Creamos un objeto cliente vacío para vincularlo al formulario
-        Clientes cliente = new Clientes();
-        model.addAttribute("cliente", cliente);
-        return "clientes-form"; // Muestra /resources/templates/clientes-form.html
+        // Use the Request DTO as the backing object for the form
+        model.addAttribute("cliente", new ClienteRequestDTO());
+        return "clientes-form"; // Renders /resources/templates/clientes-form.html
     }
 
     /**
-     * UPDATE (Paso 1: Mostrar formulario con datos)
-     * Muestra el formulario para editar un cliente existente.
+     * UPDATE (Step 1: Show form with data) - GET /web/clientes/editar/{id}
+     * Muestra el formulario para editar, cargando los datos en un Request DTO.
      */
     @GetMapping("/clientes/editar/{id}")
-    public String mostrarFormularioEditarCliente(@PathVariable int id, Model model) {
-        // Buscamos el cliente por ID
-        Clientes cliente = clienteServicios.getClienteById(id)
-            .orElseThrow(() -> new IllegalArgumentException("ID de cliente no válido: " + id));
-        
-        // Pasamos el cliente encontrado al modelo para rellenar el formulario
-        model.addAttribute("cliente", cliente);
-        return "clientes-form"; // Reutiliza el mismo formulario
+    public String mostrarFormularioEditarCliente(@PathVariable Integer id, Model model) {
+        // 1. Get the Response DTO (contains current data)
+        ClienteResponseDTO clienteExistenteDto = clienteServicios.obtenerClientePorId(id);
+
+        // 2. Map ResponseDTO -> RequestDTO for the form
+        // ModelMapper helps here, otherwise map manually
+        ClienteRequestDTO clienteParaFormulario = modelMapper.map(clienteExistenteDto, ClienteRequestDTO.class);
+        // Manual mapping example if not using ModelMapper:
+        // ClienteRequestDTO clienteParaFormulario = new ClienteRequestDTO();
+        // clienteParaFormulario.setNombre(clienteExistenteDto.getNombre());
+        // clienteParaFormulario.setCedula_ruc(clienteExistenteDto.getCedulaRuc());
+        // ... map other fields, potentially including lists if the form handles them
+
+        model.addAttribute("cliente", clienteParaFormulario);
+        model.addAttribute("clienteId", id); // Pass the ID separately for the save method
+        return "clientes-form"; // Reuses the same form template
     }
 
     /**
-     * CREATE y UPDATE (Paso 2: Guardar los datos)
-     * Procesa el formulario enviado (tanto para crear como para actualizar).
+     * CREATE & UPDATE (Step 2: Save data) - POST /web/clientes/guardar
+     * Procesa el formulario enviado (vinculado al Request DTO).
      */
     @PostMapping("/clientes/guardar")
-    public String guardarCliente(@ModelAttribute("cliente") Clientes clienteDelFormulario) {
-        
-        if (clienteDelFormulario.getCliente_id() == 0) {
-            // --- ES UN CLIENTE NUEVO ---
-            // El @PrePersist en tu modelo `Clientes` se encargará de `fecha_registro`.
-            clienteServicios.saveCliente(clienteDelFormulario);
+    public String guardarCliente(
+            @RequestParam(value = "clienteId", required = false) Integer clienteId, // Get ID if editing
+            @ModelAttribute("cliente") ClienteRequestDTO clienteDtoDelFormulario) {
+
+        if (clienteId == null) {
+            // --- NEW CLIENT ---
+            clienteServicios.crearCliente(clienteDtoDelFormulario);
         } else {
-            // --- ES UNA ACTUALIZACIÓN ---
-            
-            // 1. Obtenemos el cliente COMPLETO de la BD (con sus listas)
-            Clientes clienteExistente = clienteServicios.getClienteById(clienteDelFormulario.getCliente_id())
-                .orElseThrow(() -> new IllegalArgumentException("Cliente no encontrado"));
-
-            // 2. Actualizamos SOLO los campos del formulario.
-            //    ¡Importante! Dejamos las listas (telefonos, correos) que 
-            //    trajo `clienteExistente` para no borrarlas.
-            clienteExistente.setNombre(clienteDelFormulario.getNombre());
-            clienteExistente.setCedula_ruc(clienteDelFormulario.getCedula_ruc());
-            clienteExistente.setTipo_cliente(clienteDelFormulario.getTipo_cliente());
-            
-            // 3. Asignamos la fecha de modificación manualmente
-            clienteExistente.setFecha_modificacion(LocalDate.now());
-
-            // 4. Guardamos el cliente existente ya modificado
-            clienteServicios.saveCliente(clienteExistente);
+            // --- UPDATE EXISTING CLIENT ---
+            clienteServicios.actualizarCliente(clienteId, clienteDtoDelFormulario);
         }
-        
-        // Redirigimos al usuario de vuelta a la lista de clientes
+
+        // Redirect back to the client list
         return "redirect:/web/clientes";
     }
 
     /**
-     * DELETE
+     * DELETE - GET /web/clientes/eliminar/{id}
      * Elimina un cliente por su ID.
      */
     @GetMapping("/clientes/eliminar/{id}")
-    public String eliminarCliente(@PathVariable int id) {
-        clienteServicios.deleteCliente(id);
-        
-        // Redirigimos al usuario de vuelta a la lista
+    public String eliminarCliente(@PathVariable Integer id) {
+        clienteServicios.deleteCliente(id); // Assumes service has this method
+
+        // Redirect back to the list
         return "redirect:/web/clientes";
     }
 }

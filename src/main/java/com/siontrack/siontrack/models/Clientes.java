@@ -15,6 +15,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
@@ -91,6 +92,11 @@ public class Clientes {
     @PrePersist
     protected void asignarFecha() {
         fecha_registro = LocalDate.now();
+    }
+
+    @PreUpdate
+    protected void aactualizarFecha() {
+        fecha_modificacion = LocalDate.now();
     }
 
 }

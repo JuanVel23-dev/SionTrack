@@ -141,7 +141,7 @@
                     <td th:text="${prod.categoria}">...</td>
                     <td th:text="${prod.marca}">...</td>
                     <td th:text="${prod.precio_venta}">...</td>
-                    <td th:text="${prod.inventario?.cantidad_disponible}">N/A</td>
+                    <td th:text="${prod.cantidad_disponible}">N/A</td>
                     <td th:text="${prod.proveedor?.nombre}">N/A</td>
                     <td>
                         <a th:href="@{/web/productos/editar/{id}(id=${prod.producto_id})}" 
