@@ -1,10 +1,9 @@
 package com.siontrack.siontrack.controllers;
 
-import org.modelmapper.ModelMapper; // Import ModelMapper
-import org.springframework.beans.factory.annotation.Autowired;
+import org.modelmapper.ModelMapper; 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*; // Use @RequestParam
+import org.springframework.web.bind.annotation.*; 
 import java.util.List;
 
 // DTO Imports
@@ -15,80 +14,55 @@ import com.siontrack.siontrack.DTO.Response.ProveedoresResponseDTO;
 import com.siontrack.siontrack.services.ProveedoresService;
 
 @Controller
-@RequestMapping("/web") // Keeping the base path
+@RequestMapping("/web") 
 public class ProveedoresViewController {
 
     private final ProveedoresService proveedoresService;
-    private final ModelMapper modelMapper; // Inject ModelMapper
+    private final ModelMapper modelMapper; 
 
-    // Constructor Injection
     public ProveedoresViewController(ProveedoresService proveedoresService, ModelMapper modelMapper) {
         this.proveedoresService = proveedoresService;
         this.modelMapper = modelMapper;
     }
 
-    /**
-     * READ (List) - Uses ProveedoresResponseDTO
-     */
     @GetMapping("/proveedores")
     public String mostrarListaProveedores(Model model) {
-        // Service now returns List<ProveedoresResponseDTO>
         List<ProveedoresResponseDTO> listaProveedores = proveedoresService.obtenerListaProveedores();
         model.addAttribute("proveedores", listaProveedores);
-        return "proveedores-lista"; // Renders proveedores-lista.html
+        return "proveedores-lista"; 
     }
 
-    /**
-     * CREATE (Step 1: Show empty form) - Uses ProveedoresRequestDTO
-     */
     @GetMapping("/proveedores/nuevo")
     public String mostrarFormularioNuevoProveedor(Model model) {
-        // Form is backed by the Request DTO
         model.addAttribute("proveedor", new ProveedoresRequestDTO());
-        return "proveedores-form"; // Renders proveedores-form.html
+        return "proveedores-form"; 
     }
 
-    /**
-     * UPDATE (Step 1: Show form with data) - Maps ResponseDTO to RequestDTO
-     */
     @GetMapping("/proveedores/editar/{id}")
-    public String mostrarFormularioEditarProveedor(@PathVariable Integer id, Model model) { // Use Integer for ID
-        // 1. Get the Response DTO (contains current data)
+    public String mostrarFormularioEditarProveedor(@PathVariable Integer id, Model model) { 
         ProveedoresResponseDTO proveedorExistenteDto = proveedoresService.obtenerProveedorId(id);
-
-        // 2. Map ResponseDTO -> RequestDTO for the form using ModelMapper
         ProveedoresRequestDTO proveedorParaFormulario = modelMapper.map(proveedorExistenteDto, ProveedoresRequestDTO.class);
 
         model.addAttribute("proveedor", proveedorParaFormulario);
-        model.addAttribute("proveedorId", id); // Pass the ID separately for the save method
-        return "proveedores-form"; // Reuses the same form template
+        model.addAttribute("proveedorId", id); 
+        return "proveedores-form"; 
     }
 
-    /**
-     * CREATE & UPDATE (Step 2: Save data) - Uses ProveedoresRequestDTO
-     */
     @PostMapping("/proveedores/guardar")
     public String guardarProveedor(
-            @RequestParam(value = "proveedorId", required = false) Integer proveedorId, // Get ID if editing
+            @RequestParam(value = "proveedorId", required = false) Integer proveedorId, 
             @ModelAttribute("proveedor") ProveedoresRequestDTO proveedorDtoDelFormulario) {
-
         if (proveedorId == null) {
-            // --- NEW PROVIDER ---
             proveedoresService.crearProveedor(proveedorDtoDelFormulario);
         } else {
-            // --- UPDATE EXISTING PROVIDER ---
             proveedoresService.actualizarProveedor(proveedorId, proveedorDtoDelFormulario);
         }
-
-        return "redirect:/web/proveedores"; // Redirect back to the provider list
+        return "redirect:/web/proveedores"; 
     }
 
-    /**
-     * DELETE
-     */
     @GetMapping("/proveedores/eliminar/{id}")
-    public String eliminarProveedor(@PathVariable Integer id) { // Use Integer for ID
+    public String eliminarProveedor(@PathVariable Integer id) { 
         proveedoresService.borrarProveedor(id);
-        return "redirect:/web/proveedores"; // Redirect back to the list
+        return "redirect:/web/proveedores"; 
     }
 }

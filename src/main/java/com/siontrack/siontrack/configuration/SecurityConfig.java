@@ -14,35 +14,21 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(authorize -> authorize
-                // 1. Permisos Públicos:
-                // Permite que todos vean la página de login
                 .requestMatchers("/login").permitAll() 
-                // Permite acceso a recursos estáticos (CSS, JS) si los tienes
                 .requestMatchers("/css/**", "/js/**").permitAll() 
-                
-                // 2. Permisos Protegidos:
-                // Cualquier otra solicitud (incluyendo todos tus @RestController)
-                // debe estar autenticada.
                 .anyRequest().authenticated()
             )
-            // 3. Configuración del Formulario de Login:
             .formLogin(form -> form
-                // Le dice a Spring Security dónde está tu página de login
                 .loginPage("/login") 
-                // La URL que procesará el login (Spring la maneja)
                 .loginProcessingUrl("/login") 
-                // A dónde ir después de un login exitoso
                 .defaultSuccessUrl("/web/dashboard", true) 
-                .permitAll() // Todos pueden acceder a la URL de procesamiento
+                .permitAll()
             )
-            // 4. Configuración de Logout:
             .logout(logout -> logout
-                .logoutUrl("/logout") // URL para cerrar sesión
-                .logoutSuccessUrl("/login?logout") // A dónde ir después
+                .logoutUrl("/logout") 
+                .logoutSuccessUrl("/login?logout") 
                 .permitAll()
             );
-        
-        // NOTA: No deshabilitamos CSRF. Thymeleaf lo maneja por ti.
         
         return http.build();
     }

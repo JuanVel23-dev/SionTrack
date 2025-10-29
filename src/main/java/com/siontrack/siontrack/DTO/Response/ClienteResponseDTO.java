@@ -3,10 +3,6 @@ package com.siontrack.siontrack.DTO.Response;
 import java.time.LocalDate;
 import java.util.List;
 
-import com.siontrack.siontrack.DTO.Request.CorreosRequestDTO;
-import com.siontrack.siontrack.DTO.Request.DireccionesRequestDTO;
-import com.siontrack.siontrack.DTO.Request.TelefonosRequestDTO;
-import com.siontrack.siontrack.DTO.Request.VehiculosRequestDTO;
 
 import lombok.Getter;
 import lombok.Setter;
