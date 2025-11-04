@@ -1,0 +1,137 @@
+/* === Estilos base === */
+body {
+    margin: 0;
+    font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+    background-color: #121212;
+    color: #f1f1f1;
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* === Botón hamburguesa === */
+.menu-toggle {
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    font-size: 1.8rem;
+    color: #f9c806;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    z-index: 1100;
+    transition: transform 0.3s ease, color 0.3s ease;
+}
+
+.menu-toggle:hover {
+    color: #fff;
+    transform: scale(1.1);
+}
+
+/* === Sidebar === */
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: -250px; /* oculto por defecto */
+    width: 250px;
+    height: 100%;
+    background-color: #1c1c1c;
+    border-right: 2px solid #f9c806;
+    transition: left 0.4s ease;
+    box-shadow: 3px 0 10px rgba(0, 0, 0, 0.4);
+    z-index: 1000;
+}
+
+.sidebar.open {
+    left: 0;
+}
+
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    border-bottom: 1px solid #f9c806;
+}
+
+.logo {
+    color: #f9c806;
+    font-size: 1.4rem;
+    font-weight: bold;
+}
+
+.nav-list {
+    list-style: none;
+    margin: 0;
+    padding: 1rem 0;
+}
+
+.nav-list li {
+    margin: 0.5rem 0;
+}
+
+.nav-list a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #f1f1f1;
+    text-decoration: none;
+    padding: 0.8rem 1.2rem;
+    transition: all 0.3s ease;
+}
+
+.nav-list a:hover {
+    background-color: #f9c806;
+    color: #1c1c1c;
+    font-weight: bold;
+    transform: translateX(5px);
+}
+
+/* === Contenido principal === */
+.main-content {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: margin-left 0.4s ease;
+    margin-left: 0;
+    background-color: #121212;
+}
+
+.main-content.shifted {
+    margin-left: 250px;
+}
+
+/* === Animaciones del título === */
+.title-container {
+    text-align: center;
+    animation: fadeIn 1.2s ease forwards;
+}
+
+.main-title {
+    font-size: 3.5rem;
+    color: #f9c806;
+    text-shadow: 0 0 10px rgba(249, 200, 6, 0.6);
+    opacity: 0;
+    animation: slideUp 1s ease forwards 0.5s;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(40px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* === Scrollbar personalizado === */
+::-webkit-scrollbar {
+    width: 8px;
+}
+::-webkit-scrollbar-thumb {
+    background: #f9c806;
+    border-radius: 4px;
+}
+
