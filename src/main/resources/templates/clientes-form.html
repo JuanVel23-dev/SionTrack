@@ -66,6 +66,16 @@
             border-radius: 4px;
         }
 
+        input[type="email"] {
+            width: 100%;
+            padding: 12px;
+            box-sizing: border-box;
+            background-color: #3f3f3f; /* Fondo oscuro para el input */
+            color: var(--color-texto-principal); /* Texto blanco */
+            border: 1px solid #555; /* Borde sutil */
+            border-radius: 4px;
+        }
+
         /* --- Estilos de los Botones --- */
         .btn {
             padding: 12px 20px; /* Botones más grandes */
@@ -94,6 +104,45 @@
             background-color: #5a5a5a; 
             color: white; 
         }
+        .btn-add{
+            background-color: transparent; /* Fondo transparente */
+            color: var(--color-amarillo-acento); /* Texto color acento */
+            border: 1px dashed #6c757d; /* Borde grisáceo sutil */
+            padding: 8px 15px; /* Más pequeño que los botones principales */
+            font-size: 0.9em; /* Texto ligeramente más pequeño */
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            margin-top: 5px; /* Espacio después del label (opcional) */
+        }
+
+        .btn-add:hover {
+            background-color: rgba(255, 215, 0, 0.1); /* Resaltado amarillo muy sutil */
+            color: #FFFFFF; /* Texto blanco al pasar el ratón */
+            border-color: var(--color-amarillo-acento); /* Borde sólido al pasar el ratón */
+            border-style: solid;
+        }
+
+        .remove-btn{
+            background-color: #4a4a4a; /* Gris oscuro, ligeramente más claro que el fondo */
+            color: #ccc; /* Texto gris claro */
+            border: 1px solid #666; /* Borde sutil */
+            padding: 6px 12px; /* Un poco más pequeño */
+            font-size: 0.85em; /* Letra más pequeña */
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 8px; /* Espacio entre el input (arriba) y el botón (abajo) */
+            width: auto; /* Ancho automático */
+            display: inline-block; /* Asegura que no ocupe toda la línea */
+        }
+
+        .remove-btn:hover{
+            background-color: #dc3545; /* Rojo de peligro al pasar el ratón */
+            color: white;
+            border-color: #dc3545;
+        }
 
     </style>
 </head>
@@ -105,9 +154,8 @@
 
         <form th:object="${cliente}" th:action="@{/web/clientes/guardar}" method="post">
 
-            <input type="hidden" th:field="*{cliente_id}" />
-            <input type="hidden" th:field="*{fecha_registro}" />
-
+            <input type="hidden" name="clienteId" th:value="${clienteId}" />
+            
             <div>
                 <label for="nombre">Nombre:</label>
                 <input type="text" id="nombre" th:field="*{nombre}" required />
@@ -124,10 +172,95 @@
             </div>
 
             <div>
+                <label>Teléfonos:</label>
+                <div id="telefonos-container">
+                    <div th:each="tel, iterStat : *{telefonos}" class="dynamic-entry">
+                        <input type="text" th:field="*{telefonos[__${iterStat.index}__].telefono}" placeholder="Número de teléfono" />
+                        <button type="button" class="remove-btn">Eliminar</button> </div>
+                </div>
+                <button type="button" class= "btn-add" id="add-telefono-btn">Añadir Teléfono</button>
+            </div>
+            
+            <div>
+                <label>Direcciones:</label>
+                <div id="direcciones-container">
+                    <div th:each="dir, iterStat : *{direcciones}" class="dynamic-entry">
+                        <input type="text" th:field="*{direcciones[__${iterStat.index}__].direccion}" placeholder="Dirección" />
+                        <button type="button" class="remove-btn">Eliminar</button> </div> 
+                </div>
+                <button type="button" class= "btn-add" id="add-direccion-btn">Añadir Dirección</button>
+            </div>
+
+            <div>
+                <label>Correos:</label> 
+                <div id="correos-container">
+                    <div th:each="correo, iterStat : *{correos}" class="dynamic-entry">
+                        <input type="email" th:field="*{correos[__${iterStat.index}__].correo}" placeholder="Correo electrónico" />
+                        <button type="button" class="remove-btn">Eliminar</button> </div>
+                </div>
+                <button type="button" class= "btn-add" id="add-correo-btn">Añadir Correo</button>
+            </div>
+
+            <div>
                 <button type="submit" class="btn btn-guardar">Guardar</button>
                 <a th:href="@{/web/clientes}" class="btn btn-cancelar">Cancelar</a>
             </div>
         </form>
 
-    </div> </body>
+<script th:inline="javascript">
+
+    var telefonoIndex = 0;
+    var correoIndex =  0;
+    var direccionIndex = 0;
+
+    
+    document.getElementById('add-telefono-btn').addEventListener('click', function() {
+        addDynamicField('telefonos-container', 'telefonos', telefonoIndex, 'telefono', 'text', 'Número de teléfono');
+        telefonoIndex++; 
+    });
+
+    document.getElementById('add-correo-btn').addEventListener('click', function() {
+        addDynamicField('correos-container', 'correos', correoIndex, 'correo', 'email', 'Correo electrónico');
+        correoIndex++;
+    });
+
+    document.getElementById('add-direccion-btn').addEventListener('click', function() {
+        addDynamicField('direcciones-container', 'direcciones', direccionIndex, 'direccion', 'text', 'Dirección');
+        direccionIndex++;
+    });
+
+    function addDynamicField(containerId, listName, index, fieldName, inputType, placeholder) {
+        var container = document.getElementById(containerId);
+        
+        var newEntry = document.createElement('div');
+        newEntry.className = 'dynamic-entry'; 
+
+        var newInput = document.createElement('input');
+        newInput.type = inputType;
+        newInput.name = listName + '[' + index + '].' + fieldName; 
+        newInput.placeholder = placeholder;
+        
+
+        var removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'remove-btn'; 
+        removeBtn.innerText = 'Eliminar';
+        
+        newEntry.appendChild(newInput);
+        newEntry.appendChild(removeBtn);
+        container.appendChild(newEntry);
+    }
+
+    document.addEventListener('click', function (event) {
+        if (event.target.classList.contains('remove-btn')) {
+            event.preventDefault(); 
+            event.target.closest('.dynamic-entry').remove(); 
+        }
+    });
+
+</script>
+
+</div> 
+
+</body>
 </html>
