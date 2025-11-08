@@ -208,11 +208,16 @@
         </form>
 
 <script th:inline="javascript">
+/*<![CDATA[*/
 
-    var telefonoIndex = 0;
-    var correoIndex =  0;
-    var direccionIndex = 0;
+    // --- LÓGICA DE CAMPOS DINÁMICOS CONSOLIDADOS ---
 
+    // 1. Inicializar Índices
+    var telefonoIndex = /*[[${cliente.telefonos != null ? cliente.telefonos.size() : 0}]]*/ 0;
+    var correoIndex = /*[[${cliente.correos != null ? cliente.correos.size() : 0}]]*/ 0;
+    var direccionIndex = /*[[${cliente.direcciones != null ? cliente.direcciones.size() : 0}]]*/ 0;
+
+    // 2. Listeners para los botones "Añadir"
     
     document.getElementById('add-telefono-btn').addEventListener('click', function() {
         addDynamicField('telefonos-container', 'telefonos', telefonoIndex, 'telefono', 'text', 'Número de teléfono');
@@ -229,17 +234,22 @@
         direccionIndex++;
     });
 
+    /**
+     * Función reutilizable para AÑADIR un campo de entrada (Input)
+     * Esta función crea un NUEVO input, no concatena valores.
+     */
     function addDynamicField(containerId, listName, index, fieldName, inputType, placeholder) {
         var container = document.getElementById(containerId);
         
         var newEntry = document.createElement('div');
         newEntry.className = 'dynamic-entry'; 
 
+        // 1. CREA UN NUEVO INPUT
         var newInput = document.createElement('input');
         newInput.type = inputType;
+        // 2. Asigna el nombre de binding correcto (ej. telefonos[1].telefono)
         newInput.name = listName + '[' + index + '].' + fieldName; 
         newInput.placeholder = placeholder;
-        
 
         var removeBtn = document.createElement('button');
         removeBtn.type = 'button';
@@ -251,6 +261,9 @@
         container.appendChild(newEntry);
     }
 
+    /**
+     * Función reutilizable para ELIMINAR un campo (Delegación de Eventos)
+     */
     document.addEventListener('click', function (event) {
         if (event.target.classList.contains('remove-btn')) {
             event.preventDefault(); 
@@ -258,6 +271,7 @@
         }
     });
 
+/*]]>*/
 </script>
 
 </div> 
