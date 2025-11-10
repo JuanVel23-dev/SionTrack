@@ -1,280 +1,178 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title>Formulario de Cliente</title>
-    
-    <style>
-        /* --- Paleta de Colores --- */
-        :root {
-            --color-negro-fondo: #1a1a1a;
-            --color-negro-tarjeta: #2c2c2c;
-            --color-amarillo-acento: #FFD700;
-            --color-texto-principal: #FFFFFF;
-            --color-texto-secundario: #ccc;
-        }
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
 
-        body {
-            background-color: var(--color-negro-fondo);
-            font-family: Arial, sans-serif;
-            color: var(--color-texto-principal);
-            margin: 0;
-            padding: 40px;
-        }
-
-        /* --- Título principal --- */
-        h1 {
-            color: var(--color-amarillo-acento);
-            text-align: center;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-top: 0; /* Ajuste para el formulario */
-        }
-
-        /* --- Contenedor principal con sombra --- */
-        .container {
-            /* Hacemos el contenedor del formulario más estrecho */
-            max-width: 700px;
-            margin: 20px auto;
-            padding: 30px;
-            background-color: var(--color-negro-tarjeta);
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-            border-top: 5px solid var(--color-amarillo-acento);
-        }
+<th:block layout:fragment="content">
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">
+                <span th:if="${clienteId == null}">Nuevo Cliente</span>
+                <span th:if="${clienteId != null}">Editar Cliente</span>
+            </h2>
+        </div>
         
-        /* --- Estilos para el Formulario --- */
-        form div {
-            margin-bottom: 20px; /* Más espacio */
-        }
-        
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: bold;
-            color: var(--color-texto-secundario); /* Texto gris claro */
-        }
-
-        /* Estilo para los inputs de texto */
-        input[type="text"] {
-            width: 100%;
-            padding: 12px;
-            box-sizing: border-box;
-            background-color: #3f3f3f; /* Fondo oscuro para el input */
-            color: var(--color-texto-principal); /* Texto blanco */
-            border: 1px solid #555; /* Borde sutil */
-            border-radius: 4px;
-        }
-
-        input[type="email"] {
-            width: 100%;
-            padding: 12px;
-            box-sizing: border-box;
-            background-color: #3f3f3f; /* Fondo oscuro para el input */
-            color: var(--color-texto-principal); /* Texto blanco */
-            border: 1px solid #555; /* Borde sutil */
-            border-radius: 4px;
-        }
-
-        /* --- Estilos de los Botones --- */
-        .btn {
-            padding: 12px 20px; /* Botones más grandes */
-            text-decoration: none;
-            border-radius: 4px;
-            margin-right: 10px;
-            display: inline-block;
-            border: none;
-            cursor: pointer;
-            transition: opacity 0.3s ease;
-            font-weight: bold;
-            font-size: 1em;
-        }
-        .btn:hover {
-            opacity: 0.8;
-        }
-
-        /* Botón de Guardar (Amarillo) */
-        .btn-guardar { 
-            background-color: var(--color-amarillo-acento); 
-            color: var(--color-negro-fondo); 
-        }
-        
-        /* Botón de Cancelar (Gris) */
-        .btn-cancelar { 
-            background-color: #5a5a5a; 
-            color: white; 
-        }
-        .btn-add{
-            background-color: transparent; /* Fondo transparente */
-            color: var(--color-amarillo-acento); /* Texto color acento */
-            border: 1px dashed #6c757d; /* Borde grisáceo sutil */
-            padding: 8px 15px; /* Más pequeño que los botones principales */
-            font-size: 0.9em; /* Texto ligeramente más pequeño */
-            font-weight: bold;
-            cursor: pointer;
-            border-radius: 4px;
-            transition: all 0.3s ease;
-            margin-top: 5px; /* Espacio después del label (opcional) */
-        }
-
-        .btn-add:hover {
-            background-color: rgba(255, 215, 0, 0.1); /* Resaltado amarillo muy sutil */
-            color: #FFFFFF; /* Texto blanco al pasar el ratón */
-            border-color: var(--color-amarillo-acento); /* Borde sólido al pasar el ratón */
-            border-style: solid;
-        }
-
-        .remove-btn{
-            background-color: #4a4a4a; /* Gris oscuro, ligeramente más claro que el fondo */
-            color: #ccc; /* Texto gris claro */
-            border: 1px solid #666; /* Borde sutil */
-            padding: 6px 12px; /* Un poco más pequeño */
-            font-size: 0.85em; /* Letra más pequeña */
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 8px; /* Espacio entre el input (arriba) y el botón (abajo) */
-            width: auto; /* Ancho automático */
-            display: inline-block; /* Asegura que no ocupe toda la línea */
-        }
-
-        .remove-btn:hover{
-            background-color: #dc3545; /* Rojo de peligro al pasar el ratón */
-            color: white;
-            border-color: #dc3545;
-        }
-
-    </style>
-</head>
-<body>
-
-    <div class="container">
-
-        <h1>Formulario de Cliente</h1>
-
-        <form th:object="${cliente}" th:action="@{/web/clientes/guardar}" method="post">
-
+        <form th:object="${cliente}" 
+              th:action="@{/web/clientes/guardar}" 
+              method="post"
+              data-validate>
+            
             <input type="hidden" name="clienteId" th:value="${clienteId}" />
             
-            <div>
-                <label for="nombre">Nombre:</label>
-                <input type="text" id="nombre" th:field="*{nombre}" required />
-            </div>
-            
-            <div>
-                <label for="cedula_ruc">Cédula / RUC:</label>
-                <input type="text" id="cedula_ruc" th:field="*{cedula_ruc}" required />
-            </div>
-            
-            <div>
-                <label for="tipo_cliente">Tipo de Cliente:</label>
-                <input type="text" id="tipo_cliente" th:field="*{tipo_cliente}" required />
+            <div class="card-body">
+                <!-- Información Básica -->
+                <h3 style="color: var(--accent-primary); margin-bottom: var(--spacing-lg); border-bottom: 1px solid var(--border-color); padding-bottom: var(--spacing-sm);">
+                    <i class="fas fa-user"></i> Información Básica
+                </h3>
+                
+                <div class="form-group">
+                    <label for="nombre" class="form-label required">Nombre Completo</label>
+                    <input type="text" 
+                           id="nombre" 
+                           th:field="*{nombre}" 
+                           class="form-input"
+                           required 
+                           placeholder="Ej: Juan Pérez Sánchez"
+                           aria-label="Nombre del cliente">
+                    <span class="form-help">Ingresa el nombre completo del cliente</span>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: var(--spacing-lg);">
+                    <div class="form-group">
+                        <label for="cedula_ruc" class="form-label required">Cédula / RUC</label>
+                        <input type="text" 
+                               id="cedula_ruc" 
+                               th:field="*{cedula_ruc}" 
+                               class="form-input"
+                               required 
+                               placeholder="1234567890"
+                               aria-label="Cédula o RUC">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="tipo_cliente" class="form-label required">Tipo de Cliente</label>
+                        <select id="tipo_cliente" 
+                                th:field="*{tipo_cliente}" 
+                                class="form-select"
+                                required>
+                            <option value="">Seleccione un tipo</option>
+                            <option value="Persona Natural">Persona Natural</option>
+                            <option value="Empresa">Empresa</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Teléfonos -->
+                <div class="divider"></div>
+                <h3 style="color: var(--accent-primary); margin-bottom: var(--spacing-lg);">
+                    <i class="fas fa-phone"></i> Teléfonos
+                </h3>
+
+                <div class="form-group">
+                    <label class="form-label">Números de Teléfono</label>
+                    <div id="telefonos-container" 
+                         data-dynamic-field
+                         data-add-button="add-telefono-btn"
+                         data-field-name="telefonos"
+                         data-field-type="tel"
+                         data-placeholder="Ej: 0999999999"
+                         th:attr="data-initial-index=${cliente.telefonos != null ? cliente.telefonos.size() : 0}">
+                        
+                        <div th:each="tel, iterStat : *{telefonos}" class="dynamic-field">
+                            <input type="tel"
+                                   th:field="*{telefonos[__${iterStat.index}__].telefono}"
+                                   class="form-input"
+                                   placeholder="Ej: 0999999999" />
+                            <button type="button" class="btn btn-danger btn-sm btn-remove">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-ghost btn-sm" id="add-telefono-btn">
+                        <i class="fas fa-plus"></i>
+                        Añadir Teléfono
+                    </button>
+                </div>
+
+                <!-- Direcciones -->
+                <div class="divider"></div>
+                <h3 style="color: var(--accent-primary); margin-bottom: var(--spacing-lg);">
+                    <i class="fas fa-map-marker-alt"></i> Direcciones
+                </h3>
+
+                <div class="form-group">
+                    <label class="form-label">Direcciones</label>
+                    <div id="direcciones-container"
+                         data-dynamic-field
+                         data-add-button="add-direccion-btn"
+                         data-field-name="direcciones"
+                         data-field-type="text"
+                         data-placeholder="Ej: Av. Principal 123 y Secundaria"
+                         th:attr="data-initial-index=${cliente.direcciones != null ? cliente.direcciones.size() : 0}">
+                        
+                        <div th:each="dir, iterStat : *{direcciones}" class="dynamic-field">
+                            <input type="text"
+                                   th:field="*{direcciones[__${iterStat.index}__].direccion}"
+                                   class="form-input"
+                                   placeholder="Ej: Av. Principal 123 y Secundaria" />
+                            <button type="button" class="btn btn-danger btn-sm btn-remove">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-ghost btn-sm" id="add-direccion-btn">
+                        <i class="fas fa-plus"></i>
+                        Añadir Dirección
+                    </button>
+                </div>
+
+                <!-- Correos -->
+                <div class="divider"></div>
+                <h3 style="color: var(--accent-primary); margin-bottom: var(--spacing-lg);">
+                    <i class="fas fa-envelope"></i> Correos Electrónicos
+                </h3>
+
+                <div class="form-group">
+                    <label class="form-label">Correos</label>
+                    <div id="correos-container"
+                         data-dynamic-field
+                         data-add-button="add-correo-btn"
+                         data-field-name="correos"
+                         data-field-type="email"
+                         data-placeholder="Ej: cliente@ejemplo.com"
+                         th:attr="data-initial-index=${cliente.correos != null ? cliente.correos.size() : 0}">
+                        
+                        <div th:each="correo, iterStat : *{correos}" class="dynamic-field">
+                            <input type="email"
+                                   th:field="*{correos[__${iterStat.index}__].correo}"
+                                   class="form-input"
+                                   placeholder="Ej: cliente@ejemplo.com" />
+                            <button type="button" class="btn btn-danger btn-sm btn-remove">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-ghost btn-sm" id="add-correo-btn">
+                        <i class="fas fa-plus"></i>
+                        Añadir Correo
+                    </button>
+                </div>
             </div>
 
-            <div>
-                <label>Teléfonos:</label>
-                <div id="telefonos-container">
-                    <div th:each="tel, iterStat : *{telefonos}" class="dynamic-entry">
-                        <input type="text" th:field="*{telefonos[__${iterStat.index}__].telefono}" placeholder="Número de teléfono" />
-                        <button type="button" class="remove-btn">Eliminar</button> </div>
-                </div>
-                <button type="button" class= "btn-add" id="add-telefono-btn">Añadir Teléfono</button>
-            </div>
-            
-            <div>
-                <label>Direcciones:</label>
-                <div id="direcciones-container">
-                    <div th:each="dir, iterStat : *{direcciones}" class="dynamic-entry">
-                        <input type="text" th:field="*{direcciones[__${iterStat.index}__].direccion}" placeholder="Dirección" />
-                        <button type="button" class="remove-btn">Eliminar</button> </div> 
-                </div>
-                <button type="button" class= "btn-add" id="add-direccion-btn">Añadir Dirección</button>
-            </div>
-
-            <div>
-                <label>Correos:</label> 
-                <div id="correos-container">
-                    <div th:each="correo, iterStat : *{correos}" class="dynamic-entry">
-                        <input type="email" th:field="*{correos[__${iterStat.index}__].correo}" placeholder="Correo electrónico" />
-                        <button type="button" class="remove-btn">Eliminar</button> </div>
-                </div>
-                <button type="button" class= "btn-add" id="add-correo-btn">Añadir Correo</button>
-            </div>
-
-            <div>
-                <button type="submit" class="btn btn-guardar">Guardar</button>
-                <a th:href="@{/web/clientes}" class="btn btn-cancelar">Cancelar</a>
+            <!-- Footer del formulario -->
+            <div class="card-footer">
+                <a th:href="@{/web/clientes}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i>
+                    Cancelar
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i>
+                    <span th:if="${clienteId == null}">Crear Cliente</span>
+                    <span th:if="${clienteId != null}">Guardar Cambios</span>
+                </button>
             </div>
         </form>
+    </div>
+</th:block>
 
-<script th:inline="javascript">
-/*<![CDATA[*/
-
-    // --- LÓGICA DE CAMPOS DINÁMICOS CONSOLIDADOS ---
-
-    // 1. Inicializar Índices
-    var telefonoIndex = /*[[${cliente.telefonos != null ? cliente.telefonos.size() : 0}]]*/ 0;
-    var correoIndex = /*[[${cliente.correos != null ? cliente.correos.size() : 0}]]*/ 0;
-    var direccionIndex = /*[[${cliente.direcciones != null ? cliente.direcciones.size() : 0}]]*/ 0;
-
-    // 2. Listeners para los botones "Añadir"
-    
-    document.getElementById('add-telefono-btn').addEventListener('click', function() {
-        addDynamicField('telefonos-container', 'telefonos', telefonoIndex, 'telefono', 'text', 'Número de teléfono');
-        telefonoIndex++; 
-    });
-
-    document.getElementById('add-correo-btn').addEventListener('click', function() {
-        addDynamicField('correos-container', 'correos', correoIndex, 'correo', 'email', 'Correo electrónico');
-        correoIndex++;
-    });
-
-    document.getElementById('add-direccion-btn').addEventListener('click', function() {
-        addDynamicField('direcciones-container', 'direcciones', direccionIndex, 'direccion', 'text', 'Dirección');
-        direccionIndex++;
-    });
-
-    /**
-     * Función reutilizable para AÑADIR un campo de entrada (Input)
-     * Esta función crea un NUEVO input, no concatena valores.
-     */
-    function addDynamicField(containerId, listName, index, fieldName, inputType, placeholder) {
-        var container = document.getElementById(containerId);
-        
-        var newEntry = document.createElement('div');
-        newEntry.className = 'dynamic-entry'; 
-
-        // 1. CREA UN NUEVO INPUT
-        var newInput = document.createElement('input');
-        newInput.type = inputType;
-        // 2. Asigna el nombre de binding correcto (ej. telefonos[1].telefono)
-        newInput.name = listName + '[' + index + '].' + fieldName; 
-        newInput.placeholder = placeholder;
-
-        var removeBtn = document.createElement('button');
-        removeBtn.type = 'button';
-        removeBtn.className = 'remove-btn'; 
-        removeBtn.innerText = 'Eliminar';
-        
-        newEntry.appendChild(newInput);
-        newEntry.appendChild(removeBtn);
-        container.appendChild(newEntry);
-    }
-
-    /**
-     * Función reutilizable para ELIMINAR un campo (Delegación de Eventos)
-     */
-    document.addEventListener('click', function (event) {
-        if (event.target.classList.contains('remove-btn')) {
-            event.preventDefault(); 
-            event.target.closest('.dynamic-entry').remove(); 
-        }
-    });
-
-/*]]>*/
-</script>
-
-</div> 
-
-</body>
 </html>

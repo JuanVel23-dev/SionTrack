@@ -1,0 +1,353 @@
+/* ============================================
+   TABLAS MODERNAS
+   ============================================ */
+
+/* Contenedor de tabla con scroll */
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  margin-bottom: var(--spacing-lg);
+}
+
+/* Tabla base */
+.table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.95rem;
+}
+
+/* Header de tabla */
+.table thead {
+  background: var(--bg-secondary);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.table th {
+  padding: var(--spacing-lg);
+  text-align: left;
+  font-weight: 600;
+  color: var(--accent-primary);
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid var(--accent-dark);
+  white-space: nowrap;
+}
+
+/* Cuerpo de tabla */
+.table td {
+  padding: var(--spacing-lg);
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-primary);
+  vertical-align: middle;
+}
+
+/* Filas */
+.table tbody tr {
+  transition: background-color var(--transition-fast);
+}
+
+.table tbody tr:hover {
+  background: rgba(255, 215, 0, 0.05);
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Filas zebradas */
+.table-striped tbody tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.table-striped tbody tr:nth-child(even):hover {
+  background: rgba(255, 215, 0, 0.05);
+}
+
+/* ============================================
+   ACCIONES DE TABLA
+   ============================================ */
+.table-actions {
+  display: flex;
+  gap: var(--spacing-xs);
+  justify-content: flex-end;
+}
+
+.table-action-btn {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  border-radius: var(--radius-sm);
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.table-action-btn:hover {
+  transform: translateY(-2px);
+}
+
+.btn-edit {
+  background: rgba(59, 130, 246, 0.15);
+  color: var(--info);
+  border: 1px solid var(--info);
+}
+
+.btn-edit:hover {
+  background: var(--info);
+  color: white;
+}
+
+.btn-delete {
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--danger);
+  border: 1px solid var(--danger);
+}
+
+.btn-delete:hover {
+  background: var(--danger);
+  color: white;
+}
+
+.btn-view {
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--success);
+  border: 1px solid var(--success);
+}
+
+.btn-view:hover {
+  background: var(--success);
+  color: white;
+}
+
+/* ============================================
+   TOOLBAR DE TABLA
+   ============================================ */
+.table-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-lg);
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
+}
+
+.table-toolbar-left {
+  display: flex;
+  gap: var(--spacing-md);
+  align-items: center;
+}
+
+.table-toolbar-right {
+  display: flex;
+  gap: var(--spacing-md);
+  align-items: center;
+}
+
+/* Búsqueda */
+.table-search {
+  position: relative;
+  min-width: 300px;
+}
+
+.table-search input {
+  width: 100%;
+  padding: 0.75rem 1rem 0.75rem 3rem;
+  background: var(--bg-tertiary);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  transition: all var(--transition-fast);
+}
+
+.table-search input:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px var(--accent-light);
+}
+
+.table-search-icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+/* Filtros */
+.table-filter {
+  padding: 0.75rem 1rem;
+  background: var(--bg-tertiary);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.table-filter:hover {
+  border-color: var(--accent-primary);
+}
+
+/* ============================================
+   PAGINACIÓN
+   ============================================ */
+.table-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-lg);
+  background: var(--bg-card);
+  border-top: 1px solid var(--border-color);
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
+}
+
+.pagination-info {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.pagination-controls {
+  display: flex;
+  gap: var(--spacing-xs);
+}
+
+.pagination-btn {
+  padding: 0.5rem 0.75rem;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  font-size: 0.9rem;
+  min-width: 40px;
+  text-align: center;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background: var(--accent-primary);
+  color: var(--bg-primary);
+  border-color: var(--accent-primary);
+}
+
+.pagination-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pagination-btn.active {
+  background: var(--accent-primary);
+  color: var(--bg-primary);
+  border-color: var(--accent-primary);
+  font-weight: 600;
+}
+
+/* ============================================
+   ESTADO VACÍO DE TABLA
+   ============================================ */
+.table-empty {
+  text-align: center;
+  padding: var(--spacing-2xl);
+  color: var(--text-muted);
+}
+
+.table-empty-icon {
+  font-size: 4rem;
+  color: var(--border-color);
+  margin-bottom: var(--spacing-lg);
+}
+
+.table-empty-title {
+  font-size: 1.25rem;
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-sm);
+}
+
+.table-empty-description {
+  margin-bottom: var(--spacing-lg);
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 768px) {
+  /* Convertir tabla en cards en móvil */
+  .table-mobile {
+    display: block;
+  }
+  
+  .table-mobile thead {
+    display: none;
+  }
+  
+  .table-mobile tbody,
+  .table-mobile tr,
+  .table-mobile td {
+    display: block;
+    width: 100%;
+  }
+  
+  .table-mobile tr {
+    margin-bottom: var(--spacing-md);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+  }
+  
+  .table-mobile td {
+    padding: var(--spacing-md);
+    text-align: right;
+    position: relative;
+    padding-left: 50%;
+    border-bottom: 1px solid var(--border-color);
+  }
+  
+  .table-mobile td:last-child {
+    border-bottom: none;
+  }
+  
+  .table-mobile td::before {
+    content: attr(data-label);
+    position: absolute;
+    left: var(--spacing-md);
+    top: var(--spacing-md);
+    font-weight: 600;
+    color: var(--accent-primary);
+    text-align: left;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+  }
+  
+  .table-actions {
+    justify-content: center;
+  }
+  
+  .table-search {
+    min-width: 100%;
+  }
+  
+  .table-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .table-toolbar-left,
+  .table-toolbar-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+}

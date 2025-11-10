@@ -1,0 +1,90 @@
+/* ============================================
+   ESTILOS PÁGINA DE LOGIN
+   ============================================ */
+
+/* Usamos el body para centrar el contenido */
+body.login-page {
+    background-color: var(--bg-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: var(--spacing-lg);
+    
+    /* Imagen de fondo sutil (Opcional, pero elegante) */
+    /* background-image: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('URL_DE_TU_IMAGEN_DE_FONDO.jpg'); */
+    background-size: cover;
+    background-position: center;
+}
+
+/* La tarjeta de login */
+.login-card {
+    max-width: 420px;
+    width: 100%;
+    /* Borde distintivo */
+    border-top: 4px solid var(--accent-primary);
+    animation: slideUp 0.5s ease;
+}
+
+.login-header {
+    text-align: center;
+    padding-bottom: var(--spacing-md);
+}
+
+.login-logo {
+    font-size: 2.5rem;
+    color: var(--accent-primary);
+    margin-bottom: var(--spacing-sm);
+    text-shadow: var(--shadow-glow);
+}
+
+.login-title {
+    font-size: 1.5rem;
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+/* Grupo de input con icono */
+.form-input-group {
+    position: relative;
+}
+
+.form-input-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    pointer-events: none;
+    font-size: 0.9rem;
+}
+
+.form-input-group .form-input {
+    padding-left: 3rem;
+}
+
+/* Botón de mostrar/ocultar contraseña */
+.password-toggle {
+    position: absolute;
+    right: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-fast);
+}
+.password-toggle:hover {
+    color: var(--accent-primary);
+    background: var(--bg-tertiary);
+}
+
+.login-btn {
+    width: 100%;
+    font-size: 1.05rem;
+    margin-top: var(--spacing-sm);
+    padding: 0.85rem 1.5rem; /* Botón un poco más grande */
+}

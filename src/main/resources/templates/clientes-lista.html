@@ -1,161 +1,150 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title>Lista de Clientes</title>
-    
-    <style>
-        /* --- Paleta de Colores --- */
-        :root {
-            --color-negro-fondo: #1a1a1a;
-            --color-negro-tarjeta: #2c2c2c;
-            --color-amarillo-acento: #FFD700;
-            --color-texto-principal: #FFFFFF;
-            --color-texto-secundario: #ccc;
-        }
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
 
-        body {
-            background-color: var(--color-negro-fondo);
-            font-family: Arial, sans-serif;
-            color: var(--color-texto-principal);
-            margin: 0;
-            padding: 40px;
-        }
+<th:block layout:fragment="content">
+    <div class="table-toolbar">
+        <div class="table-toolbar-left">
+            <div class="table-search">
+                <i class="fas fa-search table-search-icon"></i>
+                <input type="text"
+                       id="searchInput"
+                       placeholder="Buscar clientes..."
+                       aria-label="Buscar clientes">
+            </div>
 
-        /* --- Título principal --- */
-        h1 {
-            color: var(--color-amarillo-acento);
-            text-align: center;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
+            <select class="table-filter" id="filterTipo">
+                <option value="">Todos los tipos</option>
+                <option value="Persona Natural">Persona Natural</option>
+                <option value="Empresa">Empresa</option>
+            </select>
+        </div>
 
-        /* --- Contenedor principal con sombra --- */
-        .container {
-            max-width: 1200px;
-            margin: 20px auto; /* Centramos el contenedor */
-            padding: 30px;
-            background-color: var(--color-negro-tarjeta);
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-            border-top: 5px solid var(--color-amarillo-acento); /* Detalle superior */
-        }
-        
-        /* --- Estilos de la Tabla (adaptados al tema oscuro) --- */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
+        <div class="table-toolbar-right">
+            <a th:href="@{/web/clientes/nuevo}" class="btn btn-primary">
+                <i class="fas fa-plus"></i>
+                Nuevo Cliente
+            </a>
+        </div>
+    </div>
 
-        th, td {
-            border: 1px solid #444; /* Borde más sutil */
-            padding: 12px;
-            text-align: left;
-        }
-
-        th {
-            /* Encabezado de la tabla con el color de acento */
-            background-color: #333;
-            color: var(--color-amarillo-acento);
-            text-transform: uppercase;
-        }
-
-        /* Filas intercaladas para mejor lectura */
-        tr:nth-child(even) {
-            background-color: #3f3f3f; /* Un gris un poco más claro */
-        }
-        tr:hover {
-             background-color: #4a4a4a;
-        }
-
-        /* --- Estilos de los Botones (adaptados) --- */
-        .btn {
-            padding: 6px 12px;
-            text-decoration: none;
-            border-radius: 4px;
-            margin: 2px;
-            display: inline-block;
-            border: none;
-            cursor: pointer;
-            transition: opacity 0.3s ease;
-        }
-        .btn:hover {
-            opacity: 0.8; /* Efecto hover sutil */
-        }
-
-        /* Botón de Crear (amarillo) */
-        .btn-crear {
-            background-color: var(--color-amarillo-acento);
-            color: var(--color-negro-fondo);
-            font-weight: bold;
-            margin-bottom: 15px;
-        }
-
-        /* Botón de Editar (gris) */
-        .btn-editar {
-            background-color: #5a5a5a;
-            color: white;
-        }
-
-        /* Botón de Eliminar (rojo oscuro) */
-        .btn-eliminar {
-            background-color: #a00; /* Un rojo más oscuro */
-            color: white;
-        }
-        
-        /* Botón para volver al Dashboard */
-        .btn-volver {
-            background-color: transparent;
-            color: var(--color-amarillo-acento);
-            border: 1px solid var(--color-amarillo-acento);
-            text-decoration: none;
-            margin-bottom: 20px;
-        }
-
-    </style>
-</head>
-<body>
-
-    <div class="container">
-    
-        <a th:href="@{/web/dashboard}" class="btn btn-volver">
-            &larr; Volver al Dashboard
-        </a>
-
-        <h1>Gestión de Clientes</h1>
-
-        <a th:href="@{/web/clientes/nuevo}" class="btn btn-crear">
-            Crear Nuevo Cliente
-        </a>
-        
-        <table>
+    <div class="table-wrapper">
+        <table class="table table-striped table-mobile">
             <thead>
                 <tr>
                     <th>ID</th>
                     <th>Nombre</th>
                     <th>Cédula / RUC</th>
                     <th>Tipo</th>
-                    <th>Acciones</th>
+                    <th>Contacto</th>
+                    <th style="text-align: right;">Acciones</th>
                 </tr>
             </thead>
             <tbody>
-                <tr th:each="cliente : ${clientes}">
-                    <td th:text="${cliente.cliente_id}">...</td>
-                    <td th:text="${cliente.nombre}">...</td>
-                    <td th:text="${cliente.cedula_ruc}">...</td>
-                    <td th:text="${cliente.tipo_cliente}">...</td>
-                    <td>
-                        <a th:href="@{/web/clientes/editar/{id}(id=${cliente.cliente_id})}" 
-                           class="btn btn-editar">Actualizar</a>
-                        
-                        <a th:href="@{/web/clientes/eliminar/{id}(id=${cliente.cliente_id})}" 
-                           class="btn btn-eliminar"
-                           onclick="return confirm('¿Estás seguro de que deseas eliminar este cliente?')">Eliminar</a>
+                <tr th:each="cliente : ${clientes}" th:data-tipo="${cliente.tipo_cliente}" class="data-row">
+                    <td th:text="${cliente.cliente_id}" data-label="ID">1</td>
+                    <td th:text="${cliente.nombre}" data-label="Nombre">Juan Pérez</td>
+                    <td th:text="${cliente.cedula_ruc}" data-label="Cédula/RUC">1234567890</td>
+                    <td data-label="Tipo">
+                        <span class="badge badge-info" th:text="${cliente.tipo_cliente}">
+                            Persona Natural
+                        </span>
+                    </td>
+                    <td data-label="Contacto">
+                        <div th:if="${!cliente.telefonos.isEmpty()}" class="contact-info-item">
+                            <i class="fas fa-phone"></i>
+                            <span th:text="${cliente.telefonos[0].telefono}">0999999999</span>
+                        </div>
+                        <div th:if="${!cliente.correos.isEmpty()}" class="contact-info-item-small">
+                            <i class="fas fa-envelope"></i>
+                            <span th:text="${cliente.correos[0].correo}">email@ejemplo.com</span>
+                        </div>
+                    </td>
+                    <td data-label="Acciones">
+                        <div class="table-actions">
+                            <a th:href="@{/web/clientes/editar/{id}(id=${cliente.cliente_id})}"
+                               class="table-action-btn btn-edit"
+                               title="Editar">
+                                <i class="fas fa-edit"></i>
+                                <span>Editar</span>
+                            </a>
+                            
+                            <a th:href="@{/web/clientes/{id}/vehiculos/nuevo(id=${cliente.cliente_id})}"
+                               class="table-action-btn btn-view"
+                               title="Agregar Vehículo">
+                                <i class="fas fa-car-side"></i>
+                                <span>Agregar</span> </a>
+
+                            <a th:href="@{/web/clientes/eliminar/{id}(id=${cliente.cliente_id})}"
+                               class="table-action-btn btn-delete"
+                               data-confirm="¿Estás seguro de eliminar este cliente? Esta acción no se puede deshacer."
+                               title="Eliminar">
+                                <i class="fas fa-trash"></i>
+                                <span>Eliminar</span>
+                            </a>
+                        </div>
                     </td>
                 </tr>
             </tbody>
         </table>
-        
-    </div> </body>
+
+        <div th:if="${clientes == null OR clientes.isEmpty()}" class="table-empty">
+            <div class="empty-state">
+                <div class="empty-state-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h3 class="empty-state-title">No hay clientes registrados</h3>
+                <p class="empty-state-description">
+                    Comienza agregando tu primer cliente al sistema
+                </p>
+                <a th:href="@{/web/clientes/nuevo}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i>
+                    Crear Primer Cliente
+                </a>
+            </div>
+        </div>
+    </div>
+    
+</th:block>
+
+<th:block layout:fragment="customJS">
+    <script th:inline="javascript">
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            const searchInput = document.getElementById('searchInput');
+            const filterTipo = document.getElementById('filterTipo');
+            const dataRows = document.querySelectorAll('.table tbody tr.data-row');
+
+            function filterTable() {
+                const searchTerm = searchInput.value.toLowerCase().trim();
+                const tipoFilter = filterTipo.value;
+
+                dataRows.forEach(row => {
+                    const nombre = row.children[1]?.textContent.toLowerCase() || '';
+                    const cedula = row.children[2]?.textContent.toLowerCase() || '';
+                    const tipo = row.dataset.tipo || '';
+
+                    const matchesSearch = nombre.includes(searchTerm) || 
+                                          cedula.includes(searchTerm);
+                    const matchesTipo = !tipoFilter || tipo === tipoFilter;
+
+                    if (matchesSearch && matchesTipo) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            }
+            
+            if (searchInput) {
+                searchInput.addEventListener('input', filterTable);
+            }
+            if (filterTipo) {
+                filterTipo.addEventListener('change', filterTable);
+            }
+        });
+    </script>
+</th:block>
+
 </html>

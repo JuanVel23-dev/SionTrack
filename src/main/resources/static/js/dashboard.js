@@ -1,10 +1,30 @@
+/**
+ * Lógica personalizada para el Dashboard
+ * Animar los contadores de estadísticas
+ */
 document.addEventListener('DOMContentLoaded', () => {
-    const menuToggle = document.getElementById('menu-toggle');
-    const sidebar = document.getElementById('sidebar');
-    const mainContent = document.getElementById('main-content');
+    console.log('Dashboard loaded');
 
-    menuToggle.addEventListener('click', () => {
-        sidebar.classList.toggle('open');
-        mainContent.classList.toggle('shifted');
+    // Función para animar números
+    const animateValue = (element, start, end, duration) => {
+        let startTimestamp = null;
+        const step = (timestamp) => {
+            if (!startTimestamp) startTimestamp = timestamp;
+            const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+            element.textContent = Math.floor(progress * (end - start) + start);
+            if (progress < 1) {
+                window.requestAnimationFrame(step);
+            }
+        };
+        window.requestAnimationFrame(step);
+    };
+
+    // Animar cada número en las tarjetas de estadísticas
+    document.querySelectorAll('.stat-card-number span').forEach(span => {
+        const finalValue = parseInt(span.textContent) || 0;
+        span.textContent = '0';
+        setTimeout(() => {
+            animateValue(span, 0, finalValue, 1000);
+        }, 200);
     });
 });

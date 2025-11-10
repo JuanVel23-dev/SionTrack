@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import com.siontrack.siontrack.DTO.Request.VehiculosRequestDTO;
 
 import java.util.List;
 
@@ -70,4 +71,22 @@ public class ClienteViewController {
         clienteServicios.deleteCliente(id); 
         return "redirect:/web/clientes";
     }
+
+    @GetMapping("/clientes/{id}/vehiculos/nuevo")
+public String mostrarFormularioNuevoVehiculo(@PathVariable("id") Integer clienteId, Model model) {
+
+    // 1. Obtener el cliente para saber su nombre
+    ClienteResponseDTO cliente = clienteServicios.obtenerClientePorId(clienteId);
+
+    // 2. Crear el objeto DTO vacío para el formulario
+    VehiculosRequestDTO vehiculoNuevo = new VehiculosRequestDTO();
+
+    // 3. Añadir los datos al modelo para Thymeleaf
+    model.addAttribute("vehiculo", vehiculoNuevo);
+    model.addAttribute("clienteId", clienteId);
+    model.addAttribute("clienteNombre", cliente.getNombre());
+
+    // 4. Devolver el nombre del archivo HTML del formulario
+    return "vehiculo-form";
+}
 }

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+
+<th:block layout:fragment="content">
+    
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">
+                <span th:text="|Nuevo Vehículo para: ${clienteNombre}|">Nuevo Vehículo</span>
+            </h2>
+        </div>
+
+        <form th:object="${vehiculo}"
+              th:action="@{/web/vehiculos/guardar}" method="post"
+              data-validate>
+
+            <input type="hidden" name="clienteId" th:value="${clienteId}" />
+
+            <div class="card-body">
+                
+                <h3 class="form-section-title">
+                    <i class="fas fa-car"></i> Información del Vehículo
+                </h3>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="marca" class="form-label required">Marca</label>
+                        <input type="text" id="marca" th:field="*{marca}" class="form-input" required placeholder="Ej: Chevrolet">
+                    </div>
+                    <div class="form-group">
+                        <label for="modelo" class="form-label required">Modelo</label>
+                        <input type="text" id="modelo" th:field="*{modelo}" class="form-input" required placeholder="Ej: D-Max">
+                    </div>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="placa" class="form-label required">Placa</label>
+                        <input type="text" id="placa" th:field="*{placa}" class="form-input" required placeholder="Ej: PAA-1234">
+                    </div>
+                    <div class="form-group">
+                        <label for="anio" class="form-label required">Año</label>
+                        <input type="number" id="anio" th:field="*{anio}" class="form-input" required placeholder="Ej: 2020">
+                    </div>
+                    <div class="form-group">
+                        <label for="kilometraje_actual" class="form-label required">Kilometraje</label>
+                        <input type="number" id="kilometraje_actual" th:field="*{kilometraje_actual}" class="form-input" required placeholder="Ej: 50000">
+                    </div>
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="form-group">
+                    <label for="tipo_motor" class="form-label">Tipo de Motor</label>
+                    <input type="text" id="tipo_motor" th:field="*{tipo_motor}" class="form-input" placeholder="Ej: 2.5L Diesel">
+                </div>
+            </div>
+
+            <div class="card-footer">
+                <a th:href="@{/web/clientes}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i>
+                    Cancelar
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i>
+                    <span>Guardar Vehículo</span>
+                </button>
+            </div>
+        </form>
+    </div>
+    
+    <th:block layout:fragment="customCSS">
+        <style>
+            .form-section-title {
+                color: var(--accent-primary);
+                margin-bottom: var(--spacing-lg);
+                border-bottom: 1px solid var(--border-color);
+                padding-bottom: var(--spacing-sm);
+                font-size: 1.15rem;
+            }
+            .form-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                gap: var(--spacing-lg);
+                margin-bottom: var(--spacing-sm); /* Espacio entre filas del grid */
+            }
+        </style>
+    </th:block>
+    
+</th:block>
+</html>

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="SionTrack - Sistema de Gestión Empresarial">
+
+    <title th:text="${pageTitle != null ? pageTitle + ' - SionTrack' : 'SionTrack'}">SionTrack</title>
+
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+    <link rel="stylesheet" th:href="@{/css/layout.css}">
+    <link rel="stylesheet" th:href="@{/css/components.css}">
+    <link rel="stylesheet" th:href="@{/css/tables.css}">
+    <link rel="stylesheet" th:href="@{/css/modals.css}">
+
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+          crossorigin="anonymous"
+          referrerpolicy="no-referrer">
+
+    <th:block layout:fragment="customCSS"></th:block>
+</head>
+<body>
+<div class="app-layout">
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                <i class="fas fa-chart-line sidebar-logo-icon"></i>
+                <span>SionTrack</span>
+            </div>
+            <button class="sidebar-close" id="sidebar-close" aria-label="Cerrar menú">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div class="sidebar-nav">
+            <ul class="nav-list">
+                <li class="nav-item">
+                    <a th:href="@{/web/dashboard}" class="nav-link">
+                        <i class="fas fa-home"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a th:href="@{/web/clientes}" class="nav-link">
+                        <i class="fas fa-users"></i>
+                        <span>Clientes</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a th:href="@{/web/proveedores}" class="nav-link">
+                        <i class="fas fa-truck"></i>
+                        <span>Proveedores</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a th:href="@{/web/productos}" class="nav-link">
+                        <i class="fas fa-box"></i>
+                        <span>Productos</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="sidebar-footer">
+            <div class="sidebar-user">
+                <div class="sidebar-user-avatar">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div>
+                    <div style="font-weight: 600; color: var(--text-primary);">Usuario</div>
+                    <div style="font-size: 0.8rem;">Administrador</div>
+                </div>
+            </div>
+        </div>
+    </nav>
+    <button class="menu-toggle" id="menu-toggle" aria-label="Abrir menú">
+        <i class="fas fa-bars"></i>
+    </button>
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+    <div class="main-wrapper">
+        <header class="main-header">
+            <div class="header-left">
+                <h1 class="page-title" th:text="${pageTitle ?: 'Dashboard'}">Dashboard</h1>
+                <nav class="breadcrumb" th:if="${breadcrumbs != null}">
+                    <span class="breadcrumb-item" th:each="crumb, iterStat : ${breadcrumbs}">
+                        <a th:if="${crumb.url != null}" th:href="${crumb.url}" th:text="${crumb.name}">Home</a>
+                        <span th:if="${crumb.url == null}" th:text="${crumb.name}">Current</span>
+                        <span class="breadcrumb-separator" th:if="${!iterStat.last}">
+                            <i class="fas fa-chevron-right"></i>
+                        </span>
+                    </span>
+                </nav>
+            </div>
+            <div class="header-right">
+                <th:block th:replace="${headerActions} ?: ~{}"></th:block>
+            </div>
+        </header>
+        <main class="main-content">
+            <div th:if="${successMessage}" class="alert alert-success animate-slide-down">
+                <span class="alert-icon"><i class="fas fa-check-circle"></i></span>
+                <div class="alert-content">
+                    <div class="alert-title">¡Éxito!</div>
+                    <div th:text="${successMessage}"></div>
+                </div>
+            </div>
+
+            <div th:if="${errorMessage}" class="alert alert-danger animate-slide-down">
+                <span class="alert-icon"><i class="fas fa-exclamation-circle"></i></span>
+                <div class="alert-content">
+                    <div class="alert-title">Error</div>
+                    <div th:text="${errorMessage}"></div>
+                </div>
+            </div>
+            
+            <div layout:fragment="content">
+                </div>
+        </main>
+    </div>
+</div>
+<script th:src="@{/js/main.js}"></script>
+<script th:src="@{/js/form-utils.js}"></script>
+
+<th:block layout:fragment="customJS"></th:block>
+</body>
+</html>

@@ -1,137 +1,97 @@
-/* === Estilos base === */
-body {
-    margin: 0;
-    font-family: 'Segoe UI', Roboto, Arial, sans-serif;
-    background-color: #121212;
-    color: #f1f1f1;
-    display: flex;
-    height: 100vh;
-    overflow: hidden;
-}
+/* ============================================
+   ESTILOS PERSONALIZADOS DASHBOARD
+   ============================================ */
 
-/* === Botón hamburguesa === */
-.menu-toggle {
-    position: fixed;
-    top: 15px;
-    left: 15px;
-    font-size: 1.8rem;
-    color: #f9c806;
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    z-index: 1100;
-    transition: transform 0.3s ease, color 0.3s ease;
-}
-
-.menu-toggle:hover {
-    color: #fff;
-    transform: scale(1.1);
-}
-
-/* === Sidebar === */
-.sidebar {
-    position: fixed;
-    top: 0;
-    left: -250px; /* oculto por defecto */
-    width: 250px;
-    height: 100%;
-    background-color: #1c1c1c;
-    border-right: 2px solid #f9c806;
-    transition: left 0.4s ease;
-    box-shadow: 3px 0 10px rgba(0, 0, 0, 0.4);
-    z-index: 1000;
-}
-
-.sidebar.open {
-    left: 0;
-}
-
-.sidebar-header {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 1rem;
-    border-bottom: 1px solid #f9c806;
-}
-
-.logo {
-    color: #f9c806;
-    font-size: 1.4rem;
-    font-weight: bold;
-}
-
-.nav-list {
-    list-style: none;
-    margin: 0;
-    padding: 1rem 0;
-}
-
-.nav-list li {
-    margin: 0.5rem 0;
-}
-
-.nav-list a {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    color: #f1f1f1;
-    text-decoration: none;
-    padding: 0.8rem 1.2rem;
-    transition: all 0.3s ease;
-}
-
-.nav-list a:hover {
-    background-color: #f9c806;
-    color: #1c1c1c;
-    font-weight: bold;
-    transform: translateX(5px);
-}
-
-/* === Contenido principal === */
-.main-content {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: margin-left 0.4s ease;
-    margin-left: 0;
-    background-color: #121212;
-}
-
-.main-content.shifted {
-    margin-left: 250px;
-}
-
-/* === Animaciones del título === */
-.title-container {
+.dashboard-hero {
     text-align: center;
-    animation: fadeIn 1.2s ease forwards;
+    padding: var(--spacing-2xl) 0;
+    margin-bottom: var(--spacing-xl);
 }
 
-.main-title {
-    font-size: 3.5rem;
-    color: #f9c806;
-    text-shadow: 0 0 10px rgba(249, 200, 6, 0.6);
-    opacity: 0;
-    animation: slideUp 1s ease forwards 0.5s;
+.dashboard-hero-title {
+    font-size: 3rem;
+    color: var(--accent-primary);
+    margin-bottom: var(--spacing-md);
+    text-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
 }
 
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+.dashboard-hero-subtitle {
+    font-size: 1.2rem;
+    color: var(--text-secondary);
+    max-width: 600px;
+    margin: 0 auto;
 }
 
-@keyframes slideUp {
-    from { opacity: 0; transform: translateY(40px); }
-    to { opacity: 1; transform: translateY(0); }
+/* Grid para las tarjetas de estadísticas */
+.dashboard-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-2xl);
 }
 
-/* === Scrollbar personalizado === */
-::-webkit-scrollbar {
-    width: 8px;
-}
-::-webkit-scrollbar-thumb {
-    background: #f9c806;
-    border-radius: 4px;
+.stat-card {
+    text-align: center;
 }
 
+.stat-card-icon {
+    font-size: 3rem;
+    margin-bottom: var(--spacing-md);
+}
+
+.stat-card-icon.icon-clientes { color: var(--accent-primary); }
+.stat-card-icon.icon-proveedores { color: var(--info); }
+.stat-card-icon.icon-productos { color: var(--success); }
+
+.stat-card-number {
+    font-size: 2.5rem;
+    margin-bottom: var(--spacing-sm);
+    color: var(--text-primary);
+}
+
+.stat-card-label {
+    color: var(--text-muted);
+    margin: 0;
+}
+
+.stat-card-footer {
+    padding: var(--spacing-md);
+    border-top: 1px solid var(--border-color);
+}
+
+.stat-card-footer .btn {
+    width: 100%;
+}
+
+/* Grid para accesos rápidos */
+.quick-access-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--spacing-md);
+}
+
+.quick-access-btn {
+    height: 80px;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.quick-access-btn i {
+    font-size: 1.5rem;
+    margin-bottom: var(--spacing-xs);
+}
+
+/*
+ * Corrección para estilos en línea (CSP)
+ */
+
+/* Estilo para el botón deshabilitado de "Reportes" */
+.quick-access-btn.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Estilo para la tarjeta de Actividad Reciente */
+.activity-card {
+    margin-top: var(--spacing-xl);
+}
