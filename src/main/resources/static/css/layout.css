@@ -164,7 +164,7 @@
    ============================================ */
 .menu-toggle {
   position: fixed;
-  top: var(--spacing-lg);
+  top: var(--spacing-sm);
   left: var(--spacing-lg);
   z-index: 1100;
   background: var(--bg-card);

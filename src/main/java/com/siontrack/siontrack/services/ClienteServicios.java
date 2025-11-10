@@ -13,6 +13,7 @@ import com.siontrack.siontrack.DTO.Request.ClienteRequestDTO;
 import com.siontrack.siontrack.DTO.Request.CorreosRequestDTO;
 import com.siontrack.siontrack.DTO.Request.DireccionesRequestDTO;
 import com.siontrack.siontrack.DTO.Request.TelefonosRequestDTO;
+import com.siontrack.siontrack.DTO.Request.VehiculosRequestDTO;
 import com.siontrack.siontrack.DTO.Response.ClienteResponseDTO;
 import com.siontrack.siontrack.models.Cliente_Correos;
 import com.siontrack.siontrack.models.Cliente_Direcciones;
@@ -230,4 +231,23 @@ public class ClienteServicios {
         clienteRepository.deleteById(id);
     }
 
+    // ... (justo después del método deleteCliente, dentro de la clase ClienteServicios)
+
+    @Transactional
+    public void crearVehiculoParaCliente(VehiculosRequestDTO dto, Integer clienteId) {
+        
+        // 1. Buscar al cliente que será el "padre" de este vehículo
+        Clientes clienteExistente = clienteRepository.findById(clienteId)
+                .orElseThrow(() -> new RuntimeException("Cliente no encontrado con ID: " + clienteId));
+
+        // 2. Mapear los datos del formulario (DTO) a la entidad Vehiculo
+        Vehiculos nuevoVehiculo = modelMapper.map(dto, Vehiculos.class);
+
+        // 3. ¡El paso más importante! Establecer la relación
+        nuevoVehiculo.setClientes(clienteExistente);
+        
+        // 4. Guardar la nueva entidad Vehiculo
+        //    (JPA se encargará de asignar el 'cliente_id' automáticamente)
+        vehiculoRepository.save(nuevoVehiculo);
+    }
 }
