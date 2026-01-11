@@ -64,5 +64,8 @@ public class ProductosResponseDTO {
     @Setter
     private ProveedoresResponseDTO proveedor;
 
+    @Getter
+    @Setter
+    private boolean alerta_stock;
     
 }

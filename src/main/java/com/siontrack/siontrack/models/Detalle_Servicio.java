@@ -25,7 +25,7 @@ public class Detalle_Servicio {
     public enum tipoItem{
         PRODUCTO,
         SERVICIO,
-        INSUMO,
+        INSUMO, 
         PAQUETE
     }
 

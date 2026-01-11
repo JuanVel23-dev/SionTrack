@@ -42,15 +42,24 @@
                     <td th:text="${prod.nombre}" data-label="Nombre">...</td>
                     <td th:text="${prod.categoria}" data-label="Categoría">...</td>
                     <td th:text="${prod.marca}" data-label="Marca">...</td>
-                    <td th:text="|S/ ${#numbers.formatDecimal(prod.precio_venta, 1, 2)}|"
+                    <td th:text="|$ ${#numbers.formatDecimal(prod.precio_venta, 1, 2)}|"
                         data-label="Precio"
                         style="text-align: right;">
                         S/ 0.00
                     </td>
                     <td style="text-align: center;" data-label="Stock">
+                        
+                        <span th:if="${prod.alerta_stock}" class="icono-alerta" title="Stock Crítico">
+                            ⚠️
+                        </span>
+
                         <span th:text="${prod.cantidad_disponible}"
-                              th:classappend="${prod.cantidad_disponible <= prod.stock_minimo} ? 'badge badge-danger' : 'badge badge-success'">
+                            th:classappend="${prod.alerta_stock} ? 'badge badge-danger' : 'badge badge-success'">
                             ...
+                        </span>
+
+                        <span class="texto-minimo" th:if="${prod.stock_minimo != null}">
+                            (Min: <span th:text="${prod.stock_minimo}">0</span>)
                         </span>
                     </td>
                     <td data-label="Acciones">

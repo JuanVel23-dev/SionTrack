@@ -57,11 +57,7 @@ public class Productos {
     @Setter
     private String estado;
 
-    @OneToOne(mappedBy = "producto", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @JsonManagedReference("detalle_servicio_producto")
-    @Getter
-    @Setter
-    private Detalle_Servicio detalle;
+    
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "proveedor_id")

@@ -1,19 +1,24 @@
 package com.siontrack.siontrack.services;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.siontrack.siontrack.DTO.Request.ProductosRequestDTO;
+import com.siontrack.siontrack.DTO.Response.ProductoPopularDTO;
 import com.siontrack.siontrack.DTO.Response.ProductosResponseDTO;
 
 import com.siontrack.siontrack.models.Inventario;
 import com.siontrack.siontrack.models.Productos;
 import com.siontrack.siontrack.models.Proveedores;
+import com.siontrack.siontrack.repository.DetalleServicioRepository;
 import com.siontrack.siontrack.repository.ProductosRepository;
 import com.siontrack.siontrack.repository.ProveedoresRepository;
 
@@ -29,18 +34,60 @@ public class ProductosServicios {
     @Autowired
     private ModelMapper modelMapper;
 
+    @Autowired
+    private DetalleServicioRepository detalleServicioRepository;
+
     @Transactional(readOnly = true)
     public List<ProductosResponseDTO> obtenerListaProductos() {
         return productosRepository.findAll().stream()
-                .map(producto -> modelMapper.map(producto, ProductosResponseDTO.class))
-                .collect(Collectors.toList());
+                .map(producto -> {
+                // 1. Mapeo automático de campos base
+                ProductosResponseDTO dto = modelMapper.map(producto, ProductosResponseDTO.class);
+                
+                // 2. Lógica manual para Inventario y Alertas
+                // Verificamos si el producto tiene inventario asociado
+                if (producto.getInventario() != null) {
+                    
+                    // Aseguramos el mapeo de datos (por si ModelMapper falló con los anidados)
+                    dto.setCantidad_disponible(producto.getInventario().getCantidad_disponible());
+                    dto.setStock_minimo(producto.getInventario().getStock_minimo());
+                    dto.setUbicacion(producto.getInventario().getUbicacion());
+
+                    // --- CÁLCULO DE LA ALERTA ---
+                    // Si hay stock mínimo definido y la cantidad actual es menor o igual
+                    if (dto.getStock_minimo() != null && dto.getCantidad_disponible() != null 
+                        && dto.getCantidad_disponible() <= dto.getStock_minimo()) {
+                        
+                        dto.setAlerta_stock(true); // ¡ACTIVAR ALERTA!
+                    } else {
+                        dto.setAlerta_stock(false);
+                    }
+                }
+                return dto;
+            })
+            .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public ProductosResponseDTO obtenerProductoByID(Integer id) {
         Productos producto = productosRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Producto no encontrado con ID: " + id));
-        return modelMapper.map(producto, ProductosResponseDTO.class);
+
+        ProductosResponseDTO dto = modelMapper.map(producto, ProductosResponseDTO.class);
+
+        // Aplicar la misma lógica para el producto individual
+        if (producto.getInventario() != null) {
+            dto.setCantidad_disponible(producto.getInventario().getCantidad_disponible());
+            dto.setStock_minimo(producto.getInventario().getStock_minimo());
+            dto.setUbicacion(producto.getInventario().getUbicacion());
+
+            if (dto.getStock_minimo() != null && dto.getCantidad_disponible() != null 
+                && dto.getCantidad_disponible() <= dto.getStock_minimo()) {
+                dto.setAlerta_stock(true);
+            }
+        }
+        
+        return dto;
     }
 
     @Transactional
@@ -122,6 +169,37 @@ public class ProductosServicios {
             throw new RuntimeException("Producto no encontrado con ID: " + id);
         }
         productosRepository.deleteById(id);
+    }
+
+    @Transactional
+    public List<ProductoPopularDTO> obtenerListaPopulares(int limite, String periodo){
+
+        Pageable pageable = PageRequest.of(0, limite);
+        LocalDate fechaInicio;
+        LocalDate hoy = LocalDate.now();
+
+        // Calculamos la fecha de corte según lo que pida el usuario
+        switch (periodo.toLowerCase()) {
+            case "semana":
+                fechaInicio = hoy.minusWeeks(1); // Últimos 7 días
+                break;
+            case "mes":
+                fechaInicio = hoy.minusMonths(1); // Último mes
+                break;
+            case "trimestre":
+                fechaInicio = hoy.minusMonths(3); // Últimos 3 meses
+                break;
+            case "anio":
+                fechaInicio = hoy.minusYears(1); // Último año
+                break;
+            case "general":
+            default:
+                // Para "general", ponemos una fecha muy antigua (ej. año 2000)
+                fechaInicio = LocalDate.of(2000, 1, 1);
+                break;
+        }
+
+        return detalleServicioRepository.encontrarProductsoPopulares(fechaInicio, pageable);
     }
 
 }
