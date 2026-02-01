@@ -1,6 +1,8 @@
 package com.siontrack.siontrack.repository;
 
 
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -13,4 +15,7 @@ public interface ClienteRepository extends JpaRepository<Clientes, Integer>{
 
     @Query("SELECT COUNT(c) > 0 FROM Clientes c WHERE c.cedula_ruc = :cedulaRuc")
     boolean existsByCedula_ruc(@Param("cedulaRuc") String cedulaRuc);
+
+
+    Optional<Clientes> findByTelefonos_Telefono(String telefono);
 }

@@ -53,6 +53,11 @@ public class Clientes {
     @Setter
     private LocalDate fecha_modificacion;
 
+    @Column(name = "recibe_notificaciones", nullable = true, updatable = true)
+    @Getter
+    @Setter
+    private boolean recibe_notificaciones;
+
     @OneToMany(mappedBy = "clientes", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonManagedReference("cliente_telefonos")
     @Getter

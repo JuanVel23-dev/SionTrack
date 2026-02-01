@@ -27,6 +27,9 @@ public class ClienteResponseDTO {
     @Getter
     @Setter
     private LocalDate fecha_modificacion;
+    @Getter
+    @Setter
+    private boolean recibe_notificaciones;
 
     @Getter
     @Setter

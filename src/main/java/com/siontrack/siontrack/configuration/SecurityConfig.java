@@ -29,46 +29,42 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            // 1. CSRF: Ignorar en API para permitir POST desde Postman
-            .csrf(csrf -> csrf
-                .ignoringRequestMatchers("/api/**")) // AGREGE LA BARRA "/" AL INICIO
+                // 1. CSRF: Ignorar en API para permitir POST desde Postman
+                .csrf(csrf -> csrf
+                        .ignoringRequestMatchers("/api/**")) // AGREGE LA BARRA "/" AL INICIO
 
-            // 2. AUTHORIZATION: Unificado en un solo bloque y ordenado correctamente
-            .authorizeHttpRequests(authorize -> authorize
-                // A. Recursos estáticos y Login (Públicos) - Van PRIMERO
-                .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**", "/login").permitAll()
-                
-                // B. Rutas de API (Protegidas, pero accesibles con Basic Auth)
-                .requestMatchers("/api/**").authenticated()
+                // 2. AUTHORIZATION: Unificado en un solo bloque y ordenado correctamente
+                .authorizeHttpRequests(authorize -> authorize
+                        // A. Recursos estáticos y Login (Públicos) - Van PRIMERO
+                        .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**", "/login", "/api/webhook").permitAll()
 
-                // C. REGLA FINAL (Catch-all): Todo lo demás autenticado - DEBE IR AL FINAL
-                .anyRequest().authenticated()
-            )
+                        // B. Rutas de API (Protegidas, pero accesibles con Basic Auth)
+                        .requestMatchers("/api/**").authenticated()
 
-            // 3. Form Login (Para usuarios web)
-            .formLogin(form -> form
-                .loginPage("/login")
-                .loginProcessingUrl("/login")
-                .defaultSuccessUrl("/web/dashboard", true)
-                .permitAll()
-            )
+                        // C. REGLA FINAL (Catch-all): Todo lo demás autenticado - DEBE IR AL FINAL
+                        .anyRequest().authenticated())
 
-            // 4. Logout
-            .logout(logout -> logout
-                .logoutUrl("/logout")
-                .logoutSuccessUrl("/login?logout")
-                .permitAll()
-            )
+                // 3. Form Login (Para usuarios web)
+                .formLogin(form -> form
+                        .loginPage("/login")
+                        .loginProcessingUrl("/login")
+                        .defaultSuccessUrl("/web/dashboard", true)
+                        .permitAll())
 
-            // 5. HTTP Basic (Para Postman)
-            .httpBasic(Customizer.withDefaults())
+                // 4. Logout
+                .logout(logout -> logout
+                        .logoutUrl("/logout")
+                        .logoutSuccessUrl("/login?logout")
+                        .permitAll())
 
-            // 6. Headers (CSP para estilos y scripts)
-            .headers(headers -> headers
-                .contentSecurityPolicy(csp -> csp
-                    .policyDirectives("style-src 'self' https://cdnjs.cloudflare.com; script-src 'self'; font-src 'self' https://cdnjs.cloudflare.com;")
-                )
-            );
+                // 5. HTTP Basic (Para Postman)
+                .httpBasic(Customizer.withDefaults())
+
+                // 6. Headers (CSP para estilos y scripts)
+                .headers(headers -> headers
+                        .contentSecurityPolicy(csp -> csp
+                                .policyDirectives(
+                                        "style-src 'self' https://cdnjs.cloudflare.com; script-src 'self'; font-src 'self' https://cdnjs.cloudflare.com;")));
 
         return http.build();
     }
