@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -58,20 +59,54 @@ public class Notificaciones {
     @Setter
     private Clientes clientes;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "plantilla_id", nullable = false)
-    @JsonBackReference("notificaciones_plantillas")
-    @Getter
-    @Setter
-    private PlantillaNotificaciones plantilla;
-
+    @Getter @Setter
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "servicio_id", nullable = true)
     @JsonBackReference("notificaciones_servicios")
     private Servicios servicio;
 
+    @Getter @Setter
+    @Column(name = "tipo_notificacion")
+    private String tipoNotificacion; 
+
+    @Getter @Setter
+    @Column(name = "nombre_servicio")
+    private String nombreServicio;  
+
+    @Getter @Setter
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "vehiculo_id")
+    private Vehiculos vehiculo;
+
+    @Getter @Setter
+    @Column(name = "kilometraje_servicio")
+    private String kilometrajeServicio;
+
+    @Getter @Setter
+    @Column(name = "fecha_proximo_servicio")
+    private Timestamp fechaProximoServicio;
+
+    @Getter @Setter
+    @Column(name = "resultado_envio")
+    private String resultadoEnvio;  
+
+    @Getter @Setter
+    @Column(name = "respuesta_recibida")
+    private Boolean respuestaRecibida = false;
+
+    @Getter @Setter
+    @Column(name = "contenido_respuesta")
+    private String contenidoRespuesta;
+
+    @Getter @Setter
+    @Column(name = "intentos_envio")
+    private int intentosEnvio;
+    
     @PrePersist
     protected void asignarFecha() {
         creado_en = LocalDateTime.now();
+        if (estado == null) {
+            estado = "PENDIENTE";
+        }
     }
 }

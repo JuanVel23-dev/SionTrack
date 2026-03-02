@@ -17,6 +17,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -54,9 +55,11 @@ public class Clientes {
     private LocalDate fecha_modificacion;
 
     @Column(name = "recibe_notificaciones", nullable = true, updatable = true)
-    @Getter
     @Setter
     private boolean recibe_notificaciones;
+
+    @Column(name = "consentimiento_procesado", nullable = true, updatable = true)
+    private boolean consentimiento_procesado;
 
     @OneToMany(mappedBy = "clientes", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonManagedReference("cliente_telefonos")
@@ -102,6 +105,18 @@ public class Clientes {
     @PreUpdate
     protected void aactualizarFecha() {
         fecha_modificacion = LocalDate.now();
+    }
+
+    public Boolean getConsentimientoProcesado() {
+        return consentimiento_procesado;
+    }
+
+    public void setConsentimientoProcesado(Boolean consentimientoProcesado) {
+        this.consentimiento_procesado = consentimientoProcesado;
+    }
+
+    public Boolean getRecibeNotificaciones() {
+        return recibe_notificaciones;
     }
 
 }

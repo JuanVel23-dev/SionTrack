@@ -42,6 +42,7 @@ public class Detalle_Servicio {
 
     @Enumerated(EnumType.STRING) 
     @Column(name = "tipo_item", nullable = false, length = 25)
+    @Getter @Setter
     private tipoItem tipo = tipoItem.PRODUCTO; 
     
     @ManyToOne(fetch = FetchType.LAZY)

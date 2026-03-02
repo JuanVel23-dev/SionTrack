@@ -28,21 +28,28 @@ import jakarta.transaction.Transactional;
 @Service
 public class ServiciosService {
 
-    @Autowired private ServiciosRepository serviciosRepository;
-    @Autowired private ClienteRepository clienteRepository;
-    @Autowired private VehiculosRepository vehiculoRepository;
-    @Autowired private ProductosRepository productosRepository;
-    @Autowired private ModelMapper modelMapper;
+    @Autowired
+    private ServiciosRepository serviciosRepository;
+    @Autowired
+    private ClienteRepository clienteRepository;
+    @Autowired
+    private VehiculosRepository vehiculoRepository;
+    @Autowired
+    private ProductosRepository productosRepository;
+    @Autowired
+    private ModelMapper modelMapper;
+    @Autowired
+    private RecordatorioService recordatorioService;
 
     @Transactional
     public ServicioResponseDTO crearServicio(ServicioRequestDTO dto) {
 
         // 1. Validar y Buscar Entidades Padre
         Clientes cliente = clienteRepository.findById(dto.getCliente_id())
-            .orElseThrow(() -> new RuntimeException("Cliente no encontrado: " + dto.getCliente_id()));
+                .orElseThrow(() -> new RuntimeException("Cliente no encontrado: " + dto.getCliente_id()));
 
         Vehiculos vehiculo = vehiculoRepository.findById(dto.getVehiculo_id())
-            .orElseThrow(() -> new RuntimeException("Vehículo no encontrado: " + dto.getVehiculo_id()));
+                .orElseThrow(() -> new RuntimeException("Vehículo no encontrado: " + dto.getVehiculo_id()));
 
         // 2. Crear Entidad Servicio Base
         Servicios servicio = new Servicios();
@@ -51,45 +58,52 @@ public class ServiciosService {
         servicio.setEstado(dto.getEstado() != null ? dto.getEstado() : "EN_PROCESO");
         servicio.setObservaciones(dto.getObservaciones());
         servicio.setCreado_en(LocalDateTime.now());
-        
+
         // Asignar Relaciones
         servicio.setClientes(cliente);
         servicio.setVehiculos(vehiculo);
 
+        if(servicio.getKilometraje_servicio() != null ){
+            actualizarKilometrajeVehiculo(vehiculo, servicio.getKilometraje_servicio());
+        }
+        
         // 3. Procesar Detalles y Calcular Total
         BigDecimal totalServicio = BigDecimal.ZERO;
         List<Detalle_Servicio> listaDetalles = new ArrayList<>();
 
         if (dto.getDetalles() != null && !dto.getDetalles().isEmpty()) {
-            
+
             for (DetalleServicioRequestDTO detalleDto : dto.getDetalles()) {
-                
+
                 // Buscar el producto
                 Productos producto = productosRepository.findById(detalleDto.getProducto_id())
-                    .orElseThrow(() -> new RuntimeException("Producto no encontrado: " + detalleDto.getProducto_id()));
+                        .orElseThrow(
+                                () -> new RuntimeException("Producto no encontrado: " + detalleDto.getProducto_id()));
 
                 // Crear entidad detalle
                 Detalle_Servicio detalle = new Detalle_Servicio();
                 detalle.setProducto(producto);
                 detalle.setServicio(servicio); // Vincular al padre
-                
+
                 // Datos del detalle
                 detalle.setCantidad(detalleDto.getCantidad());
-                
+
                 // PRECIO: Usar el enviado o el del producto actual (congelamiento de precio)
-                BigDecimal precioFinal = (detalleDto.getPrecio_unitario_congelado() != null) 
-                        ? detalleDto.getPrecio_unitario_congelado() 
+                BigDecimal precioFinal = (detalleDto.getPrecio_unitario_congelado() != null)
+                        ? detalleDto.getPrecio_unitario_congelado()
                         : producto.getPrecio_venta();
-                
+
                 detalle.setPrecio_unitario_congelado(precioFinal);
-                
+
                 // Definir tipo (usando el Enum de tu entidad)
-                // detalle.setTipo(Detalle_Servicio.tipoItem.valueOf(detalleDto.getTipoItem())); 
+                detalle.setTipo(Detalle_Servicio.tipoItem.valueOf(detalleDto.getTipoItem()));
 
                 // Lógica de Stock (Opcional: Descontar inventario)
                 if (producto.getInventario() != null) {
-                    int nuevaCantidad = producto.getInventario().getCantidad_disponible() - detalleDto.getCantidad().intValue();
-                    if (nuevaCantidad < 0) throw new RuntimeException("Stock insuficiente para: " + producto.getNombre());
+                    int nuevaCantidad = producto.getInventario().getCantidad_disponible()
+                            - detalleDto.getCantidad().intValue();
+                    if (nuevaCantidad < 0)
+                        throw new RuntimeException("Stock insuficiente para: " + producto.getNombre());
                     producto.getInventario().setCantidad_disponible(nuevaCantidad);
                 }
 
@@ -107,14 +121,40 @@ public class ServiciosService {
         // 4. Guardar (Cascade guardará los detalles)
         Servicios servicioGuardado = serviciosRepository.save(servicio);
 
+        try {
+            recordatorioService.procesarServicioParaRecordatorios(servicioGuardado);
+        } catch (Exception e) {
+            // Log del error pero no interrumpe la creación del servicio
+            System.err.println("⚠️ Error creando recordatorio: " + e.getMessage());
+        }
+
         // 5. Retornar DTO
         return modelMapper.map(servicioGuardado, ServicioResponseDTO.class);
     }
-    
+
     // Método para listar
     public List<ServicioResponseDTO> obtenerTodos() {
         return serviciosRepository.findAll().stream()
-            .map(s -> modelMapper.map(s, ServicioResponseDTO.class))
-            .collect(Collectors.toList());
+                .map(s -> modelMapper.map(s, ServicioResponseDTO.class))
+                .collect(Collectors.toList());
+    }
+
+    public void eliminarServicio(Integer idServicio) {
+        // Primero verificamos que exista para evitar errores
+        if (!serviciosRepository.existsById(idServicio)) {
+            throw new RuntimeException("El servicio con ID " + idServicio + " no existe.");
+        }
+
+        // Al borrar el servicio, Hibernate automáticamente borrará los detalles
+        serviciosRepository.deleteById(idServicio);
+    }
+
+    private void actualizarKilometrajeVehiculo(Vehiculos vehiculo, String kilometrajeNuevo) {
+        if (kilometrajeNuevo == null || kilometrajeNuevo.trim().isEmpty()) {
+            return;
+        }
+
+        vehiculo.setKilometraje_actual(kilometrajeNuevo.trim());
+        vehiculoRepository.save(vehiculo);
     }
 }

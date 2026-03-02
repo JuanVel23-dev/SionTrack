@@ -47,7 +47,7 @@ public class Vehiculos {
     private String tipo_motor;
 
     @Getter @Setter
-    private int kilometraje_actual;
+    private String kilometraje_actual;
 
     @Getter @Setter
     @Column(name = "creado_en" , nullable = false , updatable = false)

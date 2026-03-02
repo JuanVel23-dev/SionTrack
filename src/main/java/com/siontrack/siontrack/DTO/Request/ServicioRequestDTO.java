@@ -20,7 +20,7 @@ public class ServicioRequestDTO {
 
     @Getter
     @Setter
-    private int kilometraje_servicio;
+    private String kilometraje_servicio;
 
     @Getter
     @Setter

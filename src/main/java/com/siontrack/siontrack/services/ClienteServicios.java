@@ -20,6 +20,9 @@ import com.siontrack.siontrack.models.Cliente_Direcciones;
 import com.siontrack.siontrack.models.Cliente_Telefonos;
 import com.siontrack.siontrack.models.Clientes;
 import com.siontrack.siontrack.models.Vehiculos;
+import com.siontrack.siontrack.models.enums.ResultadoEnvioMensaje;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.siontrack.siontrack.repository.*;
 
 @Service
@@ -36,9 +39,12 @@ public class ClienteServicios {
     private TelefonosRepository telefonoRepository;
     @Autowired
     private VehiculosRepository vehiculoRepository;
-
+    @Autowired
+    private WhatsAppService whatsAppService;
     @Autowired
     private CorreosRepository correosRepository;
+
+    private static final Logger log = LoggerFactory.getLogger(ClienteServicios.class);
 
     ClienteServicios(DireccionesRepository direccionesRepository) {
         this.direccionesRepository = direccionesRepository;
@@ -51,29 +57,65 @@ public class ClienteServicios {
         cliente.setNombre(dto.getNombre());
         cliente.setCedula_ruc(dto.getCedula_ruc());
         cliente.setTipo_cliente(dto.getTipo_cliente());
+        cliente.setRecibe_notificaciones(false);
+        cliente.setConsentimientoProcesado(false);
 
         cliente = clienteRepository.save(cliente);
 
-        if (dto.getTelefonos() != null) {
+        // --- LOGICA DE TELEFONOS + WHATSAPP ---
+        if (dto.getTelefonos() != null && !dto.getTelefonos().isEmpty()) {
             final Clientes savedCliente = cliente;
             List<Cliente_Telefonos> telefonos = dto.getTelefonos().stream()
                     .map(tDto -> {
                         Cliente_Telefonos telefono = modelMapper.map(tDto, Cliente_Telefonos.class);
-                        telefono.setClientes(savedCliente); // Vincula al padre (que ya tiene ID)
+                        telefono.setClientes(savedCliente);
                         return telefono;
                     })
                     .collect(Collectors.toList());
 
             telefonoRepository.saveAll(telefonos);
             cliente.setTelefonos(telefonos);
+
+            // Enviar WhatsApp y manejar resultado
+            try {
+                String numeroPrincipal = telefonos.get(0).getTelefono();
+
+                ResultadoEnvioMensaje resultado = whatsAppService
+                        .enviarSolicitudConsentimiento(numeroPrincipal, cliente.getNombre());
+
+                // ⭐ Manejar según el resultado
+                switch (resultado) {
+                    case ENVIADO -> {
+                        log.info("✅ WhatsApp enviado a {}", cliente.getNombre());
+                    }
+                    case SIN_WHATSAPP -> {
+                        log.warn("📵 {} no tiene WhatsApp, marcando teléfono", numeroPrincipal);
+                        //telefonos.get(0).setTieneWhatsapp(false);
+                        telefonoRepository.save(telefonos.get(0));
+                    }
+                    case NUMERO_INVALIDO -> {
+                        log.warn("🚫 Número inválido: {}", numeroPrincipal);
+                        //telefonos.get(0).setTieneWhatsapp(false);
+                        telefonoRepository.save(telefonos.get(0));
+                    }
+                    default -> {
+                        log.warn("⚠️ No se pudo enviar WhatsApp: {}", resultado);
+                    }
+                }
+
+            } catch (Exception e) {
+                log.error("⚠️ Cliente creado, pero falló el envío de WhatsApp: {}", e.getMessage());
+            }
         }
+
+        // --- RESTO DE RELACIONES (sin cambios) ---
 
         if (dto.getVehiculos() != null) {
             final Clientes savedCliente = cliente;
             List<Vehiculos> vehiculos = dto.getVehiculos().stream()
                     .map(vDto -> {
                         Vehiculos vehiculo = modelMapper.map(vDto, Vehiculos.class);
-                        vehiculo.setClientes(savedCliente); // Vincula al padre (que ya tiene ID)
+                        vehiculo.setClientes(savedCliente);
                         return vehiculo;
                     })
                     .collect(Collectors.toList());
@@ -146,77 +188,84 @@ public class ClienteServicios {
 
             clienteExistente.setCedula_ruc(nuevaCedulaRuc);
         }
-        
+
         List<Cliente_Correos> correosExistentes = clienteExistente.getCorreos();
-    // CORRECCIÓN: Filtrar DTOs nulos o vacíos ANTES de procesar
-    List<CorreosRequestDTO> nuevosCorreosDto = (dto.getCorreos() == null) ? new ArrayList<>() :
-            dto.getCorreos().stream()
-               .filter(c -> c.getCorreo() != null && !c.getCorreo().trim().isEmpty())
-               .collect(Collectors.toList());
+        // CORRECCIÓN: Filtrar DTOs nulos o vacíos ANTES de procesar
+        List<CorreosRequestDTO> nuevosCorreosDto = (dto.getCorreos() == null) ? new ArrayList<>()
+                : dto.getCorreos().stream()
+                        .filter(c -> c.getCorreo() != null && !c.getCorreo().trim().isEmpty())
+                        .collect(Collectors.toList());
 
-    if (correosExistentes == null) correosExistentes = new ArrayList<>();
+        if (correosExistentes == null)
+            correosExistentes = new ArrayList<>();
 
-    // a) Eliminar correos
-    correosExistentes.removeIf(correoExistente -> nuevosCorreosDto.stream()
-            .noneMatch(nuevoCorreoDto -> nuevoCorreoDto.getCorreo().equals(correoExistente.getCorreo())));
+        // a) Eliminar correos
+        correosExistentes.removeIf(correoExistente -> nuevosCorreosDto.stream()
+                .noneMatch(nuevoCorreoDto -> nuevoCorreoDto.getCorreo().equals(correoExistente.getCorreo())));
 
-    // b) Añadir correos
-    for (CorreosRequestDTO nuevoCorreoDto : nuevosCorreosDto) {
-        if (correosExistentes.stream()
-                .noneMatch(correoExistente -> correoExistente.getCorreo().equals(nuevoCorreoDto.getCorreo()))) {
-            Cliente_Correos nuevoCorreoEntidad = modelMapper.map(nuevoCorreoDto, Cliente_Correos.class);
-            nuevoCorreoEntidad.setClientes(clienteExistente);
-            correosExistentes.add(nuevoCorreoEntidad);
+        // b) Añadir correos
+        for (CorreosRequestDTO nuevoCorreoDto : nuevosCorreosDto) {
+            if (correosExistentes.stream()
+                    .noneMatch(correoExistente -> correoExistente.getCorreo().equals(nuevoCorreoDto.getCorreo()))) {
+                Cliente_Correos nuevoCorreoEntidad = modelMapper.map(nuevoCorreoDto, Cliente_Correos.class);
+                nuevoCorreoEntidad.setClientes(clienteExistente);
+                correosExistentes.add(nuevoCorreoEntidad);
+            }
         }
-    }
-    
-    // 6. GESTIÓN DE TELÉFONOS
-    List<Cliente_Telefonos> telefonosExistentes = clienteExistente.getTelefonos();
-    // CORRECCIÓN: Filtrar DTOs nulos o vacíos ANTES de procesar
-    List<TelefonosRequestDTO> nuevosTelefonosDto = (dto.getTelefonos() == null) ? new ArrayList<>() :
-            dto.getTelefonos().stream()
-               .filter(t -> t.getTelefono() != null && !t.getTelefono().trim().isEmpty())
-               .collect(Collectors.toList());
 
-    if (telefonosExistentes == null) telefonosExistentes = new ArrayList<>();
+        // 6. GESTIÓN DE TELÉFONOS
+        List<Cliente_Telefonos> telefonosExistentes = clienteExistente.getTelefonos();
+        // CORRECCIÓN: Filtrar DTOs nulos o vacíos ANTES de procesar
+        List<TelefonosRequestDTO> nuevosTelefonosDto = (dto.getTelefonos() == null) ? new ArrayList<>()
+                : dto.getTelefonos().stream()
+                        .filter(t -> t.getTelefono() != null && !t.getTelefono().trim().isEmpty())
+                        .collect(Collectors.toList());
 
-    // a) Eliminar teléfonos
-    telefonosExistentes.removeIf(telefonoExistente -> nuevosTelefonosDto.stream()
-            .noneMatch(nuevoTelefonoDto -> nuevoTelefonoDto.getTelefono().equals(telefonoExistente.getTelefono())));
+        if (telefonosExistentes == null)
+            telefonosExistentes = new ArrayList<>();
 
-    // b) Añadir teléfonos
-    for (TelefonosRequestDTO nuevoTelefonoDto : nuevosTelefonosDto) {
-        if (telefonosExistentes.stream()
-                .noneMatch(telefonoExistente -> telefonoExistente.getTelefono().equals(nuevoTelefonoDto.getTelefono()))) {
-            Cliente_Telefonos nuevoTelefonoEntidad = modelMapper.map(nuevoTelefonoDto, Cliente_Telefonos.class);
-            nuevoTelefonoEntidad.setClientes(clienteExistente);
-            telefonosExistentes.add(nuevoTelefonoEntidad);
+        // a) Eliminar teléfonos
+        telefonosExistentes.removeIf(telefonoExistente -> nuevosTelefonosDto.stream()
+                .noneMatch(nuevoTelefonoDto -> nuevoTelefonoDto.getTelefono().equals(telefonoExistente.getTelefono())));
+
+        // b) Añadir teléfonos
+        for (TelefonosRequestDTO nuevoTelefonoDto : nuevosTelefonosDto) {
+            if (telefonosExistentes.stream()
+                    .noneMatch(telefonoExistente -> telefonoExistente.getTelefono()
+                            .equals(nuevoTelefonoDto.getTelefono()))) {
+                Cliente_Telefonos nuevoTelefonoEntidad = modelMapper.map(nuevoTelefonoDto, Cliente_Telefonos.class);
+                nuevoTelefonoEntidad.setClientes(clienteExistente);
+                telefonosExistentes.add(nuevoTelefonoEntidad);
+            }
         }
-    }
 
-    // 7. GESTIÓN DE DIRECCIONES
-    List<Cliente_Direcciones> direccionesExistentes = clienteExistente.getDirecciones();
-    // CORRECCIÓN: Filtrar DTOs nulos o vacíos ANTES de procesar
-    List<DireccionesRequestDTO> nuevasDireccionesDto = (dto.getDirecciones() == null) ? new ArrayList<>() :
-            dto.getDirecciones().stream()
-               .filter(d -> d.getDireccion() != null && !d.getDireccion().trim().isEmpty())
-               .collect(Collectors.toList());
+        // 7. GESTIÓN DE DIRECCIONES
+        List<Cliente_Direcciones> direccionesExistentes = clienteExistente.getDirecciones();
+        // CORRECCIÓN: Filtrar DTOs nulos o vacíos ANTES de procesar
+        List<DireccionesRequestDTO> nuevasDireccionesDto = (dto.getDirecciones() == null) ? new ArrayList<>()
+                : dto.getDirecciones().stream()
+                        .filter(d -> d.getDireccion() != null && !d.getDireccion().trim().isEmpty())
+                        .collect(Collectors.toList());
 
-    if (direccionesExistentes == null) direccionesExistentes = new ArrayList<>();
-    
-    // a) Eliminar direcciones
-    direccionesExistentes.removeIf(direccionExistente -> nuevasDireccionesDto.stream()
-            .noneMatch(nuevaDireccionDto -> nuevaDireccionDto.getDireccion().equals(direccionExistente.getDireccion())));
+        if (direccionesExistentes == null)
+            direccionesExistentes = new ArrayList<>();
 
-    // b) Añadir direcciones
-    for (DireccionesRequestDTO nuevaDireccionDto : nuevasDireccionesDto) {
-        if (direccionesExistentes.stream()
-                .noneMatch(direccionExistente -> direccionExistente.getDireccion().equals(nuevaDireccionDto.getDireccion()))) {
-            Cliente_Direcciones nuevaDireccionEntidad = modelMapper.map(nuevaDireccionDto, Cliente_Direcciones.class);
-            nuevaDireccionEntidad.setClientes(clienteExistente);
-            direccionesExistentes.add(nuevaDireccionEntidad);
+        // a) Eliminar direcciones
+        direccionesExistentes.removeIf(direccionExistente -> nuevasDireccionesDto.stream()
+                .noneMatch(nuevaDireccionDto -> nuevaDireccionDto.getDireccion()
+                        .equals(direccionExistente.getDireccion())));
+
+        // b) Añadir direcciones
+        for (DireccionesRequestDTO nuevaDireccionDto : nuevasDireccionesDto) {
+            if (direccionesExistentes.stream()
+                    .noneMatch(direccionExistente -> direccionExistente.getDireccion()
+                            .equals(nuevaDireccionDto.getDireccion()))) {
+                Cliente_Direcciones nuevaDireccionEntidad = modelMapper.map(nuevaDireccionDto,
+                        Cliente_Direcciones.class);
+                nuevaDireccionEntidad.setClientes(clienteExistente);
+                direccionesExistentes.add(nuevaDireccionEntidad);
+            }
         }
-    }
 
         Clientes clienteActualizado = clienteRepository.save(clienteExistente);
 
@@ -231,11 +280,12 @@ public class ClienteServicios {
         clienteRepository.deleteById(id);
     }
 
-    // ... (justo después del método deleteCliente, dentro de la clase ClienteServicios)
+    // ... (justo después del método deleteCliente, dentro de la clase
+    // ClienteServicios)
 
     @Transactional
     public void crearVehiculoParaCliente(VehiculosRequestDTO dto, Integer clienteId) {
-        
+
         // 1. Buscar al cliente que será el "padre" de este vehículo
         Clientes clienteExistente = clienteRepository.findById(clienteId)
                 .orElseThrow(() -> new RuntimeException("Cliente no encontrado con ID: " + clienteId));
@@ -245,9 +295,9 @@ public class ClienteServicios {
 
         // 3. ¡El paso más importante! Establecer la relación
         nuevoVehiculo.setClientes(clienteExistente);
-        
+
         // 4. Guardar la nueva entidad Vehiculo
-        //    (JPA se encargará de asignar el 'cliente_id' automáticamente)
+        // (JPA se encargará de asignar el 'cliente_id' automáticamente)
         vehiculoRepository.save(nuevoVehiculo);
     }
 }

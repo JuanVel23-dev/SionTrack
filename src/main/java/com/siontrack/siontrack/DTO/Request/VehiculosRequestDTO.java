@@ -24,7 +24,7 @@ public class VehiculosRequestDTO {
     private String tipo_motor;
     @Getter
     @Setter
-    private Integer kilometraje_actual;
+    private String kilometraje_actual;
     @Getter
     @Setter
     private Timestamp creado_en;
