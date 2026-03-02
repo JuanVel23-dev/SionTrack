@@ -1,0 +1,520 @@
+/* =====================================================
+   SIONTRACK - SELECTOR DE PAÍS PARA TELÉFONO
+   ===================================================== */
+
+/* Fila de teléfono */
+.telefono-fila {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+/* ===== SELECTOR DE PAÍS ===== */
+.pais-selector {
+    position: relative;
+    width: 160px;
+    min-width: 160px;
+    flex-shrink: 0;
+    z-index: 100;
+}
+
+.pais-selector.abierto {
+    z-index: 1000;
+}
+
+/* Botón principal */
+.pais-boton {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    height: 42px;
+    padding: 0 12px;
+    background-color: var(--bg-elevated);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    color: var(--fg-default);
+    font-size: 14px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.pais-boton:hover {
+    border-color: var(--fg-subtle);
+}
+
+.pais-boton.activo {
+    border-color: var(--accent-primary);
+}
+
+.pais-boton .pais-texto {
+    flex: 1;
+    text-align: left;
+    font-size: 13px;
+}
+
+.pais-boton .pais-flecha {
+    flex-shrink: 0;
+    opacity: 0.4;
+    transition: all 0.2s ease;
+}
+
+.pais-boton.activo .pais-flecha {
+    transform: rotate(180deg);
+    opacity: 1;
+    color: var(--accent-primary);
+}
+
+/* ===== DROPDOWN ===== */
+.pais-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    width: 220px;
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-8px);
+    transition: all 0.2s ease;
+    overflow: hidden;
+}
+
+.pais-selector.abierto .pais-dropdown {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+/* ===== BÚSQUEDA ===== */
+.pais-busqueda {
+    padding: 8px;
+    border-bottom: 1px solid var(--border-muted);
+}
+
+.pais-busqueda input {
+    width: 100%;
+    padding: 8px 10px;
+    background-color: var(--bg-elevated);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-sm);
+    color: var(--fg-default);
+    font-size: 13px;
+    font-family: inherit;
+    transition: border-color 0.2s ease;
+}
+
+.pais-busqueda input:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+}
+
+.pais-busqueda input::placeholder {
+    color: var(--fg-subtle);
+}
+
+/* ===== LISTA DE PAÍSES ===== */
+.pais-lista {
+    max-height: 240px;
+    overflow-y: auto;
+}
+
+.pais-lista::-webkit-scrollbar {
+    width: 4px;
+}
+
+.pais-lista::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.pais-lista::-webkit-scrollbar-thumb {
+    background-color: var(--border-default);
+    border-radius: 2px;
+}
+
+/* Grupo */
+.pais-grupo {
+    padding: 8px 12px 6px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--fg-subtle);
+    background-color: var(--bg-muted);
+}
+
+/* Opción */
+.pais-opcion {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 9px 12px;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+    font-size: 13px;
+}
+
+.pais-opcion:hover {
+    background-color: var(--bg-elevated);
+}
+
+.pais-opcion.seleccionado {
+    background-color: var(--accent-subtle);
+}
+
+.pais-opcion.oculto {
+    display: none;
+}
+
+.pais-opcion .op-codigo {
+    font-weight: 600;
+    color: var(--fg-default);
+    min-width: 45px;
+}
+
+.pais-opcion .op-nombre {
+    color: var(--fg-muted);
+}
+
+.pais-opcion.seleccionado .op-codigo {
+    color: var(--accent-primary);
+}
+
+/* Opción "Otro" */
+.pais-opcion.otro-opcion {
+    border-top: 1px solid var(--border-muted);
+    margin-top: 4px;
+    color: var(--fg-muted);
+}
+
+.pais-opcion.otro-opcion:hover {
+    background-color: var(--bg-elevated);
+}
+
+.pais-opcion.otro-opcion .op-codigo {
+    color: var(--accent-primary);
+}
+
+/* ===== PREFIJO PERSONALIZADO ===== */
+.prefijo-container {
+    display: none;
+    width: 80px;
+    flex-shrink: 0;
+}
+
+.prefijo-container.visible {
+    display: block;
+}
+
+.prefijo-container .prefijo-input {
+    width: 100%;
+    height: 42px;
+    padding: 0 10px;
+    background-color: var(--bg-elevated);
+    border: 1px solid var(--accent-primary);
+    border-radius: var(--radius-md);
+    color: var(--accent-primary);
+    font-size: 15px;
+    font-weight: 600;
+    font-family: inherit;
+    text-align: center;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.prefijo-container .prefijo-input:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px hsla(45, 93%, 58%, 0.15);
+}
+
+.prefijo-container .prefijo-input.error {
+    border-color: var(--error);
+    color: var(--error);
+}
+
+/* ===== MODO "OTRO" - Prefijo personalizado ===== */
+/* Ocultar selector y mostrar solo prefijo + input */
+.telefono-fila.modo-otro .pais-selector {
+    width: 100px;
+    min-width: 100px;
+}
+
+.telefono-fila.modo-otro .pais-boton {
+    border-color: var(--accent-muted);
+}
+
+.telefono-fila.modo-otro .pais-boton .codigo-mostrar {
+    color: var(--accent-primary);
+}
+
+.telefono-fila.modo-otro .prefijo-container {
+    display: block;
+    width: 85px;
+}
+
+.telefono-fila.modo-otro .prefijo-container .prefijo-input {
+    background-color: var(--bg-surface);
+}
+
+/* ===== INPUT NÚMERO ===== */
+.telefono-fila .numero-input {
+    flex: 1;
+    min-width: 120px;
+    height: 44px;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 600px) {
+    .telefono-fila {
+        flex-wrap: wrap;
+    }
+    
+    .pais-selector {
+        width: 100%;
+        min-width: 100%;
+    }
+    
+    .pais-dropdown {
+        width: 100%;
+    }
+    
+    .prefijo-container.visible {
+        width: 100%;
+    }
+    
+    .prefijo-container .prefijo-input {
+        width: 100%;
+    }
+    
+    .telefono-fila .numero-input {
+        width: 100%;
+        flex: none;
+    }
+}
+
+/* =====================================================
+   ESTILOS PARA SELECT NATIVO (Tipo de Cliente, etc.)
+   ===================================================== */
+.form-select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a1a1aa' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 36px;
+}
+
+.form-select option {
+    background-color: var(--bg-surface);
+    color: var(--fg-default);
+    padding: 12px 16px;
+}
+
+.form-select option:hover,
+.form-select option:focus,
+.form-select option:checked {
+    background-color: var(--accent-primary);
+    color: var(--bg-surface);
+}
+
+.form-select optgroup {
+    background-color: var(--bg-muted);
+    color: var(--fg-muted);
+    font-weight: 600;
+    font-style: normal;
+}
+
+/* ============================================
+   SELECT NATIVO - ESTILOS COMPLETOS
+   ============================================ */
+
+/* Opciones del select */
+.form-select option {
+    background-color: var(--bg-surface);
+    color: var(--fg-default);
+    padding: 12px 16px;
+    font-size: 14px;
+    line-height: 1.6;
+    border-bottom: 1px solid var(--border-muted);
+}
+
+.form-select option:hover,
+.form-select option:focus {
+    background-color: var(--accent-primary) !important;
+    color: #1a1a1a !important;
+}
+
+.form-select option:checked {
+    background: linear-gradient(0deg, var(--accent-primary) 0%, var(--accent-primary) 100%);
+    background-color: var(--accent-primary) !important;
+    color: #1a1a1a !important;
+    font-weight: 600;
+}
+
+.form-select option:disabled {
+    color: var(--fg-subtle);
+    font-style: italic;
+    background-color: var(--bg-muted);
+}
+
+/* Optgroup mejorado */
+.form-select optgroup {
+    background-color: var(--bg-elevated);
+    color: var(--accent-primary);
+    font-weight: 700;
+    font-style: normal;
+    padding: 10px 14px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-top: 1px solid var(--border-default);
+    margin-top: 4px;
+}
+
+/* Flecha dorada */
+.form-select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23d4af37' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 12px center !important;
+    background-size: 14px !important;
+}
+
+/* Focus y hover */
+.form-select:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px hsla(45, 93%, 58%, 0.15);
+}
+
+.form-select:hover:not(:disabled) {
+    border-color: var(--fg-subtle);
+}
+
+/* Firefox */
+@-moz-document url-prefix() {
+    .form-select option {
+        padding: 10px 14px;
+    }
+    
+    .form-select option:checked {
+        background-color: var(--accent-primary) !important;
+    }
+}
+
+/* ============================================
+   SELECT PERSONALIZADO (CUSTOM DROPDOWN)
+   ============================================ */
+.custom-select {
+    position: relative;
+    width: 100%;
+}
+
+.custom-select-btn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    height: 42px;
+    padding: 0 14px;
+    background-color: var(--input-bg);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    color: var(--fg-default);
+    font-size: 14px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.custom-select-btn:hover {
+    border-color: var(--fg-subtle);
+}
+
+.custom-select-btn.activo {
+    border-color: var(--accent-primary);
+}
+
+.custom-select-btn .select-texto {
+    flex: 1;
+    text-align: left;
+}
+
+.custom-select-btn .select-texto.placeholder {
+    color: var(--fg-subtle);
+}
+
+.custom-select-btn .select-flecha {
+    flex-shrink: 0;
+    color: var(--fg-muted);
+    transition: transform 0.2s ease;
+}
+
+.custom-select-btn.activo .select-flecha {
+    transform: rotate(180deg);
+    color: var(--accent-primary);
+}
+
+/* Dropdown */
+.custom-select-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-8px);
+    transition: all 0.2s ease;
+}
+
+.custom-select.abierto .custom-select-dropdown {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+/* Opciones */
+.custom-select-option {
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-size: 14px;
+}
+
+.custom-select-option:first-child {
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+
+.custom-select-option:last-child {
+    border-radius: 0 0 var(--radius-md) var(--radius-md);
+}
+
+.custom-select-option:hover {
+    background-color: var(--bg-elevated);
+}
+
+.custom-select-option.seleccionado {
+    background-color: var(--accent-subtle);
+    color: var(--accent-primary);
+    font-weight: 500;
+}
+
+.custom-select-option.disabled {
+    color: var(--fg-subtle);
+    cursor: default;
+    font-size: 13px;
+}
+
+.custom-select-option.disabled:hover {
+    background-color: transparent;
+}

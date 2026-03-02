@@ -1,408 +1,371 @@
 /**
- * SionTrack - Main JavaScript
- * Maneja la navegación, sidebar y funcionalidad global
+ * SionTrack v2.0 - Main JavaScript
  */
 
-// ============================================
-// CONSTANTES Y CONFIGURACIÓN
-// ============================================
-const CONFIG = {
-  sidebarStorageKey: 'siontrack_sidebar_state',
-  transitionDuration: 250,
-  debounceDelay: 300
+var CONFIG = {
+  themeStorageKey: 'siontrack_theme',
+  toastDuration: 4000
 };
 
 // ============================================
-// UTILIDADES GLOBALES
+// TOAST NOTIFICATIONS
 // ============================================
-
-/**
- * Debounce function para optimizar eventos
- */
-function debounce(func, wait) {
-  let timeout;
-  return function executedFunction(...args) {
-    const later = () => {
-      clearTimeout(timeout);
-      func(...args);
-    };
-    clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
-  };
-}
-
-/**
- * Muestra notificación toast
- */
-function showToast(message, type = 'info', duration = 3000) {
-  // Remover toast anterior si existe
-  const existingToast = document.querySelector('.toast');
-  if (existingToast) {
-    existingToast.remove();
+function showToast(message, type, duration) {
+  type = type || 'success';
+  duration = duration || CONFIG.toastDuration;
+  
+  var container = document.getElementById('toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'toast-container';
+    container.className = 'toast-container';
+    document.body.appendChild(container);
   }
 
-  const toast = document.createElement('div');
-  toast.className = `toast toast-${type}`;
-  toast.innerHTML = `
-    <span class="toast-icon">${getToastIcon(type)}</span>
-    <span class="toast-message">${message}</span>
-  `;
-
-  document.body.appendChild(toast);
-
-  // Trigger animation
-  setTimeout(() => toast.classList.add('show'), 10);
-
-  // Auto remove
-  setTimeout(() => {
-    toast.classList.remove('show');
-    setTimeout(() => toast.remove(), 300);
-  }, duration);
-}
-
-function getToastIcon(type) {
-  const icons = {
-    success: '✓',
-    error: '✕',
-    warning: '⚠',
-    info: 'ℹ'
+  var icons = {
+    success: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+    delete: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>',
+    error: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>'
   };
-  return icons[type] || icons.info;
-}
 
-/**
- * Muestra loading overlay
- */
-function showLoading() {
-  const overlay = document.createElement('div');
-  overlay.className = 'loading-overlay';
-  overlay.id = 'global-loading';
-  overlay.innerHTML = '<div class="spinner spinner-lg"></div>';
-  document.body.appendChild(overlay);
-}
+  var toast = document.createElement('div');
+  toast.className = 'toast toast-' + type;
+  toast.innerHTML = 
+    '<span class="toast-icon">' + (icons[type] || icons.success) + '</span>' +
+    '<span class="toast-message">' + message + '</span>' +
+    '<button class="toast-close" type="button" aria-label="Cerrar">' +
+      '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+        '<line x1="18" y1="6" x2="6" y2="18"></line>' +
+        '<line x1="6" y1="6" x2="18" y2="18"></line>' +
+      '</svg>' +
+    '</button>' +
+    '<div class="toast-progress"><div class="toast-progress-bar"></div></div>';
 
-function hideLoading() {
-  const overlay = document.getElementById('global-loading');
-  if (overlay) {
-    overlay.remove();
-  }
-}
+  container.appendChild(toast);
 
-/**
- * Confirmación moderna para acciones destructivas
- */
-function confirmAction(message, onConfirm) {
-  const modal = document.createElement('div');
-  modal.className = 'confirm-modal';
-  modal.innerHTML = `
-    <div class="confirm-backdrop"></div>
-    <div class="confirm-dialog">
-      <div class="confirm-icon">⚠️</div>
-      <h3 class="confirm-title">Confirmar Acción</h3>
-      <p class="confirm-message">${message}</p>
-      <div class="confirm-actions">
-        <button class="btn btn-secondary" data-action="cancel">Cancelar</button>
-        <button class="btn btn-danger" data-action="confirm">Confirmar</button>
-      </div>
-    </div>
-  `;
+  var closeBtn = toast.querySelector('.toast-close');
+  var progressBar = toast.querySelector('.toast-progress-bar');
+  var timeoutId = null;
+  var startTime = Date.now();
+  var remainingTime = duration;
 
-  document.body.appendChild(modal);
-  setTimeout(() => modal.classList.add('show'), 10);
-
-  // Event listeners
-  modal.querySelector('[data-action="cancel"]').addEventListener('click', () => {
-    closeModal(modal);
+  requestAnimationFrame(function() {
+    progressBar.classList.add('animate');
   });
 
-  modal.querySelector('[data-action="confirm"]').addEventListener('click', () => {
-    closeModal(modal);
-    if (typeof onConfirm === 'function') {
-      onConfirm();
+  function closeToast() {
+    if (timeoutId) clearTimeout(timeoutId);
+    toast.classList.add('toast-exit');
+    setTimeout(function() {
+      if (toast.parentNode) toast.remove();
+    }, 250);
+  }
+
+  closeBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    closeToast();
+  });
+
+  timeoutId = setTimeout(closeToast, duration);
+
+  toast.addEventListener('mouseenter', function() {
+    clearTimeout(timeoutId);
+    timeoutId = null;
+    var elapsed = Date.now() - startTime;
+    remainingTime = Math.max(0, duration - elapsed);
+    progressBar.classList.add('paused');
+  });
+
+  toast.addEventListener('mouseleave', function() {
+    if (remainingTime > 0) {
+      progressBar.classList.remove('paused');
+      startTime = Date.now() - (duration - remainingTime);
+      timeoutId = setTimeout(closeToast, remainingTime);
+    } else {
+      closeToast();
     }
   });
 
-  modal.querySelector('.confirm-backdrop').addEventListener('click', () => {
-    closeModal(modal);
-  });
-
-  function closeModal(modal) {
-    modal.classList.remove('show');
-    setTimeout(() => modal.remove(), 300);
-  }
+  return toast;
 }
 
 // ============================================
-// SIDEBAR MANAGEMENT
+// THEME MANAGER
 // ============================================
-class SidebarManager {
-  constructor() {
+var ThemeManager = {
+  init: function() {
+    var saved = localStorage.getItem(CONFIG.themeStorageKey);
+    if (saved) this.setTheme(saved, false);
+
+    var btn = document.getElementById('theme-toggle');
+    if (btn) btn.addEventListener('click', this.toggle.bind(this));
+  },
+
+  getTheme: function() {
+    return document.documentElement.getAttribute('data-theme') || 'dark';
+  },
+
+  setTheme: function(theme, notify) {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem(CONFIG.themeStorageKey, theme);
+    if (notify !== false) {
+      showToast('Tema ' + (theme === 'dark' ? 'oscuro' : 'claro') + ' activado');
+    }
+  },
+
+  toggle: function() {
+    this.setTheme(this.getTheme() === 'dark' ? 'light' : 'dark');
+  }
+};
+
+// ============================================
+// SIDEBAR MANAGER
+// ============================================
+var SidebarManager = {
+  init: function() {
     this.sidebar = document.getElementById('sidebar');
-    this.menuToggle = document.getElementById('menu-toggle');
-    this.sidebarClose = document.getElementById('sidebar-close');
     this.overlay = document.getElementById('sidebar-overlay');
-    this.mainWrapper = document.querySelector('.main-wrapper');
-    
     if (!this.sidebar) return;
-    
-    this.init();
-  }
 
-  init() {
-    // Restaurar estado del sidebar
-    this.restoreState();
-    
-    // Event listeners
-    this.menuToggle?.addEventListener('click', () => this.toggle());
-    this.sidebarClose?.addEventListener('click', () => this.close());
-    this.overlay?.addEventListener('click', () => this.close());
-    
-    // Cerrar en ESC
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && this.isOpen()) {
-        this.close();
-      }
-    });
+    var menuBtn = document.getElementById('menu-toggle');
+    var closeBtn = document.getElementById('sidebar-close');
 
-    // Responsive handling
-    this.handleResize();
-    window.addEventListener('resize', debounce(() => this.handleResize(), CONFIG.debounceDelay));
-    
-    // Marcar link activo
+    if (menuBtn) menuBtn.addEventListener('click', this.toggle.bind(this));
+    if (closeBtn) closeBtn.addEventListener('click', this.close.bind(this));
+    if (this.overlay) this.overlay.addEventListener('click', this.close.bind(this));
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') this.close();
+    }.bind(this));
+
     this.setActiveLink();
-  }
+  },
 
-  toggle() {
-    if (this.isOpen()) {
-      this.close();
-    } else {
-      this.open();
-    }
-  }
+  toggle: function() {
+    this.sidebar.classList.toggle('open');
+    if (this.overlay) this.overlay.classList.toggle('active');
+  },
 
-  open() {
-    this.sidebar.classList.add('open');
-    this.overlay?.classList.add('active');
-    document.body.style.overflow = 'hidden';
-    this.saveState(true);
-  }
-
-  close() {
+  close: function() {
     this.sidebar.classList.remove('open');
-    this.overlay?.classList.remove('active');
-    document.body.style.overflow = '';
-    this.saveState(false);
-  }
+    if (this.overlay) this.overlay.classList.remove('active');
+  },
 
-  isOpen() {
-    return this.sidebar.classList.contains('open');
-  }
-
-  saveState(isOpen) {
-    // Solo guardar en desktop
-    if (window.innerWidth > 768) {
-      localStorage.setItem(CONFIG.sidebarStorageKey, isOpen);
-    }
-  }
-
-  restoreState() {
-    // Solo restaurar en desktop
-    if (window.innerWidth > 768) {
-      const savedState = localStorage.getItem(CONFIG.sidebarStorageKey);
-      if (savedState === 'true') {
-        this.open();
-      }
-    }
-  }
-
-  handleResize() {
-    if (window.innerWidth <= 768) {
-      // En móvil, siempre cerrado por defecto
-      document.body.style.overflow = '';
-    } else {
-      // En desktop, restaurar estado
-      if (this.isOpen()) {
-        document.body.style.overflow = '';
-      }
-    }
-  }
-
-  setActiveLink() {
-    const currentPath = window.location.pathname;
-    const links = this.sidebar.querySelectorAll('.nav-link');
+  setActiveLink: function() {
+    var path = window.location.pathname;
+    var links = this.sidebar.querySelectorAll('.nav-link');
     
-    links.forEach(link => {
-      const href = link.getAttribute('href');
-      if (href && currentPath.includes(href)) {
+    links.forEach(function(link) {
+      link.classList.remove('active');
+      var href = link.getAttribute('href');
+      if (href && path.indexOf(href) !== -1 && href !== '/') {
         link.classList.add('active');
       }
     });
+
+    if (path === '/' || path.indexOf('dashboard') !== -1) {
+      var dash = this.sidebar.querySelector('[href*="dashboard"]');
+      if (dash) {
+        links.forEach(function(l) { l.classList.remove('active'); });
+        dash.classList.add('active');
+      }
+    }
   }
+};
+
+// ============================================
+// CONVERTIR ALERTAS THYMELEAF A TOASTS
+// ============================================
+function convertAlertsToToasts() {
+  var mainContent = document.querySelector('.main-content');
+  if (!mainContent) return;
+  
+  // Alertas de éxito (verde)
+  var successAlerts = mainContent.querySelectorAll('.alert.alert-success');
+  successAlerts.forEach(function(alert) {
+    var titleEl = alert.querySelector('.alert-title');
+    if (!titleEl) return;
+    
+    var title = titleEl.textContent.trim().toLowerCase();
+    if (title.indexOf('éxito') === -1 && title.indexOf('exito') === -1) return;
+    
+    var messageEl = alert.querySelector('.alert-message');
+    if (messageEl) {
+      var message = messageEl.textContent.trim();
+      if (message) {
+        alert.style.display = 'none';
+        setTimeout(function() {
+          showToast(message, 'success');
+        }, 100);
+      }
+    }
+  });
+  
+  // Alertas de eliminación (roja)
+  var deleteAlerts = mainContent.querySelectorAll('.alert.alert-delete');
+  deleteAlerts.forEach(function(alert) {
+    var messageEl = alert.querySelector('.alert-message');
+    if (messageEl) {
+      var message = messageEl.textContent.trim();
+      if (message) {
+        alert.style.display = 'none';
+        setTimeout(function() {
+          showToast(message, 'delete');
+        }, 100);
+      }
+    }
+  });
+  
+  // Alertas de error
+  var errorAlerts = mainContent.querySelectorAll('.alert.alert-error, .alert.alert-danger');
+  errorAlerts.forEach(function(alert) {
+    var titleEl = alert.querySelector('.alert-title');
+    if (!titleEl) return;
+    
+    var title = titleEl.textContent.trim().toLowerCase();
+    if (title.indexOf('error') === -1) return;
+    
+    var messageEl = alert.querySelector('.alert-message');
+    if (messageEl) {
+      var message = messageEl.textContent.trim();
+      if (message) {
+        alert.style.display = 'none';
+        setTimeout(function() {
+          showToast(message, 'error');
+        }, 100);
+      }
+    }
+  });
+}
+
+// ============================================
+// CONFIRM MODAL
+// ============================================
+function confirmAction(message, onConfirm, options) {
+  options = options || {};
+  
+  var modal = document.createElement('div');
+  modal.className = 'confirm-modal';
+  modal.innerHTML = 
+    '<div class="confirm-backdrop"></div>' +
+    '<div class="confirm-dialog">' +
+      '<h3 class="confirm-title">' + (options.title || 'Confirmar') + '</h3>' +
+      '<p class="confirm-message">' + message + '</p>' +
+      '<div class="confirm-actions">' +
+        '<button class="btn btn-secondary" data-action="cancel">' + (options.cancelText || 'Cancelar') + '</button>' +
+        '<button class="btn btn-' + (options.type === 'danger' ? 'danger' : 'primary') + '" data-action="confirm">' + (options.confirmText || 'Confirmar') + '</button>' +
+      '</div>' +
+    '</div>';
+
+  document.body.appendChild(modal);
+  requestAnimationFrame(function() { modal.classList.add('show'); });
+
+  function close() {
+    modal.classList.remove('show');
+    setTimeout(function() { modal.remove(); }, 300);
+  }
+
+  modal.querySelector('[data-action="cancel"]').addEventListener('click', close);
+  modal.querySelector('.confirm-backdrop').addEventListener('click', close);
+  modal.querySelector('[data-action="confirm"]').addEventListener('click', function() {
+    close();
+    if (onConfirm) onConfirm();
+  });
+  
+  document.addEventListener('keydown', function handler(e) {
+    if (e.key === 'Escape') {
+      close();
+      document.removeEventListener('keydown', handler);
+    }
+  });
+}
+
+// ============================================
+// DELETE CONFIRMATIONS
+// ============================================
+function setupDeleteConfirmations() {
+  var btns = document.querySelectorAll('.btn-delete, .btn-confirm-delete, [data-confirm]');
+  btns.forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      e.preventDefault();
+      var href = this.getAttribute('href');
+      var msg = this.dataset.confirm || '¿Estás seguro de eliminar este elemento?';
+      
+      confirmAction(msg, function() {
+        if (href) window.location.href = href;
+      }, { title: 'Confirmar Eliminación', confirmText: 'Eliminar', type: 'danger' });
+    });
+  });
 }
 
 // ============================================
 // FORM VALIDATION
 // ============================================
-class FormValidator {
-  constructor(form) {
-    this.form = form;
-    this.init();
-  }
-
-  init() {
-    const inputs = this.form.querySelectorAll('input, select, textarea');
-    
-    inputs.forEach(input => {
-      // Validación en tiempo real
-      input.addEventListener('blur', () => this.validateField(input));
-      input.addEventListener('input', debounce(() => {
-        if (input.classList.contains('error')) {
-          this.validateField(input);
+function setupFormValidation() {
+  var forms = document.querySelectorAll('form[data-validate]');
+  forms.forEach(function(form) {
+    form.addEventListener('submit', function(e) {
+      var valid = true;
+      form.querySelectorAll('[required]').forEach(function(f) {
+        if (!f.value.trim()) {
+          valid = false;
+          f.classList.add('error');
+        } else {
+          f.classList.remove('error');
         }
-      }, CONFIG.debounceDelay));
-    });
-
-    // Validación al enviar
-    this.form.addEventListener('submit', (e) => {
-      if (!this.validateForm()) {
+      });
+      if (!valid) {
         e.preventDefault();
-        showToast('Por favor corrige los errores del formulario', 'error');
+        showToast('Por favor completa los campos requeridos', 'error');
       }
-    });
-  }
-
-  validateField(field) {
-    const value = field.value.trim();
-    const fieldName = field.name;
-    let isValid = true;
-    let errorMessage = '';
-
-    // Required validation
-    if (field.hasAttribute('required') && !value) {
-      isValid = false;
-      errorMessage = 'Este campo es obligatorio';
-    }
-
-    // Email validation
-    if (field.type === 'email' && value) {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(value)) {
-        isValid = false;
-        errorMessage = 'Ingresa un email válido';
-      }
-    }
-
-    // Number validation
-    if (field.type === 'number' && value) {
-      if (field.hasAttribute('min') && parseFloat(value) < parseFloat(field.min)) {
-        isValid = false;
-        errorMessage = `El valor mínimo es ${field.min}`;
-      }
-      if (field.hasAttribute('max') && parseFloat(value) > parseFloat(field.max)) {
-        isValid = false;
-        errorMessage = `El valor máximo es ${field.max}`;
-      }
-    }
-
-    this.setFieldState(field, isValid, errorMessage);
-    return isValid;
-  }
-
-  validateForm() {
-    const inputs = this.form.querySelectorAll('input[required], select[required], textarea[required]');
-    let isValid = true;
-
-    inputs.forEach(input => {
-      if (!this.validateField(input)) {
-        isValid = false;
-      }
-    });
-
-    return isValid;
-  }
-
-  setFieldState(field, isValid, errorMessage) {
-    const formGroup = field.closest('.form-group');
-    let errorElement = formGroup?.querySelector('.form-error');
-
-    if (isValid) {
-      field.classList.remove('error');
-      field.classList.add('success');
-      if (errorElement) {
-        errorElement.remove();
-      }
-    } else {
-      field.classList.add('error');
-      field.classList.remove('success');
-      
-      if (!errorElement) {
-        errorElement = document.createElement('span');
-        errorElement.className = 'form-error';
-        field.parentNode.appendChild(errorElement);
-      }
-      errorElement.textContent = errorMessage;
-    }
-  }
-}
-
-// ============================================
-// DELETE CONFIRMATION
-// ============================================
-function setupDeleteConfirmations() {
-  document.querySelectorAll('.btn-delete, [data-confirm]').forEach(button => {
-    button.addEventListener('click', function(e) {
-      e.preventDefault();
-      const message = this.dataset.confirm || '¿Estás seguro de que deseas eliminar este elemento?';
-      const href = this.getAttribute('href');
-      
-      confirmAction(message, () => {
-        if (href) {
-          showLoading();
-          window.location.href = href;
-        }
-      });
     });
   });
 }
 
 // ============================================
-// INICIALIZACIÓN
+// TABLE FILTER
 // ============================================
-document.addEventListener('DOMContentLoaded', () => {
-  // Inicializar sidebar
-  new SidebarManager();
+function setupTableFilter() {
+  var search = document.getElementById('searchInput');
+  var filter = document.getElementById('filterTipo');
+  var rows = document.querySelectorAll('.table tbody tr.data-row');
 
-  // Inicializar validación de formularios
-  document.querySelectorAll('form[data-validate]').forEach(form => {
-    new FormValidator(form);
-  });
+  if (!search && !filter) return;
 
-  // Setup delete confirmations
+  function doFilter() {
+    var term = search ? search.value.toLowerCase() : '';
+    var tipo = filter ? filter.value : '';
+
+    rows.forEach(function(row) {
+      var nombre = (row.children[1] ? row.children[1].textContent : '').toLowerCase();
+      var cedula = (row.children[2] ? row.children[2].textContent : '').toLowerCase();
+      var rowTipo = row.dataset.tipo || '';
+
+      var matchSearch = nombre.indexOf(term) !== -1 || cedula.indexOf(term) !== -1;
+      var matchTipo = !tipo || rowTipo === tipo;
+
+      row.classList.toggle('hidden', !(matchSearch && matchTipo));
+    });
+  }
+
+  if (search) search.addEventListener('input', doFilter);
+  if (filter) filter.addEventListener('change', doFilter);
+}
+
+// ============================================
+// INIT
+// ============================================
+document.addEventListener('DOMContentLoaded', function() {
+  ThemeManager.init();
+  SidebarManager.init();
+  convertAlertsToToasts();
   setupDeleteConfirmations();
-
-  // Lazy loading de imágenes
-  if ('IntersectionObserver' in window) {
-    const imageObserver = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          const img = entry.target;
-          img.src = img.dataset.src;
-          img.classList.remove('lazy');
-          imageObserver.unobserve(img);
-        }
-      });
-    });
-
-    document.querySelectorAll('img.lazy').forEach(img => imageObserver.observe(img));
-  }
-
-  console.log('🚀 SionTrack initialized');
+  setupFormValidation();
+  setupTableFilter();
 });
 
-// Exponer funciones globales
 window.SionTrack = {
-  showToast,
-  showLoading,
-  hideLoading,
-  confirmAction
+  showToast: showToast,
+  confirmAction: confirmAction,
+  ThemeManager: ThemeManager
 };

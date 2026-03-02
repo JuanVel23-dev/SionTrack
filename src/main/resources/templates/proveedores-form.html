@@ -3,11 +3,20 @@
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/base}">
 
+<th:block layout:fragment="customCSS">
+    <link th:href="@{/css/telefono-selector.css}" rel="stylesheet">
+</th:block>
+
 <th:block layout:fragment="content">
-    
-    <div class="card">
+    <div class="card animate-in">
         <div class="card-header">
             <h2 class="card-title">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="1" y="3" width="15" height="13"></rect>
+                    <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+                    <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                    <circle cx="18.5" cy="18.5" r="2.5"></circle>
+                </svg>
                 <span th:if="${proveedorId == null}">Nuevo Proveedor</span>
                 <span th:if="${proveedorId != null}">Editar Proveedor</span>
             </h2>
@@ -16,11 +25,18 @@
         <form th:object="${proveedor}"
               th:action="@{/web/proveedores/guardar}"
               method="post"
-              data-validate> <input type="hidden" name="proveedorId" th:value="${proveedorId}" />
+              id="proveedorForm">
+
+            <input type="hidden" name="proveedorId" th:value="${proveedorId}" />
 
             <div class="card-body">
+                <!-- Información del Proveedor -->
                 <h3 class="form-section-title">
-                    <i class="fas fa-truck"></i> Información del Proveedor
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                    </svg>
+                    Información del Proveedor
                 </h3>
 
                 <div class="form-group">
@@ -30,93 +46,132 @@
                            th:field="*{nombre}"
                            class="form-input"
                            required
-                           placeholder="Ej: Proveedor S.A."
-                           aria-label="Nombre del proveedor">
+                           placeholder="Ej: Proveedor S.A.">
                     <span class="form-help">Nombre legal o comercial del proveedor.</span>
                 </div>
 
-                <div class="form-grid">
-                    
-                    <div class="form-group">
-                        <label for="telefono" class="form-label">Teléfono</label>
-                        <input type="tel"
-                               id="telefono"
-                               th:field="*{telefono}"
-                               class="form-input"
-                               placeholder="Ej: 022123456"
-                               aria-label="Teléfono">
-                    </div>
+                <div class="divider"></div>
 
-                    <div class="form-group">
-                        <label for="email" class="form-label">Email</label>
-                        <input type="email"
-                               id="email"
-                               th:field="*{email}"
-                               class="form-input"
-                               placeholder="Ej: contacto@proveedor.com"
-                               aria-label="Email">
+                <!-- Teléfono -->
+                <h3 class="form-section-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                    </svg>
+                    Teléfono
+                </h3>
+
+                <div class="form-group">
+                    <label class="form-label required">Número de Teléfono</label>
+                    <div id="telefonos-container">
+                        <div class="telefono-fila">
+                            <div class="pais-selector">
+                                <button type="button" class="pais-boton">
+                                    <span class="codigo-mostrar">+57</span>
+                                    <span class="pais-nombre-mostrar">Colombia</span>
+                                    <svg class="pais-flecha" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="6 9 12 15 18 9"></polyline>
+                                    </svg>
+                                </button>
+                                <div class="pais-dropdown">
+                                    <div class="pais-busqueda">
+                                        <input type="text" placeholder="Buscar país..." />
+                                    </div>
+                                    <div class="pais-lista"></div>
+                                </div>
+                                <input type="hidden" class="pais-valor" value="+57" />
+                            </div>
+                            <div class="prefijo-container">
+                                <input type="text" class="prefijo-input" placeholder="+00" maxlength="5" />
+                            </div>
+                            <input type="tel"
+                                   id="telefono"
+                                   th:field="*{telefono}"
+                                   class="form-input numero-input"
+                                   required
+                                   maxlength="10"
+                                   placeholder="3001234567">
+                        </div>
                     </div>
                 </div>
 
                 <div class="divider"></div>
 
+                <!-- Email -->
                 <h3 class="form-section-title">
-                    <i class="fas fa-user-tie"></i> Contacto Adicional
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                        <polyline points="22,6 12,13 2,6"></polyline>
+                    </svg>
+                    Correo Electrónico
                 </h3>
 
                 <div class="form-group">
-                    <label for="direccion" class="form-label">Dirección</label>
+                    <label for="email" class="form-label required">Email</label>
+                    <input type="email"
+                           id="email"
+                           th:field="*{email}"
+                           class="form-input input-correo"
+                           required
+                           placeholder="Ej: contacto@proveedor.com">
+                </div>
+
+                <div class="divider"></div>
+
+                <!-- Contacto Adicional -->
+                <h3 class="form-section-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                    Contacto Adicional
+                </h3>
+
+                <div class="form-group">
+                    <label for="direccion" class="form-label required">Dirección</label>
                     <input type="text"
                            id="direccion"
                            th:field="*{direccion}"
                            class="form-input"
-                           placeholder="Ej: Av. Principal 123, Quito"
-                           aria-label="Dirección">
+                           required
+                           placeholder="Ej: Av. Principal 123, Ciudad">
                 </div>
 
                 <div class="form-group">
-                    <label for="nombre_contacto" class="form-label">Nombre de Contacto</label>
+                    <label for="nombre_contacto" class="form-label required">Nombre de Contacto</label>
                     <input type="text"
                            id="nombre_contacto"
                            th:field="*{nombre_contacto}"
                            class="form-input"
-                           placeholder="Ej: Ana López"
-                           aria-label="Nombre de Contacto">
+                           required
+                           placeholder="Ej: Ana López">
                     <span class="form-help">Persona de contacto dentro de la empresa proveedora.</span>
                 </div>
-
             </div>
 
             <div class="card-footer">
                 <a th:href="@{/web/proveedores}" class="btn btn-secondary">
-                    <i class="fas fa-times"></i>
-                    Cancelar
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                    <span>Cancelar</span>
                 </a>
                 <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-save"></i>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                        <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                        <polyline points="7 3 7 8 15 8"></polyline>
+                    </svg>
                     <span th:if="${proveedorId == null}">Crear Proveedor</span>
                     <span th:if="${proveedorId != null}">Guardar Cambios</span>
                 </button>
             </div>
         </form>
     </div>
-    
-    <th:block layout:fragment="customCSS">
-        <style>
-            .form-section-title {
-                color: var(--accent-primary);
-                margin-bottom: var(--spacing-lg);
-                border-bottom: 1px solid var(--border-color);
-                padding-bottom: var(--spacing-sm);
-                font-size: 1.15rem;
-            }
-            .form-grid {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-                gap: var(--spacing-lg);
-            }
-        </style>
-    </th:block>
-    
 </th:block>
+
+<th:block layout:fragment="customJS">
+    <script th:src="@{/js/proveedores-telefono.js}"></script>
+</th:block>
+
 </html>

@@ -3,14 +3,12 @@ package com.siontrack.siontrack.controllers;
 import org.modelmapper.ModelMapper; 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*; 
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.util.List;
 
-// DTO Imports
 import com.siontrack.siontrack.DTO.Request.ProveedoresRequestDTO;
 import com.siontrack.siontrack.DTO.Response.ProveedoresResponseDTO;
-
-// Service Import
 import com.siontrack.siontrack.services.ProveedoresService;
 
 @Controller
@@ -51,18 +49,23 @@ public class ProveedoresViewController {
     @PostMapping("/proveedores/guardar")
     public String guardarProveedor(
             @RequestParam(value = "proveedorId", required = false) Integer proveedorId, 
-            @ModelAttribute("proveedor") ProveedoresRequestDTO proveedorDtoDelFormulario) {
+            @ModelAttribute("proveedor") ProveedoresRequestDTO proveedorDtoDelFormulario,
+            RedirectAttributes redirectAttributes) {
+        
         if (proveedorId == null) {
             proveedoresService.crearProveedor(proveedorDtoDelFormulario);
+            redirectAttributes.addFlashAttribute("successMessage", "Proveedor agregado exitosamente");
         } else {
             proveedoresService.actualizarProveedor(proveedorId, proveedorDtoDelFormulario);
+            redirectAttributes.addFlashAttribute("successMessage", "Proveedor actualizado exitosamente");
         }
         return "redirect:/web/proveedores"; 
     }
 
     @GetMapping("/proveedores/eliminar/{id}")
-    public String eliminarProveedor(@PathVariable Integer id) { 
+    public String eliminarProveedor(@PathVariable Integer id, RedirectAttributes redirectAttributes) { 
         proveedoresService.borrarProveedor(id);
+        redirectAttributes.addFlashAttribute("deleteMessage", "Proveedor eliminado exitosamente");
         return "redirect:/web/proveedores"; 
     }
 }

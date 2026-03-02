@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*; 
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.util.List;
 
 import com.siontrack.siontrack.DTO.Request.ProductosRequestDTO;
@@ -65,21 +66,24 @@ public class ProductosViewController {
     @PostMapping("/productos/guardar")
     public String guardarProducto(
             @RequestParam(value = "productoId", required = false) Integer productoId, 
-            @ModelAttribute("producto") ProductosRequestDTO productoDtoDelFormulario) {
+            @ModelAttribute("producto") ProductosRequestDTO productoDtoDelFormulario,
+            RedirectAttributes redirectAttributes) {
 
         if (productoId == null) {
             productosServicios.crearProducto(productoDtoDelFormulario);
+            redirectAttributes.addFlashAttribute("successMessage", "Producto agregado exitosamente");
         } else {
             productosServicios.actualizarProducto(productoId, productoDtoDelFormulario);
+            redirectAttributes.addFlashAttribute("successMessage", "Producto actualizado exitosamente");
         }
 
         return "redirect:/web/productos"; 
     }
 
-    
     @GetMapping("/productos/eliminar/{id}")
-    public String eliminarProducto(@PathVariable Integer id) {
+    public String eliminarProducto(@PathVariable Integer id, RedirectAttributes redirectAttributes) {
         productosServicios.borrarProducto(id);
+        redirectAttributes.addFlashAttribute("deleteMessage", "Producto eliminado exitosamente");
         return "redirect:/web/productos"; 
     }
 }

@@ -1,0 +1,138 @@
+/**
+ * SionTrack - Clientes Filter
+ * Maneja la búsqueda, filtrado y dropdown personalizado de clientes
+ */
+document.addEventListener('DOMContentLoaded', function() {
+    var searchInput = document.getElementById('searchInput');
+    var filterTipo = document.getElementById('filterTipo');
+    var dataRows = document.querySelectorAll('.table tbody tr.data-row');
+
+    // ===== DROPDOWN FILTRO PERSONALIZADO =====
+    var filterDropdown = document.getElementById('filterDropdown');
+    var filterMenu = document.getElementById('filterMenu');
+    var filterBtn = document.getElementById('filterBtn');
+    var filterTexto = document.getElementById('filterTexto');
+
+    if (filterBtn && filterMenu && filterDropdown) {
+        // Click en boton abre/cierra menu
+        filterBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            var isOpen = filterDropdown.classList.contains('open');
+            
+            if (isOpen) {
+                cerrarDropdown();
+            } else {
+                abrirDropdown();
+            }
+        });
+
+        // Click en opciones
+        var opciones = filterMenu.querySelectorAll('.filter-option:not(.disabled)');
+        opciones.forEach(function(opcion) {
+            opcion.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                seleccionarOpcion(this);
+            });
+        });
+
+        // Cerrar al hacer click fuera
+        document.addEventListener('click', function(e) {
+            if (filterDropdown && !filterDropdown.contains(e.target)) {
+                cerrarDropdown();
+            }
+        });
+
+        // Cerrar con Escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                cerrarDropdown();
+            }
+        });
+    }
+
+    function abrirDropdown() {
+        if (filterDropdown && filterMenu) {
+            filterDropdown.classList.add('open');
+            filterMenu.style.display = 'block';
+        }
+    }
+
+    function cerrarDropdown() {
+        if (filterDropdown && filterMenu) {
+            filterDropdown.classList.remove('open');
+            filterMenu.style.display = 'none';
+        }
+    }
+
+    function seleccionarOpcion(elemento) {
+        var valor = elemento.getAttribute('data-value') || '';
+        var texto = elemento.textContent.trim();
+
+        // Actualizar texto del boton
+        if (filterTexto) {
+            filterTexto.textContent = texto;
+        }
+
+        // Actualizar valor hidden
+        if (filterTipo) {
+            filterTipo.value = valor;
+        }
+
+        // Quitar seleccion anterior
+        var todasOpciones = filterMenu.querySelectorAll('.filter-option');
+        todasOpciones.forEach(function(op) {
+            op.classList.remove('selected');
+        });
+
+        // Marcar nueva seleccion
+        elemento.classList.add('selected');
+
+        // Cerrar menu
+        cerrarDropdown();
+
+        // Filtrar tabla
+        filterTable();
+    }
+
+    // ===== FUNCIÓN DE FILTRADO =====
+    function filterTable() {
+        var searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
+        var tipoFilter = filterTipo ? filterTipo.value : '';
+
+        dataRows.forEach(function(row) {
+            var nombre = row.children[1] ? row.children[1].textContent.toLowerCase() : '';
+            var cedula = row.children[2] ? row.children[2].textContent.toLowerCase() : '';
+            var tipo = row.dataset.tipo || row.getAttribute('data-tipo') || '';
+
+            var matchesSearch = nombre.indexOf(searchTerm) !== -1 || cedula.indexOf(searchTerm) !== -1;
+            var matchesTipo = !tipoFilter || tipo === tipoFilter;
+
+            // Usar clase CSS en lugar de estilo inline
+            if (matchesSearch && matchesTipo) {
+                row.classList.remove('hidden');
+                row.style.display = '';
+            } else {
+                row.classList.add('hidden');
+                row.style.display = 'none';
+            }
+        });
+    }
+
+    // ===== BÚSQUEDA =====
+    if (searchInput) {
+        searchInput.addEventListener('input', filterTable);
+    }
+
+    // ===== CONFIRMACIÓN DE ELIMINACIÓN =====
+    var btnsEliminar = document.querySelectorAll('.btn-confirm-delete');
+    btnsEliminar.forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            if (!confirm('¿Está seguro de que desea eliminar este cliente?')) {
+                e.preventDefault();
+            }
+        });
+    });
+});

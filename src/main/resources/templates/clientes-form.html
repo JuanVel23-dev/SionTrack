@@ -3,176 +3,208 @@
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/base}">
 
+<th:block layout:fragment="customCSS">
+    <link rel="stylesheet" th:href="@{/css/telefono-selector.css}" />
+</th:block>
+
 <th:block layout:fragment="content">
-    <div class="card">
+    <div class="card animate-in">
         <div class="card-header">
             <h2 class="card-title">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                </svg>
                 <span th:if="${clienteId == null}">Nuevo Cliente</span>
                 <span th:if="${clienteId != null}">Editar Cliente</span>
             </h2>
         </div>
         
-        <form th:object="${cliente}" 
-              th:action="@{/web/clientes/guardar}" 
-              method="post"
-              data-validate>
-            
+        <form th:object="${cliente}" th:action="@{/web/clientes/guardar}" method="post" id="clienteForm">
             <input type="hidden" name="clienteId" th:value="${clienteId}" />
             
             <div class="card-body">
                 <!-- Información Básica -->
-                <h3 style="color: var(--accent-primary); margin-bottom: var(--spacing-lg); border-bottom: 1px solid var(--border-color); padding-bottom: var(--spacing-sm);">
-                    <i class="fas fa-user"></i> Información Básica
+                <h3 class="form-section-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                    Información Básica
                 </h3>
                 
                 <div class="form-group">
                     <label for="nombre" class="form-label required">Nombre Completo</label>
-                    <input type="text" 
-                           id="nombre" 
-                           th:field="*{nombre}" 
-                           class="form-input"
-                           required 
-                           placeholder="Ej: Juan Pérez Sánchez"
-                           aria-label="Nombre del cliente">
+                    <input type="text" id="nombre" th:field="*{nombre}" class="form-input" required placeholder="Ej: Juan Pérez Sánchez">
                     <span class="form-help">Ingresa el nombre completo del cliente</span>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: var(--spacing-lg);">
+                <div class="form-grid">
                     <div class="form-group">
-                        <label for="cedula_ruc" class="form-label required">Cédula / RUC</label>
-                        <input type="text" 
-                               id="cedula_ruc" 
-                               th:field="*{cedula_ruc}" 
-                               class="form-input"
-                               required 
-                               placeholder="1234567890"
-                               aria-label="Cédula o RUC">
+                        <label for="cedula_ruc" class="form-label required">Cédula / NIT</label>
+                        <input type="text" id="cedula_ruc" th:field="*{cedula_ruc}" class="form-input" required placeholder="Ej: 1234567890" minlength="10" maxlength="12">
+                        <span class="form-help">10-11 dígitos, puede incluir un guión (-)</span>
                     </div>
-
                     <div class="form-group">
                         <label for="tipo_cliente" class="form-label required">Tipo de Cliente</label>
-                        <select id="tipo_cliente" 
-                                th:field="*{tipo_cliente}" 
-                                class="form-select"
-                                required>
-                            <option value="">Seleccione un tipo</option>
-                            <option value="Persona Natural">Persona Natural</option>
-                            <option value="Empresa">Empresa</option>
-                        </select>
+                        <div class="custom-select" id="tipo-cliente-select">
+                            <button type="button" class="custom-select-btn">
+                                <span class="select-texto placeholder">Seleccione un tipo</span>
+                                <svg class="select-flecha" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            </button>
+                            <div class="custom-select-dropdown">
+                                <div class="custom-select-option disabled" data-value="">Seleccione un tipo</div>
+                                <div class="custom-select-option" data-value="Persona Natural">Persona Natural</div>
+                                <div class="custom-select-option" data-value="Empresa">Empresa</div>
+                            </div>
+                            <input type="hidden" id="tipo_cliente" th:field="*{tipo_cliente}" required />
+                        </div>
                     </div>
                 </div>
 
-                <!-- Teléfonos -->
                 <div class="divider"></div>
-                <h3 style="color: var(--accent-primary); margin-bottom: var(--spacing-lg);">
-                    <i class="fas fa-phone"></i> Teléfonos
+
+                <!-- Teléfonos -->
+                <h3 class="form-section-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                    </svg>
+                    Teléfonos
                 </h3>
 
                 <div class="form-group">
                     <label class="form-label">Números de Teléfono</label>
-                    <div id="telefonos-container" 
-                         data-dynamic-field
-                         data-add-button="add-telefono-btn"
-                         data-field-name="telefonos"
-                         data-field-type="tel"
-                         data-placeholder="Ej: 0999999999"
-                         th:attr="data-initial-index=${cliente.telefonos != null ? cliente.telefonos.size() : 0}">
-                        
-                        <div th:each="tel, iterStat : *{telefonos}" class="dynamic-field">
-                            <input type="tel"
+                    <div id="telefonos-container">
+                        <div th:each="tel, iterStat : *{telefonos}" class="telefono-fila">
+                            <div class="pais-selector">
+                                <button type="button" class="pais-boton">
+                                    <span class="pais-texto">+57 Colombia</span>
+                                    <svg class="pais-flecha" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                </button>
+                                <div class="pais-dropdown">
+                                    <div class="pais-busqueda">
+                                        <input type="text" placeholder="Buscar país..." />
+                                    </div>
+                                    <div class="pais-lista"></div>
+                                </div>
+                                <input type="hidden" class="pais-valor" value="+57" />
+                            </div>
+                            <div class="prefijo-container">
+                                <input type="text" class="prefijo-input" placeholder="+00" maxlength="5" />
+                            </div>
+                            <input type="text"
                                    th:field="*{telefonos[__${iterStat.index}__].telefono}"
-                                   class="form-input"
-                                   placeholder="Ej: 0999999999" />
+                                   class="form-input numero-input"
+                                   maxlength="10"
+                                   placeholder="3001234567" />
                             <button type="button" class="btn btn-danger btn-sm btn-remove">
-                                <i class="fas fa-times"></i>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
                             </button>
                         </div>
                     </div>
                     <button type="button" class="btn btn-ghost btn-sm" id="add-telefono-btn">
-                        <i class="fas fa-plus"></i>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
                         Añadir Teléfono
                     </button>
                 </div>
 
-                <!-- Direcciones -->
                 <div class="divider"></div>
-                <h3 style="color: var(--accent-primary); margin-bottom: var(--spacing-lg);">
-                    <i class="fas fa-map-marker-alt"></i> Direcciones
+
+                <!-- Direcciones -->
+                <h3 class="form-section-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                        <circle cx="12" cy="10" r="3"></circle>
+                    </svg>
+                    Direcciones
                 </h3>
 
                 <div class="form-group">
                     <label class="form-label">Direcciones</label>
-                    <div id="direcciones-container"
-                         data-dynamic-field
-                         data-add-button="add-direccion-btn"
-                         data-field-name="direcciones"
-                         data-field-type="text"
-                         data-placeholder="Ej: Av. Principal 123 y Secundaria"
-                         th:attr="data-initial-index=${cliente.direcciones != null ? cliente.direcciones.size() : 0}">
-                        
+                    <div id="direcciones-container">
                         <div th:each="dir, iterStat : *{direcciones}" class="dynamic-field">
-                            <input type="text"
-                                   th:field="*{direcciones[__${iterStat.index}__].direccion}"
-                                   class="form-input"
-                                   placeholder="Ej: Av. Principal 123 y Secundaria" />
+                            <input type="text" th:field="*{direcciones[__${iterStat.index}__].direccion}" class="form-input" placeholder="Ej: Av. Principal 123" />
                             <button type="button" class="btn btn-danger btn-sm btn-remove">
-                                <i class="fas fa-times"></i>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
                             </button>
                         </div>
                     </div>
                     <button type="button" class="btn btn-ghost btn-sm" id="add-direccion-btn">
-                        <i class="fas fa-plus"></i>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
                         Añadir Dirección
                     </button>
                 </div>
 
-                <!-- Correos -->
                 <div class="divider"></div>
-                <h3 style="color: var(--accent-primary); margin-bottom: var(--spacing-lg);">
-                    <i class="fas fa-envelope"></i> Correos Electrónicos
+
+                <!-- Correos -->
+                <h3 class="form-section-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                        <polyline points="22,6 12,13 2,6"></polyline>
+                    </svg>
+                    Correos Electrónicos
                 </h3>
 
                 <div class="form-group">
                     <label class="form-label">Correos</label>
-                    <div id="correos-container"
-                         data-dynamic-field
-                         data-add-button="add-correo-btn"
-                         data-field-name="correos"
-                         data-field-type="email"
-                         data-placeholder="Ej: cliente@ejemplo.com"
-                         th:attr="data-initial-index=${cliente.correos != null ? cliente.correos.size() : 0}">
-                        
+                    <div id="correos-container">
                         <div th:each="correo, iterStat : *{correos}" class="dynamic-field">
-                            <input type="email"
-                                   th:field="*{correos[__${iterStat.index}__].correo}"
-                                   class="form-input"
-                                   placeholder="Ej: cliente@ejemplo.com" />
+                            <input type="email" th:field="*{correos[__${iterStat.index}__].correo}" class="form-input input-correo" placeholder="Ej: cliente@ejemplo.com" />
                             <button type="button" class="btn btn-danger btn-sm btn-remove">
-                                <i class="fas fa-times"></i>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
                             </button>
                         </div>
                     </div>
                     <button type="button" class="btn btn-ghost btn-sm" id="add-correo-btn">
-                        <i class="fas fa-plus"></i>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
                         Añadir Correo
                     </button>
                 </div>
             </div>
 
-            <!-- Footer del formulario -->
             <div class="card-footer">
                 <a th:href="@{/web/clientes}" class="btn btn-secondary">
-                    <i class="fas fa-times"></i>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
                     Cancelar
                 </a>
                 <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-save"></i>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                        <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                        <polyline points="7 3 7 8 15 8"></polyline>
+                    </svg>
                     <span th:if="${clienteId == null}">Crear Cliente</span>
                     <span th:if="${clienteId != null}">Guardar Cambios</span>
                 </button>
             </div>
         </form>
     </div>
+</th:block>
+
+<th:block layout:fragment="customJS">
+    <script th:src="@{/js/clientes-telefono.js}"></script>
 </th:block>
 
 </html>

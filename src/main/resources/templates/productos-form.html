@@ -4,10 +4,15 @@
       layout:decorate="~{layout/base}">
 
 <th:block layout:fragment="content">
-    
-    <div class="card">
+    <div class="card animate-in">
         <div class="card-header">
             <h2 class="card-title">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="16.5" y1="9.4" x2="7.5" y2="4.21"></line>
+                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                    <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                    <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                </svg>
                 <span th:if="${productoId == null}">Nuevo Producto</span>
                 <span th:if="${productoId != null}">Editar Producto</span>
             </h2>
@@ -16,121 +21,187 @@
         <form th:object="${producto}"
               th:action="@{/web/productos/guardar}"
               method="post"
-              data-validate>
+              id="productoForm">
 
             <input type="hidden" name="productoId" th:value="${productoId}" />
 
             <div class="card-body">
+                <!-- Datos del Producto -->
                 <h3 class="form-section-title">
-                    <i class="fas fa-box"></i> Datos del Producto
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                    </svg>
+                    Datos del Producto
                 </h3>
 
-                <div class="form-grid" style="grid-template-columns: 2fr 1fr 1fr;">
-                    <div class="form-group">
-                        <label for="nombre" class="form-label required">Nombre</label>
-                        <input type="text" id="nombre" th:field="*{nombre}" class="form-input" required>
-                    </div>
+                <div class="form-group">
+                    <label for="nombre" class="form-label required">Nombre</label>
+                    <input type="text" 
+                           id="nombre" 
+                           th:field="*{nombre}" 
+                           class="form-input" 
+                           required
+                           placeholder="Ej: Aceite 5W-30">
+                </div>
+
+                <div class="form-grid">
                     <div class="form-group">
                         <label for="marca" class="form-label">Marca</label>
-                        <input type="text" id="marca" th:field="*{marca}" class="form-input">
+                        <input type="text" 
+                               id="marca" 
+                               th:field="*{marca}" 
+                               class="form-input"
+                               placeholder="Ej: Castrol">
                     </div>
                     <div class="form-group">
                         <label for="categoria" class="form-label">Categoría</label>
-                        <input type="text" id="categoria" th:field="*{categoria}" class="form-input">
+                        <input type="text" 
+                               id="categoria" 
+                               th:field="*{categoria}" 
+                               class="form-input"
+                               placeholder="Ej: Lubricantes">
                     </div>
                 </div>
 
                 <div class="form-grid">
                     <div class="form-group">
                         <label for="proveedor_id" class="form-label">Proveedor</label>
-                        <select id="proveedor_id" th:field="*{proveedor_id}" class="form-select">
-                            <option value="">-- Seleccione un Proveedor --</option>
+                        <select id="proveedor_id" 
+                                th:field="*{proveedor_id}" 
+                                class="form-select">
+                            <option value="">Seleccione un proveedor</option>
                             <option th:each="prov : ${listaProveedores}"
                                     th:value="${prov.proveedor_id}"
                                     th:text="${prov.nombre}">
-                                Proveedor 1
+                                Proveedor
                             </option>
                         </select>
                     </div>
-                    
                     <div class="form-group">
                         <label for="unidad_medida" class="form-label">Unidad de Medida</label>
-                        <input type="text" id="unidad_medida" th:field="*{unidad_medida}" class="form-input" placeholder="Ej: Unidad, Litro, Kg">
+                        <input type="text" 
+                               id="unidad_medida" 
+                               th:field="*{unidad_medida}" 
+                               class="form-input"
+                               placeholder="Ej: Unidad, Litro, Kg">
                     </div>
-                    
+                </div>
+
+                <div class="form-group">
+                    <label for="estado" class="form-label required">Estado</label>
+                    <select id="estado" 
+                            th:field="*{estado}" 
+                            class="form-select"
+                            required>
+                        <option value="">Seleccione un estado</option>
+                        <option value="Activo">Activo</option>
+                        <option value="Inactivo">Inactivo</option>
+                    </select>
+                </div>
+
+                <div class="divider"></div>
+
+                <!-- Precios -->
+                <h3 class="form-section-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="1" x2="12" y2="23"></line>
+                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                    </svg>
+                    Precios
+                </h3>
+
+                <div class="form-grid">
                     <div class="form-group">
-                        <label for="estado" class="form-label required">Estado</label>
-                        <input type="text" id="estado" th:field="*{estado}" class="form-input" required>
-                        <span class="form-help">Ej: Activo, Inactivo</span>
+                        <label for="precio_compra" class="form-label">Precio de Compra</label>
+                        <input type="number" 
+                               id="precio_compra" 
+                               th:field="*{precio_compra}" 
+                               class="form-input" 
+                               step="0.01" 
+                               min="0"
+                               placeholder="0.00">
+                    </div>
+                    <div class="form-group">
+                        <label for="precio_venta" class="form-label required">Precio de Venta</label>
+                        <input type="number" 
+                               id="precio_venta" 
+                               th:field="*{precio_venta}" 
+                               class="form-input" 
+                               step="0.01" 
+                               min="0"
+                               required
+                               placeholder="0.00">
                     </div>
                 </div>
 
                 <div class="divider"></div>
 
+                <!-- Inventario -->
                 <h3 class="form-section-title">
-                    <i class="fas fa-warehouse"></i> Costos e Inventario
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 3h18v18H3z"></path>
+                        <path d="M21 9H3"></path>
+                        <path d="M21 15H3"></path>
+                        <path d="M9 21V3"></path>
+                        <path d="M15 21V3"></path>
+                    </svg>
+                    Inventario
                 </h3>
 
                 <div class="form-grid">
                     <div class="form-group">
-                        <label for="precio_compra" class="form-label">Precio Compra</label>
-                        <input type="number" step="0.01" id="precio_compra" th:field="*{precio_compra}" class="form-input" placeholder="0.00">
-                    </div>
-                    <div class="form-group">
-                        <label for="precio_venta" class="form-label required">Precio Venta</label>
-                        <input type="number" step="0.01" id="precio_venta" th:field="*{precio_venta}" class="form-input" required placeholder="0.00">
-                    </div>
-                </div>
-                
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label for="cantidad_disponible" class="form-label required">Cantidad (Stock)</label>
-                        <input type="number" id="cantidad_disponible" th:field="*{cantidad_disponible}" class="form-input" required placeholder="0">
+                        <label for="cantidad_disponible" class="form-label required">Cantidad Disponible</label>
+                        <input type="number" 
+                               id="cantidad_disponible" 
+                               th:field="*{cantidad_disponible}" 
+                               class="form-input" 
+                               min="0"
+                               required
+                               placeholder="0">
                     </div>
                     <div class="form-group">
                         <label for="stock_minimo" class="form-label required">Stock Mínimo</label>
-                        <input type="number" id="stock_minimo" th:field="*{stock_minimo}" class="form-input" required placeholder="0">
-                        <span class="form-help">Nivel para alertas de inventario.</span>
+                        <input type="number" 
+                               id="stock_minimo" 
+                               th:field="*{stock_minimo}" 
+                               class="form-input" 
+                               min="0"
+                               required
+                               placeholder="10">
+                        <span class="form-help">Se mostrará alerta cuando el stock sea menor a este valor.</span>
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label for="ubicacion" class="form-label">Ubicación en Bodega</label>
-                    <input type="text" id="ubicacion" th:field="*{ubicacion}" class="form-input" placeholder="Ej: Estante A-1, Percha 3">
+                    <label for="ubicacion" class="form-label">Ubicación en Almacén</label>
+                    <input type="text" 
+                           id="ubicacion" 
+                           th:field="*{ubicacion}" 
+                           class="form-input"
+                           placeholder="Ej: Estante A-3">
                 </div>
-
             </div>
 
             <div class="card-footer">
                 <a th:href="@{/web/productos}" class="btn btn-secondary">
-                    <i class="fas fa-times"></i>
-                    Cancelar
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                    <span>Cancelar</span>
                 </a>
                 <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-save"></i>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                        <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                        <polyline points="7 3 7 8 15 8"></polyline>
+                    </svg>
                     <span th:if="${productoId == null}">Crear Producto</span>
                     <span th:if="${productoId != null}">Guardar Cambios</span>
                 </button>
             </div>
         </form>
     </div>
-    
-    <th:block layout:fragment="customCSS">
-        <style>
-            .form-section-title {
-                color: var(--accent-primary);
-                margin-bottom: var(--spacing-lg);
-                border-bottom: 1px solid var(--border-color);
-                padding-bottom: var(--spacing-sm);
-                font-size: 1.15rem;
-            }
-            .form-grid {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-                gap: var(--spacing-lg);
-            }
-        </style>
-    </th:block>
-    
 </th:block>
+
 </html>

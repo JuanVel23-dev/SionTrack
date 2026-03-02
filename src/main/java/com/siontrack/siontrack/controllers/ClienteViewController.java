@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
 import com.siontrack.siontrack.DTO.Request.VehiculosRequestDTO;
 
 import java.util.List;
@@ -25,7 +27,6 @@ public class ClienteViewController {
     private final ClienteServicios clienteServicios;
     private final ModelMapper modelMapper; 
 
-    // Constructor Injection
     public ClienteViewController(ClienteServicios clienteServicios, ModelMapper modelMapper) {
         this.clienteServicios = clienteServicios;
         this.modelMapper = modelMapper;
@@ -56,37 +57,35 @@ public class ClienteViewController {
     @PostMapping("/clientes/guardar")
     public String guardarCliente(
             @RequestParam(value = "clienteId", required = false) Integer clienteId,
-            @ModelAttribute("cliente") ClienteRequestDTO clienteDtoDelFormulario) {
+            @ModelAttribute("cliente") ClienteRequestDTO clienteDtoDelFormulario,
+            RedirectAttributes redirectAttributes) {
 
         if (clienteId == null) {
             clienteServicios.crearCliente(clienteDtoDelFormulario);
+            redirectAttributes.addFlashAttribute("successMessage", "Cliente agregado exitosamente");
         } else {
             clienteServicios.actualizarCliente(clienteId, clienteDtoDelFormulario);
+            redirectAttributes.addFlashAttribute("successMessage", "Cliente actualizado exitosamente");
         }
         return "redirect:/web/clientes";
     }
 
     @GetMapping("/clientes/eliminar/{id}")
-    public String eliminarCliente(@PathVariable Integer id) {
-        clienteServicios.deleteCliente(id); 
+    public String eliminarCliente(@PathVariable Integer id, RedirectAttributes redirectAttributes) {
+        clienteServicios.deleteCliente(id);
+        redirectAttributes.addFlashAttribute("deleteMessage", "Cliente eliminado exitosamente");
         return "redirect:/web/clientes";
     }
 
     @GetMapping("/clientes/{id}/vehiculos/nuevo")
-public String mostrarFormularioNuevoVehiculo(@PathVariable("id") Integer clienteId, Model model) {
+    public String mostrarFormularioNuevoVehiculo(@PathVariable("id") Integer clienteId, Model model) {
+        ClienteResponseDTO cliente = clienteServicios.obtenerClientePorId(clienteId);
+        VehiculosRequestDTO vehiculoNuevo = new VehiculosRequestDTO();
 
-    // 1. Obtener el cliente para saber su nombre
-    ClienteResponseDTO cliente = clienteServicios.obtenerClientePorId(clienteId);
+        model.addAttribute("vehiculo", vehiculoNuevo);
+        model.addAttribute("clienteId", clienteId);
+        model.addAttribute("clienteNombre", cliente.getNombre());
 
-    // 2. Crear el objeto DTO vacío para el formulario
-    VehiculosRequestDTO vehiculoNuevo = new VehiculosRequestDTO();
-
-    // 3. Añadir los datos al modelo para Thymeleaf
-    model.addAttribute("vehiculo", vehiculoNuevo);
-    model.addAttribute("clienteId", clienteId);
-    model.addAttribute("clienteNombre", cliente.getNombre());
-
-    // 4. Devolver el nombre del archivo HTML del formulario
-    return "vehiculo-form";
-}
+        return "vehiculo-form";
+    }
 }

@@ -3,99 +3,116 @@
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/base}">
 
-<th:block layout:fragment="content">
+<th:block layout:fragment="customCSS">
+    <link th:href="@{/css/productos.css}" rel="stylesheet">
+</th:block>
 
-    <div class="table-toolbar">
-        <div class="table-toolbar-left">
-            <div class="table-search">
-                <i class="fas fa-search table-search-icon"></i>
-                <input type="text"
-                       id="searchInput"
-                       placeholder="Buscar por nombre o categoría..."
-                       aria-label="Buscar productos">
-            </div>
+<th:block layout:fragment="content">
+    <!-- Page Header -->
+    <div class="page-header animate-in">
+        <div class="page-header-content">
+            <h1 class="page-header-title">Productos</h1>
+            <p class="page-header-description">Inventario y control de stock</p>
         </div>
-        <div class="table-toolbar-right">
-            <a th:href="@{/web/productos/nuevo}" class="btn btn-primary">
-                <i class="fas fa-plus"></i>
-                <span>Nuevo Producto</span>
-            </a>
-        </div>
+        <a th:href="@{/web/productos/nuevo}" class="btn btn-primary">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            <span>Nuevo Producto</span>
+        </a>
     </div>
 
-    <div class="table-wrapper">
-        <table class="table table-striped table-mobile">
+    <!-- Table Container -->
+    <div class="table-container animate-in delay-1">
+        <div class="table-toolbar">
+            <div class="table-toolbar-left">
+                <div class="table-search">
+                    <svg class="table-search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <input type="text"
+                           id="searchInput"
+                           placeholder="Buscar por nombre o categoría..."
+                           aria-label="Buscar productos">
+                </div>
+            </div>
+        </div>
+
+        <table class="table" th:if="${productos != null and not productos.empty}">
             <thead>
                 <tr>
-                    <th>ID</th>
-                    <th>Nombre</th>
-                    <th>Categoría</th>
-                    <th>Marca</th>
-                    <th style="text-align: right;">Precio Venta</th>
-                    <th style="text-align: center;">Stock</th>
-                    <th style="text-align: right;">Acciones</th>
+                    <th class="text-left">ID</th>
+                    <th class="text-left">Nombre</th>
+                    <th class="text-left">Categoría</th>
+                    <th class="text-left">Marca</th>
+                    <th class="text-right">Precio Venta</th>
+                    <th class="text-center">Stock</th>
+                    <th>Acciones</th>
                 </tr>
             </thead>
             <tbody>
                 <tr th:each="prod : ${productos}" class="data-row">
-                    <td th:text="${prod.producto_id}" data-label="ID">...</td>
-                    <td th:text="${prod.nombre}" data-label="Nombre">...</td>
-                    <td th:text="${prod.categoria}" data-label="Categoría">...</td>
-                    <td th:text="${prod.marca}" data-label="Marca">...</td>
-                    <td th:text="|$ ${#numbers.formatDecimal(prod.precio_venta, 1, 2)}|"
-                        data-label="Precio"
-                        style="text-align: right;">
-                        S/ 0.00
+                    <td th:text="${prod.producto_id}" data-label="ID" class="text-left">1</td>
+                    <td th:text="${prod.nombre}" data-label="Nombre" class="text-left">Producto</td>
+                    <td th:text="${prod.categoria}" data-label="Categoría" class="text-left">Categoría</td>
+                    <td th:text="${prod.marca}" data-label="Marca" class="text-left">Marca</td>
+                    <td data-label="Precio" class="text-right">
+                        <span th:text="${'$ ' + #numbers.formatDecimal(prod.precio_venta, 1, 2)}">$ 0.00</span>
                     </td>
-                    <td style="text-align: center;" data-label="Stock">
-                        
-                        <span th:if="${prod.alerta_stock}" class="icono-alerta" title="Stock Crítico">
-                            ⚠️
-                        </span>
-
-                        <span th:text="${prod.cantidad_disponible}"
-                            th:classappend="${prod.alerta_stock} ? 'badge badge-danger' : 'badge badge-success'">
-                            ...
-                        </span>
-
-                        <span class="texto-minimo" th:if="${prod.stock_minimo != null}">
-                            (Min: <span th:text="${prod.stock_minimo}">0</span>)
-                        </span>
+                    <td data-label="Stock" class="text-center">
+                        <span class="stock-badge"
+                              th:classappend="${prod.alerta_stock} ? 'stock-badge-danger' : 'stock-badge-ok'"
+                              th:text="${prod.cantidad_disponible}">0</span>
                     </td>
                     <td data-label="Acciones">
                         <div class="table-actions">
                             <a th:href="@{/web/productos/editar/{id}(id=${prod.producto_id})}"
                                class="table-action-btn btn-edit"
-                               title="Editar">
-                                <i class="fas fa-edit"></i>
-                                <span>Editar</span>
+                               title="Editar producto">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                </svg>
                             </a>
                             <a th:href="@{/web/productos/eliminar/{id}(id=${prod.producto_id})}"
                                class="table-action-btn btn-delete"
-                               data-confirm="¿Estás seguro de eliminar este producto? Esta acción no se puede deshacer."
-                               title="Eliminar">
-                                <i class="fas fa-trash"></i>
-                                <span>Eliminar</span>
+                               title="Eliminar producto">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                    <line x1="10" y1="11" x2="10" y2="17"></line>
+                                    <line x1="14" y1="11" x2="14" y2="17"></line>
+                                </svg>
                             </a>
                         </div>
                     </td>
                 </tr>
-                
-                </tbody>
+            </tbody>
         </table>
 
-        <div th:if="${productos == null OR productos.isEmpty()}" class="table-empty">
+        <!-- Empty State -->
+        <div th:if="${productos == null or productos.empty}" class="table-empty">
             <div class="empty-state">
                 <div class="empty-state-icon">
-                    <i class="fas fa-box-open"></i>
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <line x1="16.5" y1="9.4" x2="7.5" y2="4.21"></line>
+                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                        <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                        <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                    </svg>
                 </div>
                 <h3 class="empty-state-title">No hay productos registrados</h3>
                 <p class="empty-state-description">
                     Comienza agregando tu primer producto al sistema.
                 </p>
                 <a th:href="@{/web/productos/nuevo}" class="btn btn-primary">
-                    <i class="fas fa-plus"></i>
-                    Crear Primer Producto
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    <span>Crear Primer Producto</span>
                 </a>
             </div>
         </div>
@@ -103,43 +120,23 @@
 </th:block>
 
 <th:block layout:fragment="customJS">
+    <script th:src="@{/js/productos-filter.js}"></script>
     <script th:inline="javascript">
-    document.addEventListener('DOMContentLoaded', () => {
-        
-        const searchInput = document.getElementById('searchInput');
-        
-        // Seleccionamos TODAS las filas que marcamos como "data-row"
-        const dataRows = document.querySelectorAll('.table tbody tr.data-row');
-
-        // Verificamos que los elementos existan
-        if (searchInput && dataRows.length > 0) {
+        /*<![CDATA[*/
+        (function() {
+            var successMessage = /*[[${successMessage}]]*/ null;
+            var deleteMessage = /*[[${deleteMessage}]]*/ null;
             
-            function filterTable() {
-                // Obtenemos el texto de búsqueda
-                const searchTerm = searchInput.value.toLowerCase().trim();
-
-                // Iteramos sobre CADA fila de datos
-                dataRows.forEach(row => {
-                    // Obtenemos el texto de las columnas 1 (Nombre) y 2 (Categoría)
-                    const nombre = row.children[1]?.textContent.toLowerCase() || '';
-                    const categoria = row.children[2]?.textContent.toLowerCase() || '';
-                    
-                    // Comprobamos si el texto coincide
-                    const matchesSearch = nombre.includes(searchTerm) || categoria.includes(searchTerm);
-                    
-                    // Ocultamos o mostramos la fila
-                    if (matchesSearch) {
-                        row.style.display = ''; // Mostrar
-                    } else {
-                        row.style.display = 'none'; // Ocultar
-                    }
-                });
+            if (successMessage && typeof showToast === 'function') {
+                showToast(successMessage, 'success');
             }
-
-            // Asignamos la función al evento 'input' (cada vez que tecleas)
-            searchInput.addEventListener('input', filterTable);
-        }
-    });
+            
+            if (deleteMessage && typeof showToast === 'function') {
+                showToast(deleteMessage, 'error');
+            }
+        })();
+        /*]]>*/
     </script>
 </th:block>
+
 </html>

@@ -4,90 +4,135 @@
       layout:decorate="~{layout/base}">
 
 <th:block layout:fragment="content">
-    
-    <div class="card">
+    <div class="card animate-in">
         <div class="card-header">
             <h2 class="card-title">
-                <span th:text="|Nuevo Vehículo para: ${clienteNombre}|">Nuevo Vehículo</span>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.24a2 2 0 0 0-1.8 1.1l-.8 1.63A6 6 0 0 0 2 12.42V16h2"></path>
+                    <circle cx="6.5" cy="16.5" r="2.5"></circle>
+                    <circle cx="16.5" cy="16.5" r="2.5"></circle>
+                </svg>
+                Nuevo Vehículo
             </h2>
         </div>
 
         <form th:object="${vehiculo}"
-              th:action="@{/web/vehiculos/guardar}" method="post"
+              th:action="@{/web/vehiculos/guardar}"
+              method="post"
               data-validate>
 
             <input type="hidden" name="clienteId" th:value="${clienteId}" />
 
             <div class="card-body">
-                
+                <!-- Información del Cliente -->
+                <div class="alert alert-info mb-6">
+                    <span class="alert-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                    </span>
+                    <div class="alert-content">
+                        <div class="alert-title">Cliente</div>
+                        <p class="alert-message" th:text="${clienteNombre}">Nombre del cliente</p>
+                    </div>
+                </div>
+
+                <!-- Datos del Vehículo -->
                 <h3 class="form-section-title">
-                    <i class="fas fa-car"></i> Información del Vehículo
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.24a2 2 0 0 0-1.8 1.1l-.8 1.63A6 6 0 0 0 2 12.42V16h2"></path>
+                        <circle cx="6.5" cy="16.5" r="2.5"></circle>
+                        <circle cx="16.5" cy="16.5" r="2.5"></circle>
+                    </svg>
+                    Información del Vehículo
                 </h3>
 
                 <div class="form-grid">
                     <div class="form-group">
                         <label for="marca" class="form-label required">Marca</label>
-                        <input type="text" id="marca" th:field="*{marca}" class="form-input" required placeholder="Ej: Chevrolet">
+                        <input type="text" 
+                               id="marca" 
+                               th:field="*{marca}" 
+                               class="form-input" 
+                               required
+                               placeholder="Ej: Chevrolet">
                     </div>
                     <div class="form-group">
                         <label for="modelo" class="form-label required">Modelo</label>
-                        <input type="text" id="modelo" th:field="*{modelo}" class="form-input" required placeholder="Ej: D-Max">
+                        <input type="text" 
+                               id="modelo" 
+                               th:field="*{modelo}" 
+                               class="form-input" 
+                               required
+                               placeholder="Ej: D-Max">
                     </div>
                 </div>
 
                 <div class="form-grid">
                     <div class="form-group">
                         <label for="placa" class="form-label required">Placa</label>
-                        <input type="text" id="placa" th:field="*{placa}" class="form-input" required placeholder="Ej: PAA-1234">
+                        <input type="text" 
+                               id="placa" 
+                               th:field="*{placa}" 
+                               class="form-input" 
+                               required
+                               placeholder="Ej: PAA-1234">
                     </div>
                     <div class="form-group">
                         <label for="anio" class="form-label required">Año</label>
-                        <input type="number" id="anio" th:field="*{anio}" class="form-input" required placeholder="Ej: 2020">
-                    </div>
-                    <div class="form-group">
-                        <label for="kilometraje_actual" class="form-label required">Kilometraje</label>
-                        <input type="number" id="kilometraje_actual" th:field="*{kilometraje_actual}" class="form-input" required placeholder="Ej: 50000">
+                        <input type="number" 
+                               id="anio" 
+                               th:field="*{anio}" 
+                               class="form-input"
+                               required
+                               min="1900" 
+                               max="2030"
+                               placeholder="Ej: 2020">
                     </div>
                 </div>
 
-                <div class="divider"></div>
-
-                <div class="form-group">
-                    <label for="tipo_motor" class="form-label">Tipo de Motor</label>
-                    <input type="text" id="tipo_motor" th:field="*{tipo_motor}" class="form-input" placeholder="Ej: 2.5L Diesel">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="kilometraje_actual" class="form-label required">Kilometraje Actual</label>
+                        <input type="number" 
+                               id="kilometraje_actual" 
+                               th:field="*{kilometraje_actual}" 
+                               class="form-input"
+                               required
+                               min="0"
+                               placeholder="Ej: 50000">
+                    </div>
+                    <div class="form-group">
+                        <label for="tipo_motor" class="form-label">Tipo de Motor</label>
+                        <input type="text" 
+                               id="tipo_motor" 
+                               th:field="*{tipo_motor}" 
+                               class="form-input"
+                               placeholder="Ej: 2.5L Diesel">
+                    </div>
                 </div>
             </div>
 
             <div class="card-footer">
                 <a th:href="@{/web/clientes}" class="btn btn-secondary">
-                    <i class="fas fa-times"></i>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
                     Cancelar
                 </a>
                 <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-save"></i>
-                    <span>Guardar Vehículo</span>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                        <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                        <polyline points="7 3 7 8 15 8"></polyline>
+                    </svg>
+                    Guardar Vehículo
                 </button>
             </div>
         </form>
     </div>
-    
-    <th:block layout:fragment="customCSS">
-        <style>
-            .form-section-title {
-                color: var(--accent-primary);
-                margin-bottom: var(--spacing-lg);
-                border-bottom: 1px solid var(--border-color);
-                padding-bottom: var(--spacing-sm);
-                font-size: 1.15rem;
-            }
-            .form-grid {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-                gap: var(--spacing-lg);
-                margin-bottom: var(--spacing-sm); /* Espacio entre filas del grid */
-            }
-        </style>
-    </th:block>
-    
 </th:block>
+
 </html>

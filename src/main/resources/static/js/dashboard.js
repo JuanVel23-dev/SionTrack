@@ -1,30 +1,57 @@
 /**
- * Lógica personalizada para el Dashboard
- * Animar los contadores de estadísticas
+ * SionTrack v2.0 - Dashboard
+ * Animaciones y lógica del dashboard
  */
+
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('Dashboard loaded');
-
-    // Función para animar números
-    const animateValue = (element, start, end, duration) => {
-        let startTimestamp = null;
-        const step = (timestamp) => {
-            if (!startTimestamp) startTimestamp = timestamp;
-            const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-            element.textContent = Math.floor(progress * (end - start) + start);
-            if (progress < 1) {
-                window.requestAnimationFrame(step);
-            }
-        };
-        window.requestAnimationFrame(step);
-    };
-
-    // Animar cada número en las tarjetas de estadísticas
-    document.querySelectorAll('.stat-card-number span').forEach(span => {
-        const finalValue = parseInt(span.textContent) || 0;
-        span.textContent = '0';
-        setTimeout(() => {
-            animateValue(span, 0, finalValue, 1000);
-        }, 200);
-    });
+  // Animar contadores
+  animateCounters();
+  
+  // Inicializar Lucide icons si está disponible
+  if (typeof lucide !== 'undefined') {
+    lucide.createIcons();
+  }
 });
+
+/**
+ * Anima los números en las stat cards
+ */
+function animateCounters() {
+  const counters = document.querySelectorAll('.stat-card-value');
+  
+  counters.forEach(counter => {
+    const target = parseInt(counter.textContent.replace(/[^0-9]/g, '')) || 0;
+    const prefix = counter.textContent.match(/^[^0-9]*/)?.[0] || '';
+    const suffix = counter.textContent.match(/[^0-9]*$/)?.[0] || '';
+    
+    if (target === 0) return;
+    
+    let current = 0;
+    const duration = 1000;
+    const increment = target / (duration / 16);
+    
+    counter.textContent = prefix + '0' + suffix;
+    
+    const updateCounter = () => {
+      current += increment;
+      if (current < target) {
+        counter.textContent = prefix + Math.floor(current).toLocaleString() + suffix;
+        requestAnimationFrame(updateCounter);
+      } else {
+        counter.textContent = prefix + target.toLocaleString() + suffix;
+      }
+    };
+    
+    // Iniciar animación cuando el elemento sea visible
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          setTimeout(updateCounter, 200);
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.5 });
+    
+    observer.observe(counter);
+  });
+}
