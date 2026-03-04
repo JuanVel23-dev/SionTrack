@@ -3,7 +3,7 @@ package com.siontrack.siontrack.services;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
-
+import com.siontrack.siontrack.DTO.Response.AlertaStockDTO;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.siontrack.siontrack.DTO.Request.ProductosRequestDTO;
+import com.siontrack.siontrack.DTO.Response.AlertaStockDTO;
 import com.siontrack.siontrack.DTO.Response.ProductoPopularDTO;
 import com.siontrack.siontrack.DTO.Response.ProductosResponseDTO;
 
@@ -201,5 +202,55 @@ public class ProductosServicios {
 
         return detalleServicioRepository.encontrarProductsoPopulares(fechaInicio, pageable);
     }
+ 
+    @Transactional(readOnly = true)
+public List<AlertaStockDTO> obtenerAlertasStock() {
+    return productosRepository.findAll().stream()
+        .filter(producto -> producto.getInventario() != null)
+        .filter(producto -> {
+            int cantidad = producto.getInventario().getCantidad_disponible();
+            int minimo = producto.getInventario().getStock_minimo();
+            return minimo > 0 && cantidad <= minimo;
+        })
+        .map(producto -> {
+            Inventario inv = producto.getInventario();
+            int cantidad = inv.getCantidad_disponible();
+            int minimo = inv.getStock_minimo();
+            int necesita = minimo - cantidad;
 
+            String nivel;
+            if (cantidad == 0) {
+                nivel = "AGOTADO";
+            } else if (cantidad <= (minimo * 0.5)) {
+                nivel = "CRITICO";
+            } else {
+                nivel = "BAJO";
+            }
+
+            AlertaStockDTO dto = new AlertaStockDTO();
+            dto.setProductoId(producto.getProducto_id());
+            dto.setNombre(producto.getNombre());
+            dto.setCategoria(producto.getCategoria());
+            dto.setMarca(producto.getMarca());
+            dto.setCantidadDisponible(cantidad);
+            dto.setStockMinimo(minimo);
+            dto.setUbicacion(inv.getUbicacion());
+            dto.setNivelAlerta(nivel);
+            dto.setCantidadNecesaria(Math.max(necesita, 0));
+
+            // Datos del proveedor
+            if (producto.getProveedor() != null) {
+                var prov = producto.getProveedor();
+                dto.setProveedorId(prov.getProveedor_id());
+                dto.setProveedorNombre(prov.getNombre());
+                dto.setProveedorTelefono(prov.getTelefono());
+                dto.setProveedorEmail(prov.getEmail());
+                dto.setProveedorDireccion(prov.getDireccion());
+            }
+
+            return dto;
+        })
+        .sorted((a, b) -> a.getCantidadDisponible().compareTo(b.getCantidadDisponible()))
+        .collect(Collectors.toList());
+}
 }

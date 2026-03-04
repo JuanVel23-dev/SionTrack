@@ -21,6 +21,7 @@
     <link rel="stylesheet" th:href="@{/css/components.css}">
     <link rel="stylesheet" th:href="@{/css/tables.css}">
     <link rel="stylesheet" th:href="@{/css/modals.css}">
+    <link rel="stylesheet" th:href="@{/css/notifications.css}">
 
     <th:block layout:fragment="customCSS"></th:block>
 </head>
@@ -134,7 +135,9 @@
                     </button>
                     <h2 class="page-title" th:text="${pageTitle ?: 'Dashboard'}">Dashboard</h2>
                 </div>
+
                 <div class="header-right">
+                    <!-- TEMA CLARO / OSCURO -->
                     <button class="icon-btn theme-toggle" id="theme-toggle" title="Cambiar tema">
                         <svg class="icon-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="12" cy="12" r="5"></circle>
@@ -151,12 +154,51 @@
                             <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
                         </svg>
                     </button>
-                    <button class="icon-btn" title="Notificaciones">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-                        </svg>
-                    </button>
+
+                    <!-- CAMPANA DE NOTIFICACIONES -->
+                    <div class="notification-bell" id="notification-bell">
+                        <button class="icon-btn" id="notif-toggle" title="Notificaciones">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                            </svg>
+                            <span class="notif-badge hidden" id="notif-badge"></span>
+                        </button>
+
+                        <div class="notif-dropdown" id="notif-dropdown">
+                            <div class="notif-header">
+                                <div class="notif-header-left">
+                                    <span class="notif-header-title">Alertas de Stock</span>
+                                    <span class="notif-header-count" id="notif-count-label">0 alertas</span>
+                                </div>
+                                <div class="notif-header-actions">
+                                    <button type="button" class="notif-header-btn" id="notif-mark-read" style="display:none;">
+                                        Marcar leídas
+                                    </button>
+                                    <button type="button" class="notif-header-btn clear-all" id="notif-clear-all" style="display:none;">
+                                        Limpiar todo
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="notif-body" id="notif-list">
+                                <div class="notif-empty">
+                                    <div class="notif-empty-icon">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                                        </svg>
+                                    </div>
+                                    <div class="notif-empty-title">Todo en orden</div>
+                                    <p class="notif-empty-desc">No hay alertas de stock pendientes</p>
+                                </div>
+                            </div>
+                            <div class="notif-footer">
+                                <a th:href="@{/web/productos}">Ver todos los productos →</a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </header>
 
@@ -199,26 +241,56 @@
     <!-- Toast Container -->
     <div class="toast-container" id="toast-container"></div>
 
+    <!-- Modal Reabastecimiento -->
+<div class="restock-overlay" id="restock-overlay">
+    <div class="restock-modal">
+        <div class="restock-modal-header">
+            <div class="restock-header-left">
+                <div class="restock-header-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                </div>
+                <div>
+                    <div class="restock-header-title">Reabastecimiento Requerido</div>
+                    <div class="restock-header-desc">Productos que necesitan compra de stock</div>
+                </div>
+            </div>
+            <button class="restock-close" id="restock-close">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+        <div class="restock-modal-body" id="restock-body"></div>
+        <div class="restock-modal-footer">
+            <div class="restock-footer-hint">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                Clic en un producto para ver detalle y contacto del proveedor
+            </div>
+            <div class="restock-footer-actions">
+                <button class="restock-btn restock-btn-secondary" id="restock-close-btn">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
     <!-- Scripts -->
     <script th:src="@{/js/main.js}"></script>
     <script th:src="@{/js/form-utils.js}"></script>
-    
+    <script th:src="@{/js/notifications.js}"></script>
+    <script th:src="@{/js/stock-alerts.js}"></script>
     <!-- Script para marcar página activa -->
     <script>
         (function() {
             const path = window.location.pathname;
             const navLinks = document.querySelectorAll('.nav-link[data-page]');
-            
+
             navLinks.forEach(link => {
                 link.classList.remove('active');
                 const page = link.dataset.page;
-                
+
                 if (path.includes(page)) {
                     link.classList.add('active');
                 }
             });
-            
-            // Si es la raíz o dashboard
+
             if (path === '/' || path === '/web' || path === '/web/' || path.includes('dashboard')) {
                 const dashboardLink = document.querySelector('[data-page="dashboard"]');
                 if (dashboardLink) {
@@ -230,5 +302,6 @@
     </script>
 
     <th:block layout:fragment="customJS"></th:block>
+    
 </body>
 </html>
