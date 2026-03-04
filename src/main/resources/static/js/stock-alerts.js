@@ -1,7 +1,6 @@
 /**
  * SionTrack — Stock Alerts Dashboard + Restock Modal
- * v5 — Final corregido
- * Anima rings, setea barras sin animación, genera mensajes, modal con proveedor
+ * v6 — Accordion fix: listener en init() una sola vez
  */
 (function () {
     'use strict';
@@ -12,12 +11,13 @@
         animateStockItems();
         generateRestockMessages();
 
-        // Modal bindings
         var openBtn = document.getElementById('open-restock-modal');
         var overlay = document.getElementById('restock-overlay');
         var closeBtn = document.getElementById('restock-close');
         var closeBtnFooter = document.getElementById('restock-close-btn');
+        var restockBody = document.getElementById('restock-body');
 
+        // Abrir modal
         if (openBtn) {
             openBtn.addEventListener('click', function (e) {
                 e.preventDefault();
@@ -25,6 +25,7 @@
             });
         }
 
+        // Cerrar modal
         if (closeBtn) closeBtn.addEventListener('click', closeRestockModal);
         if (closeBtnFooter) closeBtnFooter.addEventListener('click', closeRestockModal);
 
@@ -38,6 +39,21 @@
             if (e.key === 'Escape') closeRestockModal();
         });
 
+        // Accordion — UNA SOLA VEZ con event delegation
+        if (restockBody) {
+            restockBody.addEventListener('click', function (e) {
+                var header = e.target.closest('.restock-product-header');
+                if (!header) return;
+                var product = header.closest('.restock-product');
+                if (!product) return;
+                var wasExpanded = product.classList.contains('expanded');
+                restockBody.querySelectorAll('.restock-product.expanded').forEach(function (p) {
+                    p.classList.remove('expanded');
+                });
+                if (!wasExpanded) product.classList.add('expanded');
+            });
+        }
+
         fetchAlertasData();
     }
 
@@ -49,7 +65,7 @@
     }
 
     // =========================================
-    // ANIMACIONES DE RING + BARRA (sin animación)
+    // ANIMACIONES: ring anima, barra estática
     // =========================================
     function animateStockItems() {
         var items = document.querySelectorAll('.stock-item[data-cantidad]');
@@ -62,11 +78,11 @@
                 var cant = parseInt(item.dataset.cantidad) || 0;
                 var min = parseInt(item.dataset.minimo) || 1;
 
-                // Barra: se setea directo sin animación
+                // Barra: valor directo sin animación
                 var barP = Math.min((cant / min) * 100, 100);
                 item.style.setProperty('--bar-width', barP + '%');
 
-                // Ring: se anima con clase
+                // Ring: se anima con clase animate
                 var ringP = Math.min((cant / (min * 2)) * 100, 100);
                 var offset = 126 - (126 * ringP / 100);
                 item.style.setProperty('--ring-offset', offset);
@@ -80,7 +96,7 @@
     }
 
     // =========================================
-    // MENSAJES DE RESTOCK (hover)
+    // MENSAJES DE RESTOCK (aparecen en hover)
     // =========================================
     function generateRestockMessages() {
         document.querySelectorAll('.stock-item[data-cantidad]').forEach(function (item) {
@@ -122,7 +138,6 @@
 
         var products = alertasData.length > 0 ? alertasData : getProductsFromDOM();
 
-        // Ordenar: críticos primero, luego por cantidad ascendente
         products.sort(function (a, b) {
             var aNivel = (a.nivelAlerta || '').toUpperCase();
             var bNivel = (b.nivelAlerta || '').toUpperCase();
@@ -172,22 +187,6 @@
         });
 
         body.innerHTML = html;
-
-        // Accordion via event delegation
-        body.addEventListener('click', function (e) {
-            var header = e.target.closest('.restock-product-header');
-            if (!header) return;
-            var product = header.closest('.restock-product');
-            var wasExpanded = product.classList.contains('expanded');
-            // Cerrar todos
-            body.querySelectorAll('.restock-product.expanded').forEach(function (p) {
-                p.classList.remove('expanded');
-            });
-            // Toggle el que se clickeó
-            if (!wasExpanded) product.classList.add('expanded');
-        });
-
-        // NO auto-expandimos ninguno — todos cerrados al abrir
         overlay.classList.add('open');
     }
 
@@ -233,7 +232,6 @@
         '</div>';
     }
 
-    // Fallback: leer datos del DOM si el fetch no funcionó
     function getProductsFromDOM() {
         var products = [];
         document.querySelectorAll('.stock-item[data-cantidad]').forEach(function (item) {
