@@ -5,6 +5,7 @@
 
 <th:block layout:fragment="customCSS">
     <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+    <link rel="stylesheet" th:href="@{/css/productos-populares.css}">
 </th:block>
 
 <th:block layout:fragment="content">
@@ -156,8 +157,11 @@
         </div>
     </div>
 
-    <!-- Stock Alerts Card — Premium (ÚNICA versión) -->
-    <div class="stock-card animate-in" style="animation-delay:550ms"
+    <!-- Productos Populares -->
+    <section id="popular-productos" class="animate-in" style="animation-delay: 550ms;"></section>
+
+    <!-- Stock Alerts Card -->
+    <div class="stock-card animate-in" style="animation-delay:600ms"
          th:if="${alertasStock != null AND !alertasStock.isEmpty()}">
         <div class="stock-card-header">
             <div class="stock-header-left">
@@ -186,7 +190,6 @@
         </div>
 
         <div class="stock-list">
-            <!-- Urgency Banner — aparece SIEMPRE que hay alertas -->
             <div class="stock-urgency-banner">
                 <div class="stock-urgency-icon">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
@@ -197,7 +200,6 @@
                 <button class="stock-urgency-action" id="open-restock-modal">Reabastecer ahora</button>
             </div>
 
-            <!-- Items -->
             <div th:each="alerta : ${alertasStock}" class="stock-item"
                  th:classappend="${alerta.nivelAlerta.toLowerCase()}"
                  th:attr="data-cantidad=${alerta.cantidadDisponible},data-minimo=${alerta.stockMinimo}">
@@ -259,7 +261,9 @@
 </th:block>
 
 <th:block layout:fragment="customJS">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
     <script th:src="@{/js/dashboard.js}"></script>
+    <script th:src="@{/js/productos-populares.js}"></script>
 </th:block>
 
 </html>

@@ -46,16 +46,15 @@ public class Detalle_Servicio {
     private tipoItem tipo = tipoItem.PRODUCTO; 
     
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "servicio_id", nullable = false, unique = true)
+    @JoinColumn(name = "servicio_id", nullable = false)           // ← QUITADO unique = true
     @JsonBackReference("detalle_servicio")
     @Getter @Setter
     private Servicios servicio;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "producto_id", nullable = false, unique = true)
+    @JoinColumn(name = "producto_id", nullable = false)           // ← QUITADO unique = true
     @JsonBackReference("detalle_servicio_producto")
     @Getter @Setter
     private Productos producto;
-
 
 }

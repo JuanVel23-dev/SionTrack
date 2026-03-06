@@ -10,7 +10,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
-// import org.springframework.security.web.util.matcher.AntPathRequestMatcher; // Ya no es estrictamente necesario con la sintaxis simplificada
 
 @Configuration
 @EnableWebSecurity
@@ -19,8 +18,8 @@ public class SecurityConfig {
     @Bean
     public UserDetailsService userDetailsService() {
         UserDetails user = User.withDefaultPasswordEncoder()
-                .username("admin") //
-                .password("admin123") //
+                .username("admin")
+                .password("admin123")
                 .roles("USER")
                 .build();
         return new InMemoryUserDetailsManager(user);
@@ -31,20 +30,15 @@ public class SecurityConfig {
         http
                 // 1. CSRF: Ignorar en API para permitir POST desde Postman
                 .csrf(csrf -> csrf
-                        .ignoringRequestMatchers("/api/**")) // AGREGE LA BARRA "/" AL INICIO
+                        .ignoringRequestMatchers("/api/**"))
 
-                // 2. AUTHORIZATION: Unificado en un solo bloque y ordenado correctamente
+                // 2. AUTHORIZATION
                 .authorizeHttpRequests(authorize -> authorize
-                        // A. Recursos estáticos y Login (Públicos) - Van PRIMERO
                         .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**", "/login", "/api/webhook").permitAll()
-
-                        // B. Rutas de API (Protegidas, pero accesibles con Basic Auth)
                         .requestMatchers("/api/**").authenticated()
-
-                        // C. REGLA FINAL (Catch-all): Todo lo demás autenticado - DEBE IR AL FINAL
                         .anyRequest().authenticated())
 
-                // 3. Form Login (Para usuarios web)
+                // 3. Form Login
                 .formLogin(form -> form
                         .loginPage("/login")
                         .loginProcessingUrl("/login")
@@ -60,11 +54,17 @@ public class SecurityConfig {
                 // 5. HTTP Basic (Para Postman)
                 .httpBasic(Customizer.withDefaults())
 
-                // 6. Headers (CSP para estilos y scripts)
+                // 6. Headers — Content Security Policy
                 .headers(headers -> headers
                         .contentSecurityPolicy(csp -> csp
-                                .policyDirectives(
-                                        "style-src 'self' https://cdnjs.cloudflare.com; script-src 'self'; font-src 'self' https://cdnjs.cloudflare.com;")));
+                                .policyDirectives(String.join("; ",
+                                        "default-src 'self'",
+                                        "script-src 'self' https://cdn.jsdelivr.net",
+                                        "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com",
+                                        "font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com",
+                                        "img-src 'self' data:",
+                                        "connect-src 'self'"
+                                ))));
 
         return http.build();
     }
