@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.siontrack.siontrack.DTO.Request.ProductosRequestDTO;
-import com.siontrack.siontrack.DTO.Response.AlertaStockDTO;
 import com.siontrack.siontrack.DTO.Response.ProductoPopularDTO;
 import com.siontrack.siontrack.DTO.Response.ProductosResponseDTO;
 

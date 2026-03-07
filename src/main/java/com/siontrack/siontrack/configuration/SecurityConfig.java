@@ -2,27 +2,46 @@ package com.siontrack.siontrack.configuration;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.session.HttpSessionEventPublisher;
+
+import com.siontrack.siontrack.services.UsuariosService;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
+    private final UsuariosService usuariosService;
+
+    public SecurityConfig(UsuariosService usuariosService) {
+        this.usuariosService = usuariosService;
+    }
+
     @Bean
-    public UserDetailsService userDetailsService() {
-        UserDetails user = User.withDefaultPasswordEncoder()
-                .username("admin")
-                .password("admin123")
-                .roles("USER")
-                .build();
-        return new InMemoryUserDetailsManager(user);
+    public PasswordEncoder passwordEncoder(){
+        return new BCryptPasswordEncoder();
+    }
+       
+
+    @Bean
+    public AuthenticationManager authenticationManager(HttpSecurity http)throws Exception{
+        AuthenticationManagerBuilder authBuilder = http.getSharedObject(AuthenticationManagerBuilder.class);
+        authBuilder
+                .userDetailsService(usuariosService)
+                .passwordEncoder(passwordEncoder());
+        return authBuilder.build();
+    }
+
+    @Bean
+    public HttpSessionEventPublisher httpSessionEventPublisher() {
+        return new HttpSessionEventPublisher();
     }
 
     @Bean
@@ -53,6 +72,12 @@ public class SecurityConfig {
 
                 // 5. HTTP Basic (Para Postman)
                 .httpBasic(Customizer.withDefaults())
+
+                // ⬅️ Control de sesiones
+                .sessionManagement(session -> session
+                        .maximumSessions(1)                          // Solo 1 sesión por usuario
+                        .maxSessionsPreventsLogin(true)              // Bloquea nuevo login si ya hay sesión
+                        .expiredUrl("/login?expired"))  
 
                 // 6. Headers — Content Security Policy
                 .headers(headers -> headers
