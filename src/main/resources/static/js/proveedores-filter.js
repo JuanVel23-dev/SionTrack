@@ -32,4 +32,27 @@ document.addEventListener('DOMContentLoaded', function() {
     if (searchInput) {
         searchInput.addEventListener('input', filterTable);
     }
+
+    // ===== FORMATEO VISUAL DE TELÉFONOS =====
+    formatearTelefonosVisibles();
 });
+
+/**
+ * Formatea teléfonos de formato BD (573183260599) a display (+57 3183260599)
+ */
+function formatearTelefonosVisibles() {
+    var CODIGOS = ['591','593','595','598','502','503','504','505','506','507','351',
+                   '52','51','54','55','56','57','58','34','33','39','44','49','1'];
+
+    document.querySelectorAll('.contact-info-item span').forEach(function(el) {
+        var texto = el.textContent.trim();
+        if (!/^\d{10,15}$/.test(texto)) return;
+
+        for (var i = 0; i < CODIGOS.length; i++) {
+            if (texto.indexOf(CODIGOS[i]) === 0 && texto.length > CODIGOS[i].length) {
+                el.textContent = '+' + CODIGOS[i] + ' ' + texto.substring(CODIGOS[i].length);
+                return;
+            }
+        }
+    });
+}
