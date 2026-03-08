@@ -120,6 +120,48 @@
         { grupo: 'Europa', codigo: '+351', nombre: 'Portugal' }
     ];
 
+    // Códigos de país ordenados de mayor a menor longitud para matching
+    var CODIGOS_PAIS = PAISES.map(function(p) { return p.codigo.replace('+', ''); })
+        .filter(function(v, i, a) { return a.indexOf(v) === i; }) // únicos
+        .sort(function(a, b) { return b.length - a.length; }); // más largo primero
+
+    /**
+     * Parsea un teléfono en formato BD (ej: "573183252987") o formato display ("+57 3183252987")
+     * Retorna { codigo: "+57", numero: "3183252987" } o null si no puede parsear
+     */
+    function parsearTelefono(val) {
+        if (!val) return null;
+        val = val.trim();
+
+        // Formato con espacio: "+57 3183252987"
+        if (val.indexOf(' ') > 0) {
+            var partes = val.split(' ');
+            return { codigo: partes[0], numero: partes.slice(1).join('') };
+        }
+
+        // Formato con +: "+573183252987" (sin espacio)
+        if (val.charAt(0) === '+') {
+            var sinPlus = val.substring(1);
+            for (var i = 0; i < CODIGOS_PAIS.length; i++) {
+                if (sinPlus.indexOf(CODIGOS_PAIS[i]) === 0) {
+                    return { codigo: '+' + CODIGOS_PAIS[i], numero: sinPlus.substring(CODIGOS_PAIS[i].length) };
+                }
+            }
+            return null;
+        }
+
+        // Formato BD puro: "573183252987" (solo dígitos)
+        if (/^\d+$/.test(val)) {
+            for (var j = 0; j < CODIGOS_PAIS.length; j++) {
+                if (val.indexOf(CODIGOS_PAIS[j]) === 0 && val.length > CODIGOS_PAIS[j].length) {
+                    return { codigo: '+' + CODIGOS_PAIS[j], numero: val.substring(CODIGOS_PAIS[j].length) };
+                }
+            }
+        }
+
+        return null;
+    }
+
     function generarListaHTML(codigoSeleccionado) {
         var html = '';
         var grupoActual = '';
@@ -171,28 +213,24 @@
 
         lista.innerHTML = generarListaHTML(codigoActual);
 
-        // Parsear valor existente
-        var val = numeroInput.value;
-        if (val && val.indexOf(' ') > 0) {
-            var partes = val.split(' ');
-            var codigo = partes[0];
-            var numero = partes.slice(1).join('');
-
-            var nombrePais = buscarNombrePais(codigo);
+        // Parsear valor existente (soporta formato BD y formato display)
+        var parsed = parsearTelefono(numeroInput.value);
+        if (parsed) {
+            var nombrePais = buscarNombrePais(parsed.codigo);
             if (nombrePais) {
-                codigoActual = codigo;
-                boton.querySelector('.pais-texto').textContent = codigo + ' ' + nombrePais;
-                valorInput.value = codigo;
+                codigoActual = parsed.codigo;
+                boton.querySelector('.pais-texto').textContent = parsed.codigo + ' ' + nombrePais;
+                valorInput.value = parsed.codigo;
                 lista.innerHTML = generarListaHTML(codigoActual);
-            } else if (codigo.startsWith('+')) {
+            } else if (parsed.codigo.startsWith('+')) {
                 esOtro = true;
-                codigoActual = codigo;
+                codigoActual = parsed.codigo;
                 boton.querySelector('.pais-texto').textContent = 'Otro';
                 valorInput.value = 'otro';
-                prefijoInput.value = codigo;
+                prefijoInput.value = parsed.codigo;
                 prefijoContainer.classList.add('visible');
             }
-            numeroInput.value = numero;
+            numeroInput.value = parsed.numero;
         }
 
         // Toggle dropdown

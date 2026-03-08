@@ -23,6 +23,15 @@ public class ProveedoresService {
     @Autowired
     private ModelMapper modelMapper;
 
+    /**
+     * Limpia un teléfono para almacenarlo en BD.
+     * Entrada: "+57 3183252987" → Salida: "573183252987"
+     */
+    private String limpiarTelefono(String telefono) {
+        if (telefono == null) return null;
+        return telefono.replaceAll("[^0-9]", "");
+    }
+
     @Transactional(readOnly = true)
     public List<ProveedoresResponseDTO> obtenerListaProveedores() {
         return proveedoresRepository.findAll().stream()
@@ -39,6 +48,8 @@ public class ProveedoresService {
 
     @Transactional
     public ProveedoresResponseDTO crearProveedor(ProveedoresRequestDTO dto) {
+        dto.setTelefono(limpiarTelefono(dto.getTelefono()));
+
         Proveedores proveedor = modelMapper.map(dto, Proveedores.class);
 
         Proveedores savedProveedor = proveedoresRepository.save(proveedor);
@@ -51,6 +62,8 @@ public class ProveedoresService {
 
         Proveedores proveedorExistente = proveedoresRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Proveedor no encontrado con ID: " + id));
+
+        dto.setTelefono(limpiarTelefono(dto.getTelefono()));
 
         modelMapper.map(dto, proveedorExistente);
         proveedorExistente.setProveedor_id(id);

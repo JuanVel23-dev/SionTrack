@@ -50,6 +50,15 @@ public class ClienteServicios {
         this.direccionesRepository = direccionesRepository;
     }
 
+    /**
+     * Limpia un teléfono para almacenarlo en BD.
+     * Entrada: "+57 3183252987" → Salida: "573183252987"
+     */
+    private String limpiarTelefono(String telefono) {
+        if (telefono == null) return null;
+        return telefono.replaceAll("[^0-9]", "");
+    }
+
     @Transactional
     public ClienteResponseDTO crearCliente(ClienteRequestDTO dto) {
 
@@ -68,6 +77,7 @@ public class ClienteServicios {
             List<Cliente_Telefonos> telefonos = dto.getTelefonos().stream()
                     .map(tDto -> {
                         Cliente_Telefonos telefono = modelMapper.map(tDto, Cliente_Telefonos.class);
+                        telefono.setTelefono(limpiarTelefono(telefono.getTelefono()));
                         telefono.setClientes(savedCliente);
                         return telefono;
                     })
@@ -223,6 +233,9 @@ public class ClienteServicios {
 
         if (telefonosExistentes == null)
             telefonosExistentes = new ArrayList<>();
+
+        // Limpiar teléfonos del DTO para comparación consistente
+        nuevosTelefonosDto.forEach(t -> t.setTelefono(limpiarTelefono(t.getTelefono())));
 
         // a) Eliminar teléfonos
         telefonosExistentes.removeIf(telefonoExistente -> nuevosTelefonosDto.stream()
