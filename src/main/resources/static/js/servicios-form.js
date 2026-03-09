@@ -1,9 +1,8 @@
 /**
  * SionTrack - Servicios Form
- * Lógica del formulario de creación de servicios.
  *
- * Los datos de vehículos y productos se leen del DOM (div ocultos
- * renderizados por Thymeleaf con data-attributes), NO de JSON inline.
+ * Vehículos: se cargan via FETCH a /api/clientes/{id}/vehiculos
+ * Productos: se leen del DOM (divs ocultos con data-attributes)
  */
 (function() {
     'use strict';
@@ -22,8 +21,7 @@
         var totalDisplay = document.getElementById('total-display');
         var form = document.getElementById('servicioForm');
 
-        // ===== LEER DATOS DEL DOM =====
-        var vehiculosData = leerVehiculosDelDOM();
+        // Leer productos del DOM
         var productosData = leerProductosDelDOM();
 
         // Fecha de hoy por defecto
@@ -32,7 +30,9 @@
             fechaInput.value = new Date().toISOString().split('T')[0];
         }
 
-        // ===== CASCADA CLIENTE → VEHÍCULOS =====
+        // =============================================
+        // CASCADA CLIENTE → VEHÍCULOS (via FETCH)
+        // =============================================
         if (clienteSelect) {
             clienteSelect.addEventListener('change', function() {
                 cargarVehiculos(this.value);
@@ -40,35 +40,45 @@
         }
 
         function cargarVehiculos(clienteId) {
-            vehiculoSelect.innerHTML = '';
-
             if (!clienteId) {
                 vehiculoSelect.innerHTML = '<option value="">Seleccione primero un cliente</option>';
                 return;
             }
 
-            // Filtrar vehículos de este cliente
-            var vehiculosCliente = vehiculosData.filter(function(v) {
-                return v.clienteId == clienteId;
+            vehiculoSelect.innerHTML = '<option value="">Cargando vehículos...</option>';
+
+            fetch('/api/clientes/' + clienteId + '/vehiculos', {
+                headers: { 'Accept': 'application/json' }
+            })
+            .then(function(response) {
+                if (!response.ok) throw new Error('Error ' + response.status);
+                return response.json();
+            })
+            .then(function(vehiculos) {
+                if (!vehiculos || vehiculos.length === 0) {
+                    vehiculoSelect.innerHTML = '<option value="">Este cliente no tiene vehículos registrados</option>';
+                    return;
+                }
+
+                var html = '<option value="">Seleccione un vehículo</option>';
+                vehiculos.forEach(function(v) {
+                    var label = (v.marca || '') + ' ' + (v.modelo || '');
+                    if (v.placa) label += ' (' + v.placa + ')';
+                    if (v.anio) label += ' - ' + v.anio;
+                    html += '<option value="' + v.vehiculo_id + '">' + escapeHtml(label.trim()) + '</option>';
+                });
+
+                vehiculoSelect.innerHTML = html;
+            })
+            .catch(function(err) {
+                console.error('Error cargando vehículos:', err);
+                vehiculoSelect.innerHTML = '<option value="">Error al cargar vehículos</option>';
             });
-
-            if (vehiculosCliente.length === 0) {
-                vehiculoSelect.innerHTML = '<option value="">Este cliente no tiene vehículos registrados</option>';
-                return;
-            }
-
-            var html = '<option value="">Seleccione un vehículo</option>';
-            vehiculosCliente.forEach(function(v) {
-                var label = v.marca + ' ' + v.modelo;
-                if (v.placa) label += ' (' + v.placa + ')';
-                if (v.anio) label += ' - ' + v.anio;
-                html += '<option value="' + v.vehiculoId + '">' + escapeHtml(label) + '</option>';
-            });
-
-            vehiculoSelect.innerHTML = html;
         }
 
-        // ===== FILAS DE DETALLE DINÁMICAS =====
+        // =============================================
+        // FILAS DE DETALLE DINÁMICAS
+        // =============================================
         if (addDetalleBtn) {
             addDetalleBtn.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -82,12 +92,12 @@
             fila.style.opacity = '0';
             fila.style.transform = 'translateY(-10px)';
 
-            // Construir opciones de productos desde los datos del DOM
+            // Opciones de productos
             var productosOptions = '<option value="">Seleccione producto</option>';
             productosData.forEach(function(p) {
                 var label = p.nombre;
                 if (p.marca) label += ' - ' + p.marca;
-                productosOptions += '<option value="' + p.id + '" data-precio="' + p.precio + '">' + escapeHtml(label) + '</option>';
+                productosOptions += '<option value="' + p.id + '" data-precio="' + p.precio + '" data-categoria="' + escapeAttr(p.categoria) + '">' + escapeHtml(label) + '</option>';
             });
 
             fila.innerHTML =
@@ -127,43 +137,38 @@
             detallesContainer.appendChild(fila);
             detalleIndex++;
 
-            // Animación de entrada
+            // Animación
             requestAnimationFrame(function() {
                 fila.style.transition = 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)';
                 fila.style.opacity = '1';
                 fila.style.transform = 'translateY(0)';
             });
 
-            // Eventos de la nueva fila
             var productoSelect = fila.querySelector('.detalle-producto');
             var tipoSelect = fila.querySelector('.detalle-tipo');
             var cantidadInput = fila.querySelector('.detalle-cantidad');
             var precioInput = fila.querySelector('.detalle-precio');
 
-            // Al seleccionar producto → auto-llenar precio y tipo
+            // Al seleccionar producto → precio + tipo automáticos
             productoSelect.addEventListener('change', function() {
                 var selected = this.options[this.selectedIndex];
-                var precio = selected.getAttribute('data-precio');
 
-                // Auto-llenar precio
+                // Auto-precio
+                var precio = selected.getAttribute('data-precio');
                 if (precio) {
                     precioInput.value = parseFloat(precio).toFixed(2);
                 }
 
-                // Auto-seleccionar tipo basado en categoría del producto
-                var productoId = this.value;
-                var producto = productosData.find(function(p) { return p.id == productoId; });
-                if (producto && producto.categoria) {
-                    var cat = producto.categoria.toLowerCase();
-                    if (cat.indexOf('servicio') !== -1 || cat.indexOf('mano de obra') !== -1) {
-                        tipoSelect.value = 'SERVICIO';
-                    } else if (cat.indexOf('insumo') !== -1) {
-                        tipoSelect.value = 'INSUMO';
-                    } else if (cat.indexOf('paquete') !== -1 || cat.indexOf('combo') !== -1) {
-                        tipoSelect.value = 'PAQUETE';
-                    } else {
-                        tipoSelect.value = 'PRODUCTO';
-                    }
+                // Auto-tipo según categoría
+                var categoria = (selected.getAttribute('data-categoria') || '').toLowerCase();
+                if (categoria.indexOf('servicio') !== -1 || categoria.indexOf('mano de obra') !== -1) {
+                    tipoSelect.value = 'SERVICIO';
+                } else if (categoria.indexOf('insumo') !== -1) {
+                    tipoSelect.value = 'INSUMO';
+                } else if (categoria.indexOf('paquete') !== -1 || categoria.indexOf('combo') !== -1) {
+                    tipoSelect.value = 'PAQUETE';
+                } else {
+                    tipoSelect.value = 'PRODUCTO';
                 }
 
                 recalcularTotal();
@@ -172,11 +177,12 @@
             cantidadInput.addEventListener('input', recalcularTotal);
             precioInput.addEventListener('input', recalcularTotal);
 
-            // Focus en el select de producto
             productoSelect.focus();
         }
 
-        // ===== ELIMINAR FILA DE DETALLE (event delegation) =====
+        // =============================================
+        // ELIMINAR FILA (event delegation)
+        // =============================================
         detallesContainer.addEventListener('click', function(e) {
             var removeBtn = e.target.closest('.btn-remove-detalle');
             if (!removeBtn) return;
@@ -196,12 +202,13 @@
             }, 200);
         });
 
-        // ===== REINDEXAR DETALLES =====
+        // =============================================
+        // REINDEXAR
+        // =============================================
         function reindexarDetalles() {
             var filas = detallesContainer.querySelectorAll('.detalle-fila');
             filas.forEach(function(fila, idx) {
-                var inputs = fila.querySelectorAll('[name]');
-                inputs.forEach(function(input) {
+                fila.querySelectorAll('[name]').forEach(function(input) {
                     var name = input.getAttribute('name');
                     input.setAttribute('name', name.replace(/detalles\[\d+\]/, 'detalles[' + idx + ']'));
                 });
@@ -209,12 +216,12 @@
             detalleIndex = filas.length;
         }
 
-        // ===== RECALCULAR TOTAL =====
+        // =============================================
+        // RECALCULAR TOTAL
+        // =============================================
         function recalcularTotal() {
             var total = 0;
-            var filas = detallesContainer.querySelectorAll('.detalle-fila');
-
-            filas.forEach(function(fila) {
+            detallesContainer.querySelectorAll('.detalle-fila').forEach(function(fila) {
                 var cantidad = parseFloat(fila.querySelector('.detalle-cantidad').value) || 0;
                 var precio = parseFloat(fila.querySelector('.detalle-precio').value) || 0;
                 var subtotal = cantidad * precio;
@@ -223,7 +230,6 @@
                 if (subtotalEl) {
                     subtotalEl.textContent = '$ ' + subtotal.toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 }
-
                 total += subtotal;
             });
 
@@ -232,7 +238,9 @@
             }
         }
 
-        // ===== VALIDACIÓN AL ENVIAR =====
+        // =============================================
+        // VALIDACIÓN
+        // =============================================
         if (form) {
             form.addEventListener('submit', function(e) {
                 var ok = true;
@@ -260,7 +268,7 @@
                     errores.push('Agregue al menos un producto o item');
                 }
 
-                filas.forEach(function(fila, idx) {
+                filas.forEach(function(fila) {
                     var producto = fila.querySelector('.detalle-producto');
                     var cantidad = fila.querySelector('.detalle-cantidad');
 
@@ -288,40 +296,16 @@
             });
         }
 
-        // ===== AGREGAR PRIMERA FILA POR DEFECTO =====
+        // Agregar primera fila por defecto
         agregarFilaDetalle();
     });
 
-    // ===== FUNCIONES DE LECTURA DE DATOS DEL DOM =====
-
-    /**
-     * Lee los vehículos desde los divs ocultos que Thymeleaf renderizó
-     */
-    function leerVehiculosDelDOM() {
-        var items = document.querySelectorAll('#vehiculos-data .vehiculo-item');
-        var vehiculos = [];
-
-        items.forEach(function(el) {
-            vehiculos.push({
-                clienteId: el.dataset.clienteId,
-                vehiculoId: el.dataset.vehiculoId,
-                marca: el.dataset.marca || '',
-                modelo: el.dataset.modelo || '',
-                placa: el.dataset.placa || '',
-                anio: el.dataset.anio || ''
-            });
-        });
-
-        return vehiculos;
-    }
-
-    /**
-     * Lee los productos desde los divs ocultos que Thymeleaf renderizó
-     */
+    // =============================================
+    // LEER PRODUCTOS DEL DOM
+    // =============================================
     function leerProductosDelDOM() {
         var items = document.querySelectorAll('#productos-data .producto-item');
         var productos = [];
-
         items.forEach(function(el) {
             productos.push({
                 id: el.dataset.id,
@@ -331,7 +315,6 @@
                 categoria: el.dataset.categoria || ''
             });
         });
-
         return productos;
     }
 
@@ -339,5 +322,10 @@
         var div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    }
+
+    function escapeAttr(text) {
+        if (!text) return '';
+        return text.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
 })();

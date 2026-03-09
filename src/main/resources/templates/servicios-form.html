@@ -24,9 +24,7 @@
               id="servicioForm">
 
             <div class="card-body">
-                <!-- ============================================
-                     INFORMACIÓN GENERAL
-                     ============================================ -->
+                <!-- Información General -->
                 <h3 class="form-section-title">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
@@ -108,9 +106,7 @@
 
                 <div class="divider"></div>
 
-                <!-- ============================================
-                     DETALLE DEL SERVICIO
-                     ============================================ -->
+                <!-- Detalle del Servicio -->
                 <h3 class="form-section-title">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="16.5" y1="9.4" x2="7.5" y2="4.21"></line>
@@ -119,9 +115,7 @@
                     Detalle del Servicio
                 </h3>
 
-                <div id="detalles-container">
-                    <!-- Las filas de detalle se agregan dinámicamente por JS -->
-                </div>
+                <div id="detalles-container"></div>
 
                 <button type="button" class="btn btn-ghost btn-sm" id="add-detalle-btn">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -133,7 +127,7 @@
 
                 <div class="divider"></div>
 
-                <!-- Resumen de Total -->
+                <!-- Total -->
                 <div class="servicio-total-wrap">
                     <div class="servicio-total">
                         <span class="servicio-total-label">Total Estimado</span>
@@ -162,28 +156,7 @@
         </form>
     </div>
 
-    <!-- ============================================
-         DATOS EMBEBIDOS POR THYMELEAF
-         (Vehículos por cliente + Productos para selects)
-         ============================================ -->
-
-    <!-- Vehículos agrupados por cliente (data-attributes legibles por JS) -->
-    <div id="vehiculos-data" style="display:none;">
-        <th:block th:each="cli : ${listaClientes}">
-            <th:block th:each="veh : ${cli.vehículos}">
-                <div class="vehiculo-item"
-                     th:data-cliente-id="${cli.cliente_id}"
-                     th:data-vehiculo-id="${veh.vehiculo_id}"
-                     th:data-marca="${veh.marca}"
-                     th:data-modelo="${veh.modelo}"
-                     th:data-placa="${veh.placa}"
-                     th:data-anio="${veh.anio}">
-                </div>
-            </th:block>
-        </th:block>
-    </div>
-
-    <!-- Productos disponibles (data-attributes legibles por JS) -->
+    <!-- Productos disponibles (renderizados por Thymeleaf como data-attributes) -->
     <div id="productos-data" style="display:none;">
         <th:block th:each="prod : ${listaProductos}">
             <div class="producto-item"

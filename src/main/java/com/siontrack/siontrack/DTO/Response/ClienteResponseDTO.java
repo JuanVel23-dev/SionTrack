@@ -42,5 +42,5 @@ public class ClienteResponseDTO {
     private List<CorreosResponseDTO> correos;
     @Getter
     @Setter
-    private List<VehiculosResponseDTO> vehículos;
+    private List<VehiculosResponseDTO> vehiculos;
 }
