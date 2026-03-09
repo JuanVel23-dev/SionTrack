@@ -82,7 +82,7 @@ public class WebhookService {
     @Transactional
     protected void procesarConsentimiento(String telefonoMeta, String mensaje) {
         String respuestaNormalizada = mensaje.trim().toUpperCase();
-        String telefonoLocal = whatsAppService.normalizarTelefonoLocal(telefonoMeta);
+        String telefonoLocal = telefonoMeta;
 
         log.info("🔍 Buscando cliente: {}", telefonoLocal);
 

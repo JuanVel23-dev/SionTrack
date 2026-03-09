@@ -37,7 +37,7 @@ public class NotificacionesService {
         this.vehiculosRepository = vehiculosRepository;
     }
 
-    @Scheduled(cron = "0 0 23 * * *")
+    @Scheduled(cron = "0 20 20 * * *")
     @Transactional
     public void enviarNotificacionesProgramadas() {
         log.info("🔔 Enviando recordatorios programados...");

@@ -75,7 +75,7 @@ public class RecordatorioService {
         notificacion.setTipoNotificacion("RECORDATORIO_SERVICIO");
         notificacion.setNombreServicio("Cambio de aceite");
         notificacion.setKilometrajeServicio(servicio.getKilometraje_servicio());
-        notificacion.setFecha_programada(Timestamp.valueOf(fechaRecordatorio.atTime(23, 30)));
+        notificacion.setFecha_programada(Timestamp.valueOf(fechaRecordatorio.atTime(12, 00)));
         notificacion.setFechaProximoServicio(Timestamp.valueOf(fechaProximoServicio.atStartOfDay()));
         notificacion.setEstado("pendiente");
         notificacion.setIntentosEnvio(0);

@@ -47,24 +47,20 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // 1. CSRF: Ignorar en API para permitir POST desde Postman
                 .csrf(csrf -> csrf
                         .ignoringRequestMatchers("/api/**"))
 
-                // 2. AUTHORIZATION
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**", "/login", "/api/webhook").permitAll()
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().authenticated())
 
-                // 3. Form Login
                 .formLogin(form -> form
                         .loginPage("/login")
                         .loginProcessingUrl("/login")
                         .defaultSuccessUrl("/web/dashboard", true)
                         .permitAll())
 
-                // 4. Logout
                 .logout(logout -> logout
                         .logoutUrl("/logout")
                         .logoutSuccessUrl("/login?logout")
@@ -75,11 +71,10 @@ public class SecurityConfig {
 
                 // ⬅️ Control de sesiones
                 .sessionManagement(session -> session
-                        .maximumSessions(1)                          // Solo 1 sesión por usuario
-                        .maxSessionsPreventsLogin(true)              // Bloquea nuevo login si ya hay sesión
+                        .maximumSessions(1)                          
+                        .maxSessionsPreventsLogin(true)              
                         .expiredUrl("/login?expired"))  
 
-                // 6. Headers — Content Security Policy
                 .headers(headers -> headers
                         .contentSecurityPolicy(csp -> csp
                                 .policyDirectives(String.join("; ",

@@ -91,22 +91,14 @@ public class WhatsAppService {
 
         Map<String, Object> body = Map.of(
                 "messaging_product", "whatsapp",
-                "to", formatearTelefono(telefono),
+                "to", telefono,
                 "type", "text",
                 "text", Map.of("body", mensaje));
 
         return ejecutarEnvio(body, telefono);
     }
 
-    /**
-     * Normaliza un teléfono de formato Meta (573505641071) a local (3505641071)
-     */
-    public String normalizarTelefonoLocal(String telefonoMeta) {
-        if (telefonoMeta == null)
-            return "";
-        String limpio = telefonoMeta.replaceAll("[^0-9]", "");
-        return limpio.length() > 10 ? limpio.substring(limpio.length() - 10) : limpio;
-    }
+    
 
     public ResultadoEnvioMensaje enviarPlantilla(String telefono, String nombrePlantilla,
             String codigoIdioma, Map<String, String> parametros) {
@@ -123,7 +115,7 @@ public class WhatsAppService {
 
         Map<String, Object> body = Map.of(
                 "messaging_product", "whatsapp",
-                "to", formatearTelefono(telefono),
+                "to", telefono,
                 "type", "template",
                 "template", template);
 
@@ -182,7 +174,7 @@ public class WhatsAppService {
     private ResultadoEnvioMensaje manejarErrorMeta(HttpClientErrorException e, String telefono) {
         try {
             String responseBody = e.getResponseBodyAsString();
-            log.error("ERROR COMPLETO DE META: {}" , responseBody);
+            log.info("ERROR COMPLETO DE META: {}" + responseBody);
             JsonNode error = objectMapper.readTree(responseBody).get("error");
 
             int codigo = error.get("code").asInt();
@@ -233,17 +225,5 @@ public class WhatsAppService {
     /**
      * Formatea el teléfono agregando código de país si es necesario
      */
-    private String formatearTelefono(String telefono) {
-        if (telefono == null) {
-            throw new IllegalArgumentException("El teléfono no puede ser nulo");
-        }
-
-        String telefonoLimpio = telefono.replaceAll("[^0-9]", "");
-
-        if (!telefonoLimpio.startsWith(config.getCodigoPais())) {
-            return config.getCodigoPais() + telefonoLimpio;
-        }
-
-        return telefonoLimpio;
-    }
+    
 }
