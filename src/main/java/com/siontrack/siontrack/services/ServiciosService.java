@@ -12,7 +12,9 @@ import org.springframework.stereotype.Service;
 
 import com.siontrack.siontrack.DTO.Request.DetalleServicioRequestDTO;
 import com.siontrack.siontrack.DTO.Request.ServicioRequestDTO;
+import com.siontrack.siontrack.DTO.Response.ClienteResponseDTO;
 import com.siontrack.siontrack.DTO.Response.ServicioResponseDTO;
+import com.siontrack.siontrack.DTO.Response.VehiculosResponseDTO;
 import com.siontrack.siontrack.models.Clientes;
 import com.siontrack.siontrack.models.Detalle_Servicio;
 import com.siontrack.siontrack.models.Productos;
@@ -41,6 +43,27 @@ public class ServiciosService {
     @Autowired
     private RecordatorioService recordatorioService;
 
+    /**
+     * Mapea una entidad Servicios a ServicioResponseDTO,
+     * resolviendo manualmente las relaciones con nombres distintos
+     * (entity: vehiculos/clientes → DTO: vehiculo/cliente)
+     */
+    private ServicioResponseDTO mapearServicioADTO(Servicios servicio) {
+        ServicioResponseDTO dto = modelMapper.map(servicio, ServicioResponseDTO.class);
+
+        // Mapeo manual: entity.getVehiculos() → dto.setVehiculo()
+        if (servicio.getVehiculos() != null) {
+            dto.setVehiculo(modelMapper.map(servicio.getVehiculos(), VehiculosResponseDTO.class));
+        }
+
+        // Mapeo manual: entity.getClientes() → dto.setCliente()
+        if (servicio.getClientes() != null) {
+            dto.setCliente(modelMapper.map(servicio.getClientes(), ClienteResponseDTO.class));
+        }
+
+        return dto;
+    }
+
     @Transactional
     public ServicioResponseDTO crearServicio(ServicioRequestDTO dto) {
 
@@ -63,10 +86,10 @@ public class ServiciosService {
         servicio.setClientes(cliente);
         servicio.setVehiculos(vehiculo);
 
-        if(servicio.getKilometraje_servicio() != null ){
+        if (servicio.getKilometraje_servicio() != null) {
             actualizarKilometrajeVehiculo(vehiculo, servicio.getKilometraje_servicio());
         }
-        
+
         // 3. Procesar Detalles y Calcular Total
         BigDecimal totalServicio = BigDecimal.ZERO;
         List<Detalle_Servicio> listaDetalles = new ArrayList<>();
@@ -98,7 +121,7 @@ public class ServiciosService {
                 // Definir tipo (usando el Enum de tu entidad)
                 detalle.setTipo(Detalle_Servicio.tipoItem.valueOf(detalleDto.getTipoItem()));
 
-                // Lógica de Stock (Opcional: Descontar inventario)
+                // Lógica de Stock (Descontar inventario)
                 if (producto.getInventario() != null) {
                     int nuevaCantidad = producto.getInventario().getCantidad_disponible()
                             - detalleDto.getCantidad().intValue();
@@ -124,28 +147,31 @@ public class ServiciosService {
         try {
             recordatorioService.procesarServicioParaRecordatorios(servicioGuardado);
         } catch (Exception e) {
-            // Log del error pero no interrumpe la creación del servicio
             System.err.println("⚠️ Error creando recordatorio: " + e.getMessage());
         }
 
-        // 5. Retornar DTO
-        return modelMapper.map(servicioGuardado, ServicioResponseDTO.class);
+        // 5. Retornar DTO con mapeo correcto
+        return mapearServicioADTO(servicioGuardado);
     }
 
-    // Método para listar
+    // Listar todos
     public List<ServicioResponseDTO> obtenerTodos() {
         return serviciosRepository.findAll().stream()
-                .map(s -> modelMapper.map(s, ServicioResponseDTO.class))
+                .map(this::mapearServicioADTO)
                 .collect(Collectors.toList());
     }
 
+    // Obtener por ID
+    public ServicioResponseDTO obtenerServicioPorId(Integer id) {
+        Servicios servicio = serviciosRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Servicio no encontrado con ID: " + id));
+        return mapearServicioADTO(servicio);
+    }
+
     public void eliminarServicio(Integer idServicio) {
-        // Primero verificamos que exista para evitar errores
         if (!serviciosRepository.existsById(idServicio)) {
             throw new RuntimeException("El servicio con ID " + idServicio + " no existe.");
         }
-
-        // Al borrar el servicio, Hibernate automáticamente borrará los detalles
         serviciosRepository.deleteById(idServicio);
     }
 
@@ -153,7 +179,6 @@ public class ServiciosService {
         if (kilometrajeNuevo == null || kilometrajeNuevo.trim().isEmpty()) {
             return;
         }
-
         vehiculo.setKilometraje_actual(kilometrajeNuevo.trim());
         vehiculoRepository.save(vehiculo);
     }

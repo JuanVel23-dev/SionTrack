@@ -1,0 +1,79 @@
+package com.siontrack.siontrack.controllers;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import com.siontrack.siontrack.DTO.Request.ServicioRequestDTO;
+import com.siontrack.siontrack.DTO.Response.ClienteResponseDTO;
+import com.siontrack.siontrack.DTO.Response.ProductosResponseDTO;
+import com.siontrack.siontrack.DTO.Response.ServicioResponseDTO;
+import com.siontrack.siontrack.services.ClienteServicios;
+import com.siontrack.siontrack.services.ProductosServicios;
+import com.siontrack.siontrack.services.ServiciosService;
+
+@Controller
+@RequestMapping("/web")
+public class ServiciosViewController {
+
+    @Autowired
+    private ServiciosService serviciosService;
+
+    @Autowired
+    private ClienteServicios clienteServicios;
+
+    @Autowired
+    private ProductosServicios productosServicios;
+
+    /**
+     * Carga las listas necesarias para el formulario (clientes y productos)
+     */
+    private void cargarDatosFormulario(Model model) {
+        List<ClienteResponseDTO> listaClientes = clienteServicios.obtenerListaClientes();
+        List<ProductosResponseDTO> listaProductos = productosServicios.obtenerListaProductos();
+        model.addAttribute("listaClientes", listaClientes);
+        model.addAttribute("listaProductos", listaProductos);
+    }
+
+    @GetMapping("/servicios")
+    public String mostrarListaServicios(Model model) {
+        List<ServicioResponseDTO> listaServicios = serviciosService.obtenerTodos();
+        model.addAttribute("servicios", listaServicios);
+        return "servicios-lista";
+    }
+
+    @GetMapping("/servicios/nuevo")
+    public String mostrarFormularioNuevoServicio(Model model) {
+        model.addAttribute("servicio", new ServicioRequestDTO());
+        cargarDatosFormulario(model);
+        return "servicios-form";
+    }
+
+    @PostMapping("/servicios/guardar")
+    public String guardarServicio(
+            @ModelAttribute("servicio") ServicioRequestDTO servicioDtoDelFormulario,
+            RedirectAttributes redirectAttributes) {
+        try {
+            serviciosService.crearServicio(servicioDtoDelFormulario);
+            redirectAttributes.addFlashAttribute("successMessage", "Servicio creado exitosamente");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Error al crear el servicio: " + e.getMessage());
+        }
+        return "redirect:/web/servicios";
+    }
+
+    @GetMapping("/servicios/eliminar/{id}")
+    public String eliminarServicio(@PathVariable Integer id, RedirectAttributes redirectAttributes) {
+        try {
+            serviciosService.eliminarServicio(id);
+            redirectAttributes.addFlashAttribute("deleteMessage", "Servicio eliminado exitosamente");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Error al eliminar: " + e.getMessage());
+        }
+        return "redirect:/web/servicios";
+    }
+}

@@ -5,7 +5,8 @@ import com.siontrack.siontrack.repository.ClienteRepository;
 import com.siontrack.siontrack.repository.ProveedoresRepository;
 import com.siontrack.siontrack.repository.ProductosRepository;
 import com.siontrack.siontrack.services.ProductosServicios;
-
+import com.siontrack.siontrack.services.ServiciosService;
+import com.siontrack.siontrack.services.ServiciosService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -30,13 +31,16 @@ public class DashboardViewController {
     @Autowired
     private ProductosServicios productosServicios;
 
+    @Autowired
+    private ServiciosService serviciosService;
+
     @GetMapping({"/", "/dashboard"})
     public String mostrarDashboard(Model model) {
 
         long totalClientes = clienteRepository.count();
         long totalProveedores = proveedorRepository.count();
         long totalProductos = productoRepository.count();
-        long totalServicios = 0;
+        long totalServicios = serviciosService.obtenerTodos().size();
 
         // Alertas de stock
         List<AlertaStockDTO> alertasStock = productosServicios.obtenerAlertasStock();
