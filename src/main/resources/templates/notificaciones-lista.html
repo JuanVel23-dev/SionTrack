@@ -4,7 +4,7 @@
       layout:decorate="~{layout/base}">
 
 <th:block layout:fragment="customCSS">
-    <link rel="stylesheet" th:href="@{/css/notificaciones-tabs.css}" />
+    <link rel="stylesheet" th:href="@{/css/notificaciones-lista.css}" />
 </th:block>
 
 <th:block layout:fragment="content">
@@ -68,28 +68,28 @@
                         <tbody>
                             <tr th:each="item : ${promociones}" class="data-row data-row-promociones">
                                 <td data-label="Cliente" class="text-left">
-                                    <div th:if="${item.clienteNombre != null}">
-                                        <span th:text="${item.clienteNombre}">Cliente</span>
-                                        <div th:if="${item.telefono != null}" class="contact-info-item-small">
+                                    <div th:if="${item.clientes != null}">
+                                        <span th:text="${item.clientes.nombre}">Cliente</span>
+                                        <div th:if="${item.clientes.telefonos != null and !item.clientes.telefonos.isEmpty()}" class="contact-info-item-small">
                                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
-                                            <span th:text="${item.telefono}">000</span>
+                                            <span th:text="${item.clientes.telefonos[0].telefono}">000</span>
                                         </div>
                                     </div>
-                                    <span th:if="${item.clienteNombre == null}" class="text-subtle">—</span>
+                                    <span th:if="${item.clientes == null}" class="text-subtle">—</span>
                                 </td>
                                 <td data-label="Vehículo" class="text-left">
-                                    <div th:if="${item.vehiculoInfo != null and !item.vehiculoInfo.isEmpty()}">
-                                        <span th:text="${item.vehiculoInfo}">Marca Modelo</span>
-                                        <div th:if="${item.placa != null}" class="contact-info-item-small">
+                                    <div th:if="${item.vehiculo != null}">
+                                        <span th:text="${(item.vehiculo.marca ?: '') + ' ' + (item.vehiculo.modelo ?: '')}">Marca Modelo</span>
+                                        <div th:if="${item.vehiculo.placa != null}" class="contact-info-item-small">
                                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"></rect><line x1="2" y1="12" x2="22" y2="12"></line></svg>
-                                            <span th:text="${item.placa}">ABC-1234</span>
+                                            <span th:text="${item.vehiculo.placa}">ABC-1234</span>
                                         </div>
                                     </div>
-                                    <span th:if="${item.vehiculoInfo == null or item.vehiculoInfo.isEmpty()}" class="text-subtle">—</span>
+                                    <span th:if="${item.vehiculo == null}" class="text-subtle">—</span>
                                 </td>
                                 <td data-label="Promoción" class="text-left">
-                                    <span th:if="${item.mensajeEnviado != null}" th:text="${#strings.abbreviate(item.mensajeEnviado, 50)}">Promo</span>
-                                    <span th:if="${item.mensajeEnviado == null}" class="text-subtle">—</span>
+                                    <span th:if="${item.mensaje_enviado != null}" th:text="${#strings.abbreviate(item.mensaje_enviado, 50)}">Promo</span>
+                                    <span th:if="${item.mensaje_enviado == null}" class="text-subtle">—</span>
                                 </td>
                                 <td data-label="Estado">
                                     <span th:if="${item.estado == 'enviado'}" class="badge badge-success">Enviado</span>
@@ -98,8 +98,8 @@
                                     <span th:if="${item.estado != 'enviado' and item.estado != 'fallido' and item.estado != 'sin_consentimiento'}" class="badge badge-neutral" th:text="${item.estado}">-</span>
                                 </td>
                                 <td data-label="Fecha" class="text-left">
-                                    <span th:if="${item.fechaEnvio != null}" th:text="${#temporals.format(item.fechaEnvio, 'dd/MM/yyyy HH:mm')}">01/01/2026</span>
-                                    <span th:if="${item.fechaEnvio == null}" class="text-subtle">—</span>
+                                    <span th:if="${item.creado_en != null}" th:text="${#temporals.format(item.creado_en, 'dd/MM/yyyy HH:mm')}">01/01/2026</span>
+                                    <span th:if="${item.creado_en == null}" class="text-subtle">—</span>
                                 </td>
                             </tr>
                         </tbody>
@@ -145,24 +145,24 @@
                         <tbody>
                             <tr th:each="item : ${recordatorios}" class="data-row data-row-recordatorios">
                                 <td data-label="Cliente" class="text-left">
-                                    <div th:if="${item.clienteNombre != null}">
-                                        <span th:text="${item.clienteNombre}">Cliente</span>
-                                        <div th:if="${item.telefono != null}" class="contact-info-item-small">
+                                    <div th:if="${item.clientes != null}">
+                                        <span th:text="${item.clientes.nombre}">Cliente</span>
+                                        <div th:if="${item.clientes.telefonos != null and !item.clientes.telefonos.isEmpty()}" class="contact-info-item-small">
                                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
-                                            <span th:text="${item.telefono}">000</span>
+                                            <span th:text="${item.clientes.telefonos[0].telefono}">000</span>
                                         </div>
                                     </div>
-                                    <span th:if="${item.clienteNombre == null}" class="text-subtle">—</span>
+                                    <span th:if="${item.clientes == null}" class="text-subtle">—</span>
                                 </td>
                                 <td data-label="Vehículo" class="text-left">
-                                    <div th:if="${item.vehiculoInfo != null and !item.vehiculoInfo.isEmpty()}">
-                                        <span th:text="${item.vehiculoInfo}">Marca Modelo</span>
-                                        <div th:if="${item.placa != null}" class="contact-info-item-small">
+                                    <div th:if="${item.vehiculo != null}">
+                                        <span th:text="${(item.vehiculo.marca ?: '') + ' ' + (item.vehiculo.modelo ?: '')}">Marca Modelo</span>
+                                        <div th:if="${item.vehiculo.placa != null}" class="contact-info-item-small">
                                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"></rect><line x1="2" y1="12" x2="22" y2="12"></line></svg>
-                                            <span th:text="${item.placa}">ABC-1234</span>
+                                            <span th:text="${item.vehiculo.placa}">ABC-1234</span>
                                         </div>
                                     </div>
-                                    <span th:if="${item.vehiculoInfo == null or item.vehiculoInfo.isEmpty()}" class="text-subtle">—</span>
+                                    <span th:if="${item.vehiculo == null}" class="text-subtle">—</span>
                                 </td>
                                 <td data-label="Servicio" class="text-left" th:text="${item.nombreServicio ?: '—'}">Cambio aceite</td>
                                 <td data-label="Km" th:text="${item.kilometrajeServicio != null ? item.kilometrajeServicio + ' km' : '—'}">50000</td>
@@ -173,8 +173,8 @@
                                     <span th:if="${item.estado != 'pendiente' and item.estado != 'enviado' and item.estado != 'fallido'}" class="badge badge-neutral" th:text="${item.estado}">-</span>
                                 </td>
                                 <td data-label="Programado" class="text-left">
-                                    <span th:if="${item.fechaProgramada != null}" th:text="${#dates.format(item.fechaProgramada, 'dd/MM/yyyy')}">01/01/2026</span>
-                                    <span th:if="${item.fechaProgramada == null}" class="text-subtle">—</span>
+                                    <span th:if="${item.fecha_programada != null}" th:text="${#dates.format(item.fecha_programada, 'dd/MM/yyyy')}">01/01/2026</span>
+                                    <span th:if="${item.fecha_programada == null}" class="text-subtle">—</span>
                                 </td>
                             </tr>
                         </tbody>

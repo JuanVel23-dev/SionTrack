@@ -68,8 +68,12 @@ public class PromocionesViewController {
                 redirectAttributes.addFlashAttribute("errorMessage", mensaje);
             }
         } catch (Exception e) {
+            // Log del error real en consola para debugging
+            System.err.println("❌ Error enviando promoción: " + e.getMessage());
+            
+            // Mensaje limpio para el usuario
             redirectAttributes.addFlashAttribute("errorMessage",
-                "Error al enviar la promoción: " + e.getMessage());
+                "Ocurrió un error al enviar la promoción. Verifica la conexión e intenta nuevamente.");
         }
         return "redirect:/web/notificaciones";
     }

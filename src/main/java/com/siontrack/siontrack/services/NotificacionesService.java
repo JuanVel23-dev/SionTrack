@@ -1,8 +1,6 @@
 package com.siontrack.siontrack.services;
 
 import com.siontrack.siontrack.DTO.Request.PromocionesRequestDTO;
-import com.siontrack.siontrack.DTO.Response.PromocionEnviadaDTO;
-import com.siontrack.siontrack.DTO.Response.RecordatorioDTO;
 import com.siontrack.siontrack.models.Clientes;
 import com.siontrack.siontrack.models.Notificaciones;
 import com.siontrack.siontrack.models.Vehiculos;
@@ -44,7 +42,7 @@ public class NotificacionesService {
     // RECORDATORIOS PROGRAMADOS (sin cambios)
     // =============================================
 
-    @Scheduled(cron = "0 19 22 * * *")
+    @Scheduled(cron = "0 20 20 * * *")
     @Transactional
     public void enviarNotificacionesProgramadas() {
         log.info("🔔 Enviando recordatorios programados...");
@@ -190,18 +188,18 @@ public class NotificacionesService {
 
     // =============================================
     // CONSULTAS PARA LAS VISTAS
+    // Retorna directamente List<Notificaciones>
+    // sin DTOs intermedios
     // =============================================
 
     @Transactional(readOnly = true)
-    public List<PromocionEnviadaDTO> obtenerPromocionesEnviadas() {
-        return notificacionesRepository.findByTipoNotificacionOrdenado("PROMOCION")
-                .stream().map(this::mapearAPromocionDTO).collect(Collectors.toList());
+    public List<Notificaciones> obtenerPromocionesEnviadas() {
+        return notificacionesRepository.findByTipoNotificacionOrdenado("PROMOCION");
     }
 
     @Transactional(readOnly = true)
-    public List<RecordatorioDTO> obtenerRecordatorios() {
-        return notificacionesRepository.findRecordatoriosOrdenados()
-                .stream().map(this::mapearARecordatorioDTO).collect(Collectors.toList());
+    public List<Notificaciones> obtenerRecordatorios() {
+        return notificacionesRepository.findRecordatoriosOrdenados();
     }
 
     @Transactional(readOnly = true)
@@ -211,50 +209,5 @@ public class NotificacionesService {
                 .filter(m -> m != null && !m.trim().isEmpty())
                 .map(String::trim).distinct().sorted()
                 .collect(Collectors.toList());
-    }
-
-    private PromocionEnviadaDTO mapearAPromocionDTO(Notificaciones n) {
-        PromocionEnviadaDTO dto = new PromocionEnviadaDTO();
-        dto.setNotificacionId(n.getNotificacion_id());
-        dto.setMensajeEnviado(n.getMensaje_enviado());
-        dto.setEstado(n.getEstado());
-        dto.setResultadoEnvio(n.getResultadoEnvio());
-        dto.setFechaEnvio(n.getCreado_en());
-        if (n.getClientes() != null) {
-            dto.setClienteNombre(n.getClientes().getNombre());
-            if (n.getClientes().getTelefonos() != null && !n.getClientes().getTelefonos().isEmpty())
-                dto.setTelefono(n.getClientes().getTelefonos().get(0).getTelefono());
-        }
-        if (n.getVehiculo() != null) {
-            String info = (n.getVehiculo().getMarca() != null ? n.getVehiculo().getMarca() : "")
-                    + (n.getVehiculo().getModelo() != null ? " " + n.getVehiculo().getModelo() : "");
-            dto.setVehiculoInfo(info.trim());
-            dto.setPlaca(n.getVehiculo().getPlaca());
-        }
-        return dto;
-    }
-
-    private RecordatorioDTO mapearARecordatorioDTO(Notificaciones n) {
-        RecordatorioDTO dto = new RecordatorioDTO();
-        dto.setNotificacionId(n.getNotificacion_id());
-        dto.setNombreServicio(n.getNombreServicio());
-        dto.setKilometrajeServicio(n.getKilometrajeServicio());
-        dto.setEstado(n.getEstado());
-        dto.setResultadoEnvio(n.getResultadoEnvio());
-        dto.setFechaProgramada(n.getFecha_programada());
-        dto.setFechaEnvio(n.getFecha_envio());
-        dto.setCreadoEn(n.getCreado_en());
-        if (n.getClientes() != null) {
-            dto.setClienteNombre(n.getClientes().getNombre());
-            if (n.getClientes().getTelefonos() != null && !n.getClientes().getTelefonos().isEmpty())
-                dto.setTelefono(n.getClientes().getTelefonos().get(0).getTelefono());
-        }
-        if (n.getVehiculo() != null) {
-            String info = (n.getVehiculo().getMarca() != null ? n.getVehiculo().getMarca() : "")
-                    + (n.getVehiculo().getModelo() != null ? " " + n.getVehiculo().getModelo() : "");
-            dto.setVehiculoInfo(info.trim());
-            dto.setPlaca(n.getVehiculo().getPlaca());
-        }
-        return dto;
     }
 }

@@ -73,8 +73,12 @@
 .precio-wrap { position: relative; display: flex; align-items: center; }
 .precio-prefix {
     position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
-    color: var(--accent-primary); font-weight: var(--weight-bold);
+    color: var(--fg-subtle); font-weight: var(--weight-bold);
     font-size: var(--text-lg); pointer-events: none; z-index: 1;
+    transition: color 0.2s ease;
+}
+.precio-wrap:focus-within .precio-prefix {
+    color: var(--accent-primary);
 }
 .precio-input {
     padding-left: 34px !important;
