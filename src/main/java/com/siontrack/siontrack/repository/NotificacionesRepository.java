@@ -14,7 +14,6 @@ import com.siontrack.siontrack.models.Servicios;
 @Repository
 public interface NotificacionesRepository extends JpaRepository<Notificaciones, Integer>{
 
-
     @Query("""
         SELECT n FROM Notificaciones n
         WHERE n.fecha_programada <= :fecha
@@ -30,5 +29,9 @@ public interface NotificacionesRepository extends JpaRepository<Notificaciones, 
 
     boolean existsByServicio(Servicios servicio);
 
-}
+    @Query("SELECT n FROM Notificaciones n WHERE n.tipoNotificacion = :tipo ORDER BY n.creado_en DESC")
+    List<Notificaciones> findByTipoNotificacionOrdenado(@Param("tipo") String tipoNotificacion);
 
+    @Query("SELECT n FROM Notificaciones n WHERE n.tipoNotificacion = 'RECORDATORIO_SERVICIO' ORDER BY n.creado_en DESC")
+    List<Notificaciones> findRecordatoriosOrdenados();
+}

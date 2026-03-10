@@ -1,6 +1,8 @@
 package com.siontrack.siontrack.services;
 
 import com.siontrack.siontrack.DTO.Request.PromocionesRequestDTO;
+import com.siontrack.siontrack.DTO.Response.PromocionEnviadaDTO;
+import com.siontrack.siontrack.DTO.Response.RecordatorioDTO;
 import com.siontrack.siontrack.models.Clientes;
 import com.siontrack.siontrack.models.Notificaciones;
 import com.siontrack.siontrack.models.Vehiculos;
@@ -19,6 +21,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class NotificacionesService {
@@ -36,6 +39,10 @@ public class NotificacionesService {
         this.whatsAppService = whatsAppService;
         this.vehiculosRepository = vehiculosRepository;
     }
+
+    // =============================================
+    // RECORDATORIOS PROGRAMADOS (sin cambios)
+    // =============================================
 
     @Scheduled(cron = "0 20 20 * * *")
     @Transactional
@@ -57,10 +64,12 @@ public class NotificacionesService {
 
             if (resultado == ResultadoEnvioMensaje.ENVIADO) {
                 notificacion.setEstado("enviado");
+                enviados++;
                 log.info("✅ Recordatorio enviado: {}", notificacion.getNombreServicio());
             } else {
-                log.warn("❌ Falló definitivamente: {}", notificacion.getNombreServicio());
+                notificacion.setEstado("fallido");
                 fallidos++;
+                log.warn("❌ Falló definitivamente: {}", notificacion.getNombreServicio());
             }
 
             notificacionesRepository.save(notificacion);
@@ -96,18 +105,22 @@ public class NotificacionesService {
         );
     }
 
-        public Map<String, Object> enviarPromocion(PromocionesRequestDTO dto) {
+    // =============================================
+    // PROMOCIONES
+    // =============================================
+
+    @Transactional
+    public Map<String, Object> enviarPromocion(PromocionesRequestDTO dto) {
         log.info("📢 Enviando promoción para marca: {}", dto.getMarcaVehiculo());
 
-        // Buscar vehículos por marca
         List<Vehiculos> vehiculos = vehiculosRepository.findByMarcaIgnoreCase(dto.getMarcaVehiculo());
 
         log.info("🚗 Vehículos encontrados: {}", vehiculos.size());
 
-        int enviados = 0;
-        int fallidos = 0;
-        int sinTelefono = 0;
-        int sinConsentimiento = 0;
+        int enviados = 0, fallidos = 0, sinTelefono = 0, sinConsentimiento = 0;
+
+        String descripcionPromo = dto.getPromocion() + " | Precio: " + dto.getPrecioOferta()
+                + " | Vigencia: " + dto.getRangoFechas();
 
         for (Vehiculos vehiculo : vehiculos) {
             Clientes cliente = vehiculo.getClientes();
@@ -117,43 +130,37 @@ public class NotificacionesService {
                 continue;
             }
 
-            // Verificar consentimiento
             if (!Boolean.TRUE.equals(cliente.getRecibeNotificaciones())) {
-                log.debug("Cliente {} no acepta notificaciones", cliente.getNombre());
                 sinConsentimiento++;
+                guardarNotificacionPromocion(cliente, vehiculo, descripcionPromo,
+                        "sin_consentimiento", "SIN_CONSENTIMIENTO");
                 continue;
             }
 
-            // Obtener teléfono
             if (cliente.getTelefonos() == null || cliente.getTelefonos().isEmpty()) {
-                log.warn("⚠️ Cliente {} sin teléfono", cliente.getNombre());
                 sinTelefono++;
+                guardarNotificacionPromocion(cliente, vehiculo, descripcionPromo,
+                        "fallido", "SIN_TELEFONO");
                 continue;
             }
 
             String telefono = cliente.getTelefonos().get(0).getTelefono();
 
-            // Enviar promoción
             ResultadoEnvioMensaje resultado = whatsAppService.enviarMensajePromo(
-                telefono,
-                cliente.getNombre(),
-                dto.getMarcaVehiculo(),
-                dto.getPromocion(),
-                dto.getPrecioOferta(),
-                dto.getRangoFechas()
+                telefono, cliente.getNombre(), dto.getMarcaVehiculo(),
+                dto.getPromocion(), dto.getPrecioOferta(), dto.getRangoFechas()
             );
 
             if (resultado == ResultadoEnvioMensaje.ENVIADO) {
                 enviados++;
-                log.info("✅ Promoción enviada a: {}", cliente.getNombre());
+                guardarNotificacionPromocion(cliente, vehiculo, descripcionPromo,
+                        "enviado", resultado.name());
             } else {
                 fallidos++;
-                log.warn("❌ Falló envío a: {} - {}", cliente.getNombre(), resultado);
+                guardarNotificacionPromocion(cliente, vehiculo, descripcionPromo,
+                        "fallido", resultado.name());
             }
         }
-
-        log.info("📊 Resumen: Enviados={}, Fallidos={}, SinTelefono={}, SinConsentimiento={}",
-                enviados, fallidos, sinTelefono, sinConsentimiento);
 
         Map<String, Object> resumen = new HashMap<>();
         resumen.put("marca", dto.getMarcaVehiculo());
@@ -162,8 +169,92 @@ public class NotificacionesService {
         resumen.put("fallidos", fallidos);
         resumen.put("sinTelefono", sinTelefono);
         resumen.put("sinConsentimiento", sinConsentimiento);
-
         return resumen;
     }
 
+    private void guardarNotificacionPromocion(Clientes cliente, Vehiculos vehiculo,
+                                               String mensajePromo, String estado,
+                                               String resultadoEnvio) {
+        Notificaciones n = new Notificaciones();
+        n.setClientes(cliente);
+        n.setVehiculo(vehiculo);
+        n.setCanal("whatsapp");
+        n.setTipoNotificacion("PROMOCION");
+        n.setMensaje_enviado(mensajePromo);
+        n.setEstado(estado);
+        n.setResultadoEnvio(resultadoEnvio);
+        n.setFecha_envio(Timestamp.valueOf(LocalDateTime.now()));
+        n.setIntentosEnvio(1);
+        notificacionesRepository.save(n);
+    }
+
+    // =============================================
+    // CONSULTAS PARA LAS VISTAS
+    // =============================================
+
+    @Transactional(readOnly = true)
+    public List<PromocionEnviadaDTO> obtenerPromocionesEnviadas() {
+        return notificacionesRepository.findByTipoNotificacionOrdenado("PROMOCION")
+                .stream().map(this::mapearAPromocionDTO).collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<RecordatorioDTO> obtenerRecordatorios() {
+        return notificacionesRepository.findRecordatoriosOrdenados()
+                .stream().map(this::mapearARecordatorioDTO).collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<String> obtenerMarcasVehiculos() {
+        return vehiculosRepository.findAll().stream()
+                .map(Vehiculos::getMarca)
+                .filter(m -> m != null && !m.trim().isEmpty())
+                .map(String::trim).distinct().sorted()
+                .collect(Collectors.toList());
+    }
+
+    private PromocionEnviadaDTO mapearAPromocionDTO(Notificaciones n) {
+        PromocionEnviadaDTO dto = new PromocionEnviadaDTO();
+        dto.setNotificacionId(n.getNotificacion_id());
+        dto.setMensajeEnviado(n.getMensaje_enviado());
+        dto.setEstado(n.getEstado());
+        dto.setResultadoEnvio(n.getResultadoEnvio());
+        dto.setFechaEnvio(n.getCreado_en());
+        if (n.getClientes() != null) {
+            dto.setClienteNombre(n.getClientes().getNombre());
+            if (n.getClientes().getTelefonos() != null && !n.getClientes().getTelefonos().isEmpty())
+                dto.setTelefono(n.getClientes().getTelefonos().get(0).getTelefono());
+        }
+        if (n.getVehiculo() != null) {
+            String info = (n.getVehiculo().getMarca() != null ? n.getVehiculo().getMarca() : "")
+                    + (n.getVehiculo().getModelo() != null ? " " + n.getVehiculo().getModelo() : "");
+            dto.setVehiculoInfo(info.trim());
+            dto.setPlaca(n.getVehiculo().getPlaca());
+        }
+        return dto;
+    }
+
+    private RecordatorioDTO mapearARecordatorioDTO(Notificaciones n) {
+        RecordatorioDTO dto = new RecordatorioDTO();
+        dto.setNotificacionId(n.getNotificacion_id());
+        dto.setNombreServicio(n.getNombreServicio());
+        dto.setKilometrajeServicio(n.getKilometrajeServicio());
+        dto.setEstado(n.getEstado());
+        dto.setResultadoEnvio(n.getResultadoEnvio());
+        dto.setFechaProgramada(n.getFecha_programada());
+        dto.setFechaEnvio(n.getFecha_envio());
+        dto.setCreadoEn(n.getCreado_en());
+        if (n.getClientes() != null) {
+            dto.setClienteNombre(n.getClientes().getNombre());
+            if (n.getClientes().getTelefonos() != null && !n.getClientes().getTelefonos().isEmpty())
+                dto.setTelefono(n.getClientes().getTelefonos().get(0).getTelefono());
+        }
+        if (n.getVehiculo() != null) {
+            String info = (n.getVehiculo().getMarca() != null ? n.getVehiculo().getMarca() : "")
+                    + (n.getVehiculo().getModelo() != null ? " " + n.getVehiculo().getModelo() : "");
+            dto.setVehiculoInfo(info.trim());
+            dto.setPlaca(n.getVehiculo().getPlaca());
+        }
+        return dto;
+    }
 }
