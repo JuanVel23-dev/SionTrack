@@ -44,7 +44,7 @@ public class NotificacionesService {
     // RECORDATORIOS PROGRAMADOS (sin cambios)
     // =============================================
 
-    @Scheduled(cron = "0 20 20 * * *")
+    @Scheduled(cron = "0 19 22 * * *")
     @Transactional
     public void enviarNotificacionesProgramadas() {
         log.info("🔔 Enviando recordatorios programados...");

@@ -1,6 +1,7 @@
 package com.siontrack.siontrack.models;
 
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 
@@ -33,6 +34,11 @@ public class Productos {
     @Setter
     private String nombre;
 
+    @Column(name = "codigo_producto", unique = true)
+    @Getter
+    @Setter
+    private String codigoProducto;
+
     @Getter
     @Setter
     private String categoria;
@@ -57,7 +63,6 @@ public class Productos {
     @Setter
     private String estado;
 
-    
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "proveedor_id")

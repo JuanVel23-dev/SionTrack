@@ -18,6 +18,10 @@ public class ProductosResponseDTO {
 
     @Getter
     @Setter
+    private String codigo_producto;
+    
+    @Getter
+    @Setter
     private String categoria;
 
     @Getter

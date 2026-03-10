@@ -13,6 +13,10 @@ public class ProductosRequestDTO {
 
     @Getter
     @Setter
+    private String codigo_producto;
+    
+    @Getter
+    @Setter
     private String categoria;
 
     @Getter
@@ -49,5 +53,7 @@ public class ProductosRequestDTO {
 
     @Getter
     @Setter
-    private String ubicacion;           
+    private String ubicacion;    
+    
+    
 }
