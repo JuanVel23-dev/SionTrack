@@ -21,6 +21,16 @@ public class ClienteRestController {
     private ClienteServicios clienteServicios;
 
     /**
+     * Devuelve todos los datos de un cliente por su ID.
+     * Usado por el modal de detalle de clientes.
+     */
+    @GetMapping("/{id}")
+    public ResponseEntity<ClienteResponseDTO> obtenerClientePorId(@PathVariable Integer id) {
+        ClienteResponseDTO cliente = clienteServicios.obtenerClientePorId(id);
+        return ResponseEntity.ok(cliente);
+    }
+
+    /**
      * Devuelve los vehículos de un cliente por su ID.
      * Usado por el formulario de servicios para la cascada cliente → vehículos.
      */

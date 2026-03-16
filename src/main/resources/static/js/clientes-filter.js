@@ -1,6 +1,9 @@
 /**
  * SionTrack - Clientes Filter
  * Maneja la búsqueda, filtrado y dropdown personalizado de clientes
+ * 
+ * Nota: La confirmación de eliminación se maneja en main.js
+ * con setupDeleteConfirmations() que detecta .btn-delete y .btn-confirm-delete
  */
 document.addEventListener('DOMContentLoaded', function() {
     var searchInput = document.getElementById('searchInput');
@@ -103,14 +106,13 @@ document.addEventListener('DOMContentLoaded', function() {
         var tipoFilter = filterTipo ? filterTipo.value : '';
 
         dataRows.forEach(function(row) {
-            var nombre = row.children[1] ? row.children[1].textContent.toLowerCase() : '';
-            var cedula = row.children[2] ? row.children[2].textContent.toLowerCase() : '';
+            var nombre = row.children[0] ? row.children[0].textContent.toLowerCase() : '';
+            var cedula = row.children[1] ? row.children[1].textContent.toLowerCase() : '';
             var tipo = row.dataset.tipo || row.getAttribute('data-tipo') || '';
 
             var matchesSearch = nombre.indexOf(searchTerm) !== -1 || cedula.indexOf(searchTerm) !== -1;
             var matchesTipo = !tipoFilter || tipo === tipoFilter;
 
-            // Usar clase CSS en lugar de estilo inline
             if (matchesSearch && matchesTipo) {
                 row.classList.remove('hidden');
                 row.style.display = '';
@@ -126,16 +128,6 @@ document.addEventListener('DOMContentLoaded', function() {
         searchInput.addEventListener('input', filterTable);
     }
 
-    // ===== CONFIRMACIÓN DE ELIMINACIÓN =====
-    var btnsEliminar = document.querySelectorAll('.btn-confirm-delete');
-    btnsEliminar.forEach(function(btn) {
-        btn.addEventListener('click', function(e) {
-            if (!confirm('¿Está seguro de que desea eliminar este cliente?')) {
-                e.preventDefault();
-            }
-        });
-    });
-
     // ===== FORMATEO VISUAL DE TELÉFONOS =====
     formatearTelefonosVisibles();
 });
@@ -147,7 +139,7 @@ function formatearTelefonosVisibles() {
     var CODIGOS = ['591','593','595','598','502','503','504','505','506','507','351',
                    '52','51','54','55','56','57','58','34','33','39','44','49','1'];
 
-    document.querySelectorAll('.contact-info-item span, .contact-info-item-small span').forEach(function(el) {
+    document.querySelectorAll('.contact-row span, .contact-row-email span').forEach(function(el) {
         var texto = el.textContent.trim();
         if (!/^\d{10,15}$/.test(texto)) return;
 

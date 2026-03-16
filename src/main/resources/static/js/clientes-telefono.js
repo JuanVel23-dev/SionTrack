@@ -1,6 +1,8 @@
 /**
  * SionTrack - Selector de País con Búsqueda
  * Formato: "+57 3183260547"
+ * 
+ * NOTA: La validación de cédula/NIT se maneja en clientes-cedula-nit.js
  */
 (function() {
     'use strict';
@@ -35,7 +37,6 @@
             e.preventDefault();
             e.stopPropagation();
 
-            // Cerrar otros selects abiertos
             document.querySelectorAll('.custom-select.abierto').forEach(function(s) {
                 if (s !== container) {
                     s.classList.remove('abierto');
@@ -55,24 +56,20 @@
                 var valor = this.dataset.value;
                 var texto = this.textContent;
 
-                // Actualizar selección visual
                 opciones.forEach(function(op) {
                     op.classList.remove('seleccionado');
                 });
                 this.classList.add('seleccionado');
 
-                // Actualizar botón y input
                 textoSpan.textContent = texto;
                 textoSpan.classList.remove('placeholder');
                 hiddenInput.value = valor;
 
-                // Cerrar dropdown con animación
                 container.classList.remove('abierto');
                 btn.classList.remove('activo');
             });
         });
 
-        // Cerrar al hacer clic fuera
         document.addEventListener('click', function(e) {
             if (!container.contains(e.target)) {
                 container.classList.remove('abierto');
@@ -80,7 +77,6 @@
             }
         });
 
-        // Cerrar con Escape
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape' && container.classList.contains('abierto')) {
                 container.classList.remove('abierto');
@@ -89,7 +85,6 @@
         });
     }
 
-    // Exponer globalmente
     window.initCustomSelect = initCustomSelect;
 
     var PAISES = [
@@ -120,26 +115,19 @@
         { grupo: 'Europa', codigo: '+351', nombre: 'Portugal' }
     ];
 
-    // Códigos de país ordenados de mayor a menor longitud para matching
     var CODIGOS_PAIS = PAISES.map(function(p) { return p.codigo.replace('+', ''); })
-        .filter(function(v, i, a) { return a.indexOf(v) === i; }) // únicos
-        .sort(function(a, b) { return b.length - a.length; }); // más largo primero
+        .filter(function(v, i, a) { return a.indexOf(v) === i; })
+        .sort(function(a, b) { return b.length - a.length; });
 
-    /**
-     * Parsea un teléfono en formato BD (ej: "573183252987") o formato display ("+57 3183252987")
-     * Retorna { codigo: "+57", numero: "3183252987" } o null si no puede parsear
-     */
     function parsearTelefono(val) {
         if (!val) return null;
         val = val.trim();
 
-        // Formato con espacio: "+57 3183252987"
         if (val.indexOf(' ') > 0) {
             var partes = val.split(' ');
             return { codigo: partes[0], numero: partes.slice(1).join('') };
         }
 
-        // Formato con +: "+573183252987" (sin espacio)
         if (val.charAt(0) === '+') {
             var sinPlus = val.substring(1);
             for (var i = 0; i < CODIGOS_PAIS.length; i++) {
@@ -150,7 +138,6 @@
             return null;
         }
 
-        // Formato BD puro: "573183252987" (solo dígitos)
         if (/^\d+$/.test(val)) {
             for (var j = 0; j < CODIGOS_PAIS.length; j++) {
                 if (val.indexOf(CODIGOS_PAIS[j]) === 0 && val.length > CODIGOS_PAIS[j].length) {
@@ -213,7 +200,6 @@
 
         lista.innerHTML = generarListaHTML(codigoActual);
 
-        // Parsear valor existente (soporta formato BD y formato display)
         var parsed = parsearTelefono(numeroInput.value);
         if (parsed) {
             var nombrePais = buscarNombrePais(parsed.codigo);
@@ -233,7 +219,6 @@
             numeroInput.value = parsed.numero;
         }
 
-        // Toggle dropdown
         boton.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
@@ -255,7 +240,6 @@
             }
         });
 
-        // Búsqueda
         busqueda.addEventListener('input', function() {
             filtrarLista(this.value.toLowerCase());
         });
@@ -286,7 +270,6 @@
             });
         }
 
-        // Seleccionar
         lista.addEventListener('click', function(e) {
             var opcion = e.target.closest('.pais-opcion');
             if (!opcion) return;
@@ -319,7 +302,6 @@
             boton.classList.remove('activo');
         });
 
-        // Cerrar al clic fuera
         document.addEventListener('click', function(e) {
             if (!selector.contains(e.target)) {
                 selector.classList.remove('abierto');
@@ -327,7 +309,6 @@
             }
         });
 
-        // Validar prefijo
         prefijoInput.addEventListener('input', function() {
             var v = this.value;
             if (!v.startsWith('+')) v = '+';
@@ -342,7 +323,6 @@
             if (c === '0' && this.value === '+') e.preventDefault();
         });
 
-        // Validar número
         numeroInput.addEventListener('input', function() {
             var nums = this.value.replace(/[^0-9]/g, '');
             if (nums.startsWith('0')) nums = nums.substring(1);
@@ -373,7 +353,7 @@
 
         document.querySelectorAll('.telefono-fila').forEach(initFila);
 
-        // Eliminar
+        // Eliminar campos
         document.addEventListener('click', function(e) {
             var btn = e.target.closest('.btn-remove');
             if (btn) {
@@ -453,69 +433,11 @@
         // Inicializar select personalizado de Tipo de Cliente
         initCustomSelect('tipo-cliente-select');
 
-        // Validar cédula/NIT: 10-11 dígitos, guión solo en penúltima posición (NIT: 1234567890-1)
-        var cedula = document.getElementById('cedula_ruc');
-        if (cedula) {
-            cedula.addEventListener('input', function() {
-                var val = this.value;
-                // Remover todo excepto números y guiones
-                val = val.replace(/[^0-9\-]/g, '');
-                
-                // Remover todos los guiones primero
-                var sinGuion = val.replace(/-/g, '');
-                
-                // Si hay más de 10 dígitos y el usuario puso guión, 
-                // colocarlo solo en la penúltima posición
-                if (val.indexOf('-') !== -1 && sinGuion.length >= 10) {
-                    // Formato NIT: números-dígito verificación
-                    var numeros = sinGuion.substring(0, sinGuion.length - 1);
-                    var digitoVerif = sinGuion.substring(sinGuion.length - 1);
-                    val = numeros + '-' + digitoVerif;
-                } else if (val.indexOf('-') !== -1) {
-                    // Si puso guión pero no tiene suficientes dígitos, quitarlo
-                    val = sinGuion;
-                }
-                
-                // Limitar longitud total (10 dígitos + guión + 1 dígito = 12 caracteres)
-                this.value = val.substring(0, 12);
-            });
-
-            cedula.addEventListener('blur', function() {
-                var val = this.value.replace(/-/g, '');
-                if (val.length < 10 || val.length > 11) {
-                    this.classList.add('error');
-                    if (typeof showToast === 'function') {
-                        showToast('La cédula/NIT debe tener entre 10 y 11 dígitos', 'error');
-                    }
-                } else {
-                    this.classList.remove('error');
-                }
-            });
-            
-            // Permitir guión solo con tecla específica y en posición correcta
-            cedula.addEventListener('keypress', function(e) {
-                var char = String.fromCharCode(e.which);
-                var val = this.value.replace(/-/g, '');
-                
-                // Si es guión, solo permitir si hay al menos 10 dígitos
-                if (char === '-') {
-                    if (val.length < 10 || this.value.indexOf('-') !== -1) {
-                        e.preventDefault();
-                    }
-                }
-            });
-        }
-
         // Validar correos
         document.addEventListener('blur', function(e) {
             if (e.target.classList.contains('input-correo')) {
                 var val = e.target.value.trim();
-                if (val && val.indexOf('@') === -1) {
-                    e.target.classList.add('error');
-                    if (typeof showToast === 'function') {
-                        showToast('El correo debe contener el símbolo @', 'error');
-                    }
-                } else if (val && !val.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+                if (val && !val.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
                     e.target.classList.add('error');
                     if (typeof showToast === 'function') {
                         showToast('Ingresa un correo electrónico válido', 'error');
@@ -526,25 +448,13 @@
             }
         }, true);
 
-        // Submit
+        // Submit: formatear teléfonos y validar correos
         var form = document.getElementById('clienteForm');
         if (form) {
             form.addEventListener('submit', function(e) {
                 var ok = true;
 
-                // Validar cédula
-                var cedula = document.getElementById('cedula_ruc');
-                if (cedula) {
-                    var cedulaVal = cedula.value.replace(/-/g, '');
-                    if (cedulaVal.length < 10 || cedulaVal.length > 11) {
-                        ok = false;
-                        cedula.classList.add('error');
-                        if (typeof showToast === 'function') {
-                            showToast('La cédula debe tener entre 10 y 11 dígitos', 'error');
-                        }
-                    }
-                }
-
+                // Formatear teléfonos con código de país
                 document.querySelectorAll('.telefono-fila').forEach(function(fila) {
                     var numeroInput = fila.querySelector('.numero-input');
                     var prefijoInput = fila.querySelector('.prefijo-input');
@@ -562,6 +472,7 @@
                     }
                 });
 
+                // Validar correos
                 document.querySelectorAll('.input-correo').forEach(function(inp) {
                     var val = inp.value.trim();
                     if (val && !val.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {

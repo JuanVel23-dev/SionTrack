@@ -10,11 +10,6 @@
 
     <title th:text="${pageTitle != null ? pageTitle + ' - SionTrack' : 'SionTrack'}">SionTrack</title>
 
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
     <!-- Stylesheets -->
     <link rel="stylesheet" th:href="@{/css/main.css}">
     <link rel="stylesheet" th:href="@{/css/layout.css}">
@@ -221,7 +216,7 @@
 
             <!-- Main Content -->
             <main class="main-content">
-                <!-- Alerts -->
+                <!-- Alerts: Éxito -->
                 <div th:if="${successMessage}" class="alert alert-success animate-in">
                     <span class="alert-icon">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -235,6 +230,7 @@
                     </div>
                 </div>
 
+                <!-- Alerts: Error -->
                 <div th:if="${errorMessage}" class="alert alert-error animate-in">
                     <span class="alert-icon">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -249,6 +245,20 @@
                     </div>
                 </div>
 
+                <!-- Alerts: Eliminación -->
+                <div th:if="${deleteMessage}" class="alert alert-delete animate-in">
+                    <span class="alert-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        </svg>
+                    </span>
+                    <div class="alert-content">
+                        <div class="alert-title">Eliminado</div>
+                        <p class="alert-message" th:text="${deleteMessage}"></p>
+                    </div>
+                </div>
+
                 <!-- Page Content -->
                 <div layout:fragment="content"></div>
             </main>
@@ -259,34 +269,34 @@
     <div class="toast-container" id="toast-container"></div>
 
     <!-- Modal Reabastecimiento -->
-<div class="restock-overlay" id="restock-overlay">
-    <div class="restock-modal">
-        <div class="restock-modal-header">
-            <div class="restock-header-left">
-                <div class="restock-header-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    <div class="restock-overlay" id="restock-overlay">
+        <div class="restock-modal">
+            <div class="restock-modal-header">
+                <div class="restock-header-left">
+                    <div class="restock-header-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    </div>
+                    <div>
+                        <div class="restock-header-title">Reabastecimiento Requerido</div>
+                        <div class="restock-header-desc">Productos que necesitan compra de stock</div>
+                    </div>
                 </div>
-                <div>
-                    <div class="restock-header-title">Reabastecimiento Requerido</div>
-                    <div class="restock-header-desc">Productos que necesitan compra de stock</div>
+                <button class="restock-close" id="restock-close">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <div class="restock-modal-body" id="restock-body"></div>
+            <div class="restock-modal-footer">
+                <div class="restock-footer-hint">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                    Clic en un producto para ver detalle y contacto del proveedor
                 </div>
-            </div>
-            <button class="restock-close" id="restock-close">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </button>
-        </div>
-        <div class="restock-modal-body" id="restock-body"></div>
-        <div class="restock-modal-footer">
-            <div class="restock-footer-hint">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-                Clic en un producto para ver detalle y contacto del proveedor
-            </div>
-            <div class="restock-footer-actions">
-                <button class="restock-btn restock-btn-secondary" id="restock-close-btn">Cerrar</button>
+                <div class="restock-footer-actions">
+                    <button class="restock-btn restock-btn-secondary" id="restock-close-btn">Cerrar</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
     <!-- Scripts -->
     <script th:src="@{/js/main.js}"></script>

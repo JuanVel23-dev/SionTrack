@@ -3,6 +3,113 @@
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/base}">
 
+<th:block layout:fragment="customCSS">
+    <link rel="stylesheet" th:href="@{/css/clientes-detalle.css}" />
+    <style>
+        /* ============================================
+           TABLA CLIENTES — Layout mejorado
+           ============================================ */
+
+        /* Desktop: layout fijo con anchos proporcionales */
+        @media (min-width: 769px) {
+            .clientes-table {
+                table-layout: fixed;
+                width: 100%;
+            }
+
+            .clientes-table .col-nombre       { width: 20%; }
+            .clientes-table .col-cedula       { width: 14%; }
+            .clientes-table .col-tipo         { width: 16%; }
+            .clientes-table .col-contacto     { width: 20%; }
+            .clientes-table .col-notif        { width: 13%; }
+            .clientes-table .col-acciones     { width: 17%; }
+        }
+
+        /* Centrado vertical y horizontal por defecto */
+        .clientes-table th,
+        .clientes-table td {
+            vertical-align: middle;
+            text-align: center;
+        }
+
+        /* Alineación izquierda solo donde corresponde */
+        .clientes-table .al-left {
+            text-align: left;
+        }
+
+        /* Celda de nombre con truncado */
+        .clientes-table .cell-nombre {
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Celda cédula monoespaciada */
+        .clientes-table .cell-cedula {
+            font-family: var(--font-mono, 'SF Mono', 'Fira Code', monospace);
+            font-size: 0.85rem;
+            letter-spacing: 0.3px;
+            color: var(--fg-secondary, #a0a0a0);
+        }
+
+        /* Contacto mejorado */
+        .contact-cell {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            min-width: 0;
+        }
+
+        .contact-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            min-width: 0;
+        }
+
+        .contact-row svg {
+            flex-shrink: 0;
+            opacity: 0.5;
+        }
+
+        .contact-row span {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: 0.85rem;
+        }
+
+        .contact-row-email span {
+            font-size: 0.8rem;
+            color: var(--fg-secondary, #a0a0a0);
+        }
+
+        /* Acciones en grid 2x2 */
+        .clientes-table .table-actions {
+            display: grid;
+            grid-template-columns: repeat(2, auto);
+            gap: 6px;
+            justify-content: center;
+        }
+
+        /* Mobile: deshabilitar truncados y ajustar layout */
+        @media (max-width: 768px) {
+            .clientes-table .cell-nombre {
+                white-space: normal;
+            }
+
+            .contact-row span {
+                white-space: normal;
+            }
+
+            .clientes-table .table-actions {
+                justify-content: flex-start;
+            }
+        }
+    </style>
+</th:block>
+
 <th:block layout:fragment="content">
     <!-- Page Header -->
     <div class="page-header animate-in">
@@ -53,22 +160,37 @@
             </div>
         </div>
 
-        <table class="table" th:if="${clientes != null AND !clientes.isEmpty()}">
+        <table class="table clientes-table" th:if="${clientes != null AND !clientes.isEmpty()}">
+            <colgroup>
+                <col class="col-nombre" />
+                <col class="col-cedula" />
+                <col class="col-tipo" />
+                <col class="col-contacto" />
+                <col class="col-notif" />
+                <col class="col-acciones" />
+            </colgroup>
             <thead>
                 <tr>
-                    <th class="text-left">ID</th>
-                    <th class="text-left">Nombre</th>
-                    <th class="text-left">Cedula / NIT</th>
+                    <th class="al-left">Nombre</th>
+                    <th>Cédula / NIT</th>
                     <th>Tipo</th>
-                    <th class="text-left">Contacto</th>
+                    <th class="al-left">Contacto</th>
+                    <th>Notificaciones</th>
                     <th>Acciones</th>
                 </tr>
             </thead>
             <tbody>
                 <tr th:each="cliente : ${clientes}" th:data-tipo="${cliente.tipo_cliente}" class="data-row">
-                    <td th:text="${cliente.cliente_id}" data-label="ID" class="text-left">1</td>
-                    <td th:text="${cliente.nombre}" data-label="Nombre" class="text-left">Juan Perez</td>
-                    <td th:text="${cliente.cedula_ruc}" data-label="Cedula/NIT" class="text-left">1234567890</td>
+                    <!-- Nombre -->
+                    <td data-label="Nombre" class="al-left cell-nombre"
+                        th:text="${cliente.nombre}"
+                        th:title="${cliente.nombre}">Juan Perez</td>
+
+                    <!-- Cédula / NIT -->
+                    <td data-label="Cedula/NIT" class="cell-cedula"
+                        th:text="${cliente.cedula_ruc}">1234567890</td>
+
+                    <!-- Tipo -->
                     <td data-label="Tipo">
                         <span th:if="${cliente.tipo_cliente == 'Empresa'}" 
                               class="badge badge-info"
@@ -77,31 +199,58 @@
                               class="badge badge-success"
                               th:text="${cliente.tipo_cliente}">Persona Natural</span>
                     </td>
-                    <td data-label="Contacto" class="text-left">
-                        <div th:if="${!cliente.telefonos.isEmpty()}" class="contact-info-item">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
-                            </svg>
-                            <span th:text="${cliente.telefonos[0].telefono}">0999999999</span>
-                        </div>
-                        <div th:if="${!cliente.correos.isEmpty()}" class="contact-info-item-small">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                                <polyline points="22,6 12,13 2,6"></polyline>
-                            </svg>
-                            <span th:text="${cliente.correos[0].correo}">correo@ejemplo.com</span>
+
+                    <!-- Contacto -->
+                    <td data-label="Contacto" class="al-left">
+                        <div class="contact-cell">
+                            <div th:if="${!cliente.telefonos.isEmpty()}" class="contact-row">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                                </svg>
+                                <span th:text="${cliente.telefonos[0].telefono}">0999999999</span>
+                            </div>
+                            <div th:if="${!cliente.correos.isEmpty()}" class="contact-row contact-row-email">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                                    <polyline points="22,6 12,13 2,6"></polyline>
+                                </svg>
+                                <span th:text="${cliente.correos[0].correo}"
+                                      th:title="${cliente.correos[0].correo}">correo@ejemplo.com</span>
+                            </div>
                         </div>
                     </td>
+
+                    <!-- Notificaciones -->
+                    <td data-label="Notificaciones">
+                        <span th:if="${cliente.recibe_notificaciones}" class="badge badge-success">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:4px;vertical-align:-1px;">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                            </svg>
+                            Activo
+                        </span>
+                        <span th:unless="${cliente.recibe_notificaciones}" class="badge badge-neutral">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:4px;vertical-align:-1px;">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="15" y1="9" x2="9" y2="15"></line>
+                                <line x1="9" y1="9" x2="15" y2="15"></line>
+                            </svg>
+                            Inactivo
+                        </span>
+                    </td>
+
+                    <!-- Acciones -->
                     <td data-label="Acciones">
                         <div class="table-actions">
-                            <a th:href="@{/web/clientes/ver/{id}(id=${cliente.cliente_id})}"
-                               class="table-action-btn btn-view"
-                               title="Ver detalles">
+                            <button type="button"
+                                    class="table-action-btn btn-view btn-ver-cliente"
+                                    title="Ver detalles"
+                                    th:data-id="${cliente.cliente_id}">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                                     <circle cx="12" cy="12" r="3"></circle>
                                 </svg>
-                            </a>
+                            </button>
                             <a th:href="@{/web/clientes/editar/{id}(id=${cliente.cliente_id})}"
                                class="table-action-btn btn-edit"
                                title="Editar cliente">
@@ -112,7 +261,7 @@
                             </a>
                             <a th:href="@{'/web/clientes/' + ${cliente.cliente_id} + '/vehiculos/nuevo'}"
                                class="table-action-btn btn-vehicle"
-                               title="Agregar vehiculo">
+                               title="Agregar vehículo">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.24a2 2 0 0 0-1.8 1.1l-.8 1.63A6 6 0 0 0 2 12.42V16h2"></path>
                                     <circle cx="6.5" cy="16.5" r="2.5"></circle>
@@ -160,10 +309,56 @@
             </div>
         </div>
     </div>
+
+    <!-- ============================================
+         MODAL DE DETALLE DE CLIENTE
+         ============================================ -->
+    <div class="cli-modal-overlay" id="cli-modal-overlay">
+        <div class="cli-modal">
+            <!-- Header -->
+            <div class="cli-modal-header">
+                <div class="cli-modal-header-left">
+                    <div class="cli-modal-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="cli-modal-title">Detalle del Cliente</div>
+                        <div class="cli-modal-subtitle" id="cli-modal-subtitle">Cliente</div>
+                    </div>
+                </div>
+                <div class="cli-modal-header-right">
+                    <span class="badge" id="cli-modal-badge">Tipo</span>
+                    <button class="cli-modal-close" id="cli-modal-close">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Body -->
+            <div class="cli-modal-body" id="cli-modal-body">
+            </div>
+
+            <!-- Footer -->
+            <div class="cli-modal-footer">
+                <div class="cli-modal-footer-info">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    <span id="cli-modal-fecha">Registrado: —</span>
+                </div>
+                <button class="btn btn-secondary btn-sm" id="cli-modal-close-btn">Cerrar</button>
+            </div>
+        </div>
+    </div>
 </th:block>
 
 <th:block layout:fragment="customJS">
     <script th:src="@{/js/clientes-filter.js}"></script>
+    <script th:src="@{/js/clientes-detalle.js}"></script>
 </th:block>
 
 </html>

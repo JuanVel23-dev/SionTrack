@@ -180,61 +180,27 @@ function convertAlertsToToasts() {
   var mainContent = document.querySelector('.main-content');
   if (!mainContent) return;
   
-  // Alertas de éxito (verde)
-  var successAlerts = mainContent.querySelectorAll('.alert.alert-success');
-  successAlerts.forEach(function(alert) {
-    var titleEl = alert.querySelector('.alert-title');
-    if (!titleEl) return;
-    
-    var title = titleEl.textContent.trim().toLowerCase();
-    if (title.indexOf('éxito') === -1 && title.indexOf('exito') === -1) return;
-    
-    var messageEl = alert.querySelector('.alert-message');
-    if (messageEl) {
-      var message = messageEl.textContent.trim();
-      if (message) {
-        alert.style.display = 'none';
-        setTimeout(function() {
-          showToast(message, 'success');
-        }, 100);
+  // Mapeo: clase CSS de alerta → tipo de toast
+  var alertTypes = [
+    { selector: '.alert.alert-success', toastType: 'success' },
+    { selector: '.alert.alert-delete',  toastType: 'delete' },
+    { selector: '.alert.alert-error, .alert.alert-danger', toastType: 'error' }
+  ];
+
+  alertTypes.forEach(function(config) {
+    var alerts = mainContent.querySelectorAll(config.selector);
+    alerts.forEach(function(alert) {
+      var messageEl = alert.querySelector('.alert-message');
+      if (messageEl) {
+        var message = messageEl.textContent.trim();
+        if (message) {
+          alert.style.display = 'none';
+          setTimeout(function() {
+            showToast(message, config.toastType);
+          }, 100);
+        }
       }
-    }
-  });
-  
-  // Alertas de eliminación (roja)
-  var deleteAlerts = mainContent.querySelectorAll('.alert.alert-delete');
-  deleteAlerts.forEach(function(alert) {
-    var messageEl = alert.querySelector('.alert-message');
-    if (messageEl) {
-      var message = messageEl.textContent.trim();
-      if (message) {
-        alert.style.display = 'none';
-        setTimeout(function() {
-          showToast(message, 'delete');
-        }, 100);
-      }
-    }
-  });
-  
-  // Alertas de error
-  var errorAlerts = mainContent.querySelectorAll('.alert.alert-error, .alert.alert-danger');
-  errorAlerts.forEach(function(alert) {
-    var titleEl = alert.querySelector('.alert-title');
-    if (!titleEl) return;
-    
-    var title = titleEl.textContent.trim().toLowerCase();
-    if (title.indexOf('error') === -1) return;
-    
-    var messageEl = alert.querySelector('.alert-message');
-    if (messageEl) {
-      var message = messageEl.textContent.trim();
-      if (message) {
-        alert.style.display = 'none';
-        setTimeout(function() {
-          showToast(message, 'error');
-        }, 100);
-      }
-    }
+    });
   });
 }
 

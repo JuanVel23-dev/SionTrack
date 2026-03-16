@@ -5,6 +5,7 @@
 
 <th:block layout:fragment="customCSS">
     <link rel="stylesheet" th:href="@{/css/telefono-selector.css}" />
+    <link rel="stylesheet" th:href="@{/css/notif-warning.css}" />
 </th:block>
 
 <th:block layout:fragment="content">
@@ -24,7 +25,6 @@
             <input type="hidden" name="clienteId" th:value="${clienteId}" />
             
             <div class="card-body">
-                <!-- Información Básica -->
                 <h3 class="form-section-title">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -41,11 +41,6 @@
 
                 <div class="form-grid">
                     <div class="form-group">
-                        <label for="cedula_ruc" class="form-label required">Cédula / NIT</label>
-                        <input type="text" id="cedula_ruc" th:field="*{cedula_ruc}" class="form-input" required placeholder="Ej: 1234567890" minlength="10" maxlength="12">
-                        <span class="form-help">10-11 dígitos, puede incluir un guión (-)</span>
-                    </div>
-                    <div class="form-group">
                         <label for="tipo_cliente" class="form-label required">Tipo de Cliente</label>
                         <div class="custom-select" id="tipo-cliente-select">
                             <button type="button" class="custom-select-btn">
@@ -60,6 +55,60 @@
                             <input type="hidden" id="tipo_cliente" th:field="*{tipo_cliente}" required />
                         </div>
                     </div>
+
+                    <div class="form-group" id="cedula-nit-group">
+                        <label class="form-label required" id="cedula-nit-label">Cédula / NIT</label>
+                        
+                        <!-- Persona Natural: cédula -->
+                        <div id="campo-cedula">
+                            <input type="text" id="cedula_input" class="form-input" 
+                                   placeholder="Ej: 1234567890" maxlength="10" inputmode="numeric">
+                            <span class="form-help" id="help-cedula">Cédula de ciudadanía: 6 a 10 dígitos, solo números</span>
+                        </div>
+
+                        <!-- Empresa: NIT + DV manual -->
+                        <div id="campo-nit" style="display: none;">
+                            <div class="nit-input-group">
+                                <input type="text" id="nit_numero" class="form-input nit-numero-input" 
+                                       placeholder="Ej: 900123456" maxlength="9" inputmode="numeric">
+                                <span class="nit-separador">—</span>
+                                <input type="text" id="nit_dv" class="form-input nit-dv-input" 
+                                       placeholder="DV" maxlength="1" inputmode="numeric">
+                            </div>
+                            <span class="form-help" id="help-nit">NIT: 9 dígitos + dígito de verificación (0-9)</span>
+                        </div>
+
+                        <!-- Campo hidden que se envía al servidor -->
+                        <input type="hidden" id="cedula_ruc" th:field="*{cedula_ruc}" />
+                    </div>
+                </div>
+
+                <!-- Notificaciones - Solo en edición -->
+                <div th:if="${clienteId != null}" class="divider"></div>
+                <div th:if="${clienteId != null}">
+                    <h3 class="form-section-title">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                        </svg>
+                        Notificaciones WhatsApp
+                    </h3>
+                    <div class="form-group">
+                        <label class="form-label">Estado de notificaciones</label>
+                        <div class="toggle-container">
+                            <label class="toggle-switch">
+                                <input type="hidden" name="_recibe_notificaciones" value="on" />
+                                <input type="checkbox" name="recibe_notificaciones" id="recibe_notificaciones"
+                                       value="true" th:checked="${cliente.recibe_notificaciones}" />
+                                <span class="toggle-slider"></span>
+                            </label>
+                            <span class="toggle-label" id="toggle-notif-label">
+                                <span th:if="${cliente.recibe_notificaciones}">Notificaciones activadas</span>
+                                <span th:unless="${cliente.recibe_notificaciones}">Notificaciones desactivadas</span>
+                            </span>
+                        </div>
+                        <span class="form-help">Si está activo, el cliente recibirá recordatorios y promociones por WhatsApp</span>
+                    </div>
                 </div>
 
                 <div class="divider"></div>
@@ -71,7 +120,6 @@
                     </svg>
                     Teléfonos
                 </h3>
-
                 <div class="form-group">
                     <label class="form-label">Números de Teléfono</label>
                     <div id="telefonos-container">
@@ -82,9 +130,7 @@
                                     <svg class="pais-flecha" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
                                 </button>
                                 <div class="pais-dropdown">
-                                    <div class="pais-busqueda">
-                                        <input type="text" placeholder="Buscar país..." />
-                                    </div>
+                                    <div class="pais-busqueda"><input type="text" placeholder="Buscar país..." /></div>
                                     <div class="pais-lista"></div>
                                 </div>
                                 <input type="hidden" class="pais-valor" value="+57" />
@@ -92,24 +138,15 @@
                             <div class="prefijo-container">
                                 <input type="text" class="prefijo-input" placeholder="+00" maxlength="5" />
                             </div>
-                            <input type="text"
-                                   th:field="*{telefonos[__${iterStat.index}__].telefono}"
-                                   class="form-input numero-input"
-                                   maxlength="10"
-                                   placeholder="3001234567" />
+                            <input type="text" th:field="*{telefonos[__${iterStat.index}__].telefono}"
+                                   class="form-input numero-input" maxlength="10" placeholder="3001234567" />
                             <button type="button" class="btn btn-danger btn-sm btn-remove">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                                </svg>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                             </button>
                         </div>
                     </div>
                     <button type="button" class="btn btn-ghost btn-sm" id="add-telefono-btn">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <line x1="12" y1="5" x2="12" y2="19"></line>
-                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                        </svg>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                         Añadir Teléfono
                     </button>
                 </div>
@@ -118,31 +155,21 @@
 
                 <!-- Direcciones -->
                 <h3 class="form-section-title">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                        <circle cx="12" cy="10" r="3"></circle>
-                    </svg>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
                     Direcciones
                 </h3>
-
                 <div class="form-group">
                     <label class="form-label">Direcciones</label>
                     <div id="direcciones-container">
                         <div th:each="dir, iterStat : *{direcciones}" class="dynamic-field">
                             <input type="text" th:field="*{direcciones[__${iterStat.index}__].direccion}" class="form-input" placeholder="Ej: Av. Principal 123" />
                             <button type="button" class="btn btn-danger btn-sm btn-remove">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                                </svg>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                             </button>
                         </div>
                     </div>
                     <button type="button" class="btn btn-ghost btn-sm" id="add-direccion-btn">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <line x1="12" y1="5" x2="12" y2="19"></line>
-                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                        </svg>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                         Añadir Dirección
                     </button>
                 </div>
@@ -151,31 +178,21 @@
 
                 <!-- Correos -->
                 <h3 class="form-section-title">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                        <polyline points="22,6 12,13 2,6"></polyline>
-                    </svg>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
                     Correos Electrónicos
                 </h3>
-
                 <div class="form-group">
                     <label class="form-label">Correos</label>
                     <div id="correos-container">
                         <div th:each="correo, iterStat : *{correos}" class="dynamic-field">
                             <input type="email" th:field="*{correos[__${iterStat.index}__].correo}" class="form-input input-correo" placeholder="Ej: cliente@ejemplo.com" />
                             <button type="button" class="btn btn-danger btn-sm btn-remove">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                                </svg>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                             </button>
                         </div>
                     </div>
                     <button type="button" class="btn btn-ghost btn-sm" id="add-correo-btn">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <line x1="12" y1="5" x2="12" y2="19"></line>
-                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                        </svg>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                         Añadir Correo
                     </button>
                 </div>
@@ -183,28 +200,63 @@
 
             <div class="card-footer">
                 <a th:href="@{/web/clientes}" class="btn btn-secondary">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="18" y1="6" x2="6" y2="18"></line>
-                        <line x1="6" y1="6" x2="18" y2="18"></line>
-                    </svg>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                     Cancelar
                 </a>
                 <button type="submit" class="btn btn-primary">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-                        <polyline points="17 21 17 13 7 13 7 21"></polyline>
-                        <polyline points="7 3 7 8 15 8"></polyline>
-                    </svg>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
                     <span th:if="${clienteId == null}">Crear Cliente</span>
                     <span th:if="${clienteId != null}">Guardar Cambios</span>
                 </button>
             </div>
         </form>
     </div>
+
+    <!-- Modal Advertencia Legal - Fuera del card/form para cubrir toda la pantalla -->
+    <div class="notif-warn-overlay" id="notif-warn-overlay">
+        <div class="notif-warn-modal">
+            <div class="notif-warn-header">
+                <div class="notif-warn-icon-container">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                        <line x1="12" y1="9" x2="12" y2="13"></line>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
+                </div>
+                <h3 class="notif-warn-title">Advertencia legal</h3>
+            </div>
+            <p class="notif-warn-message" id="notif-warn-message"></p>
+            <div class="notif-warn-legal">
+                <div class="notif-warn-legal-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="16" x2="12" y2="12"></line>
+                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                    </svg>
+                </div>
+                <p class="notif-warn-legal-text">
+                    Modificar este estado sin el consentimiento explícito del cliente puede constituir una infracción a la <strong>Ley 1581 de 2012</strong> (Protección de Datos Personales) y a las políticas de <strong>WhatsApp Business</strong>.
+                </p>
+            </div>
+            <div class="notif-warn-question">¿Deseas continuar con el cambio?</div>
+            <div class="notif-warn-actions">
+                <button type="button" class="btn btn-secondary" id="notif-warn-cancel">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    Cancelar
+                </button>
+                <button type="button" class="btn btn-danger" id="notif-warn-accept">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    Sí, cambiar estado
+                </button>
+            </div>
+        </div>
+    </div>
 </th:block>
 
 <th:block layout:fragment="customJS">
     <script th:src="@{/js/clientes-telefono.js}"></script>
+    <script th:src="@{/js/clientes-cedula-nit.js}"></script>
+    <script th:src="@{/js/clientes-notif-warning.js}"></script>
 </th:block>
 
 </html>

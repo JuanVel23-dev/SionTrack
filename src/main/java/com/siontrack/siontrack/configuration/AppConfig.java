@@ -48,6 +48,8 @@ public class AppConfig {
                 mapper.skip(Clientes::setCorreos);
                 mapper.skip(Clientes::setDirecciones);
                 mapper.skip(Clientes::setVehiculos);
+                // Skip recibe_notificaciones — lo manejamos manualmente en el servicio
+                mapper.skip(Clientes::setRecibe_notificaciones);
             });
 
         return modelMapper;

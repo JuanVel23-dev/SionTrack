@@ -49,6 +49,10 @@ public class ClienteViewController {
     public String mostrarFormularioEditarCliente(@PathVariable Integer id, Model model) {
         ClienteResponseDTO clienteExistenteDto = clienteServicios.obtenerClientePorId(id);
         ClienteRequestDTO clienteParaFormulario = modelMapper.map(clienteExistenteDto, ClienteRequestDTO.class);
+        
+        // Pasar el estado de notificaciones al formulario
+        clienteParaFormulario.setRecibe_notificaciones(clienteExistenteDto.isRecibe_notificaciones());
+        
         model.addAttribute("cliente", clienteParaFormulario);
         model.addAttribute("clienteId", id); 
         return "clientes-form"; 
