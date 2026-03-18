@@ -6,7 +6,6 @@ import com.siontrack.siontrack.repository.ProveedoresRepository;
 import com.siontrack.siontrack.repository.ProductosRepository;
 import com.siontrack.siontrack.services.ProductosServicios;
 import com.siontrack.siontrack.services.ServiciosService;
-import com.siontrack.siontrack.services.ServiciosService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -42,8 +41,20 @@ public class DashboardViewController {
         long totalProductos = productoRepository.count();
         long totalServicios = serviciosService.obtenerTodos().size();
 
-        // Alertas de stock
+        // Alertas de stock (nuevo sistema v2)
         List<AlertaStockDTO> alertasStock = productosServicios.obtenerAlertasStock();
+
+        // Conteos por nivel para los chips del header
+        long countAgotado = alertasStock.stream()
+                .filter(a -> "AGOTADO".equals(a.getNivelAlerta())).count();
+        long countCritico = alertasStock.stream()
+                .filter(a -> "CRITICO".equals(a.getNivelAlerta())).count();
+        long countBajo = alertasStock.stream()
+                .filter(a -> "BAJO".equals(a.getNivelAlerta())).count();
+        long countAdvertencia = alertasStock.stream()
+                .filter(a -> "ADVERTENCIA".equals(a.getNivelAlerta())).count();
+        long countPopulares = alertasStock.stream()
+                .filter(AlertaStockDTO::isEsPopular).count();
 
         model.addAttribute("totalClientes", totalClientes);
         model.addAttribute("totalProveedores", totalProveedores);
@@ -51,6 +62,11 @@ public class DashboardViewController {
         model.addAttribute("totalServicios", totalServicios);
         model.addAttribute("alertasStock", alertasStock);
         model.addAttribute("totalAlertas", alertasStock.size());
+        model.addAttribute("countAgotado", countAgotado);
+        model.addAttribute("countCritico", countCritico);
+        model.addAttribute("countBajo", countBajo);
+        model.addAttribute("countAdvertencia", countAdvertencia);
+        model.addAttribute("countPopulares", countPopulares);
 
         return "dashboard";
     }

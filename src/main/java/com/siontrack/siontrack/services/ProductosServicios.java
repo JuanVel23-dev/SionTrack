@@ -1,6 +1,7 @@
 package com.siontrack.siontrack.services;
 
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 import com.siontrack.siontrack.DTO.Response.AlertaStockDTO;
@@ -14,7 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.siontrack.siontrack.DTO.Request.ProductosRequestDTO;
 import com.siontrack.siontrack.DTO.Response.ProductoPopularDTO;
 import com.siontrack.siontrack.DTO.Response.ProductosResponseDTO;
-
+import java.util.HashMap;
+import java.util.Map;
 import com.siontrack.siontrack.models.Inventario;
 import com.siontrack.siontrack.models.Productos;
 import com.siontrack.siontrack.models.Proveedores;
@@ -203,53 +205,111 @@ public class ProductosServicios {
     }
  
     @Transactional(readOnly = true)
-public List<AlertaStockDTO> obtenerAlertasStock() {
-    return productosRepository.findAll().stream()
-        .filter(producto -> producto.getInventario() != null)
-        .filter(producto -> {
-            int cantidad = producto.getInventario().getCantidad_disponible();
-            int minimo = producto.getInventario().getStock_minimo();
-            return minimo > 0 && cantidad <= minimo;
-        })
-        .map(producto -> {
-            Inventario inv = producto.getInventario();
-            int cantidad = inv.getCantidad_disponible();
-            int minimo = inv.getStock_minimo();
-            int necesita = minimo - cantidad;
+    public List<AlertaStockDTO> obtenerAlertasStock() {
 
-            String nivel;
-            if (cantidad == 0) {
-                nivel = "AGOTADO";
-            } else if (cantidad <= (minimo * 0.5)) {
-                nivel = "CRITICO";
-            } else {
-                nivel = "BAJO";
-            }
+        // 1. Obtener top 5 productos populares (periodo general)
+        Pageable top5 = PageRequest.of(0, 5);
+        LocalDate fechaInicio = LocalDate.of(2000, 1, 1);
+        List<ProductoPopularDTO> populares = detalleServicioRepository
+                .encontrarProductsoPopulares(fechaInicio, top5);
 
-            AlertaStockDTO dto = new AlertaStockDTO();
-            dto.setProductoId(producto.getProducto_id());
-            dto.setNombre(producto.getNombre());
-            dto.setCategoria(producto.getCategoria());
-            dto.setMarca(producto.getMarca());
-            dto.setCantidadDisponible(cantidad);
-            dto.setStockMinimo(minimo);
-            dto.setUbicacion(inv.getUbicacion());
-            dto.setNivelAlerta(nivel);
-            dto.setCantidadNecesaria(Math.max(necesita, 0));
+        Map<Integer, int[]> popularMap = new HashMap<>();
+        for (int i = 0; i < populares.size(); i++) {
+            ProductoPopularDTO p = populares.get(i);
+            popularMap.put(p.getProductoId(), new int[]{ i + 1, p.getTotalVendido().intValue() });
+        }
 
-            // Datos del proveedor
-            if (producto.getProveedor() != null) {
-                var prov = producto.getProveedor();
-                dto.setProveedorId(prov.getProveedor_id());
-                dto.setProveedorNombre(prov.getNombre());
-                dto.setProveedorTelefono(prov.getTelefono());
-                dto.setProveedorEmail(prov.getEmail());
-                dto.setProveedorDireccion(prov.getDireccion());
-            }
+        // 2. Obtener todos los productos con inventario y evaluar alertas
+        return productosRepository.findAll().stream()
+            .filter(producto -> producto.getInventario() != null)
+            .filter(producto -> {
+                int cantidad = producto.getInventario().getCantidad_disponible();
+                int minimo = producto.getInventario().getStock_minimo();
+                if (minimo <= 0) return false;
 
-            return dto;
-        })
-        .sorted((a, b) -> a.getCantidadDisponible().compareTo(b.getCantidadDisponible()))
-        .collect(Collectors.toList());
-}
-}
+                // Incluir productos hasta 1.5x el mínimo (nivel ADVERTENCIA)
+                return cantidad <= (int)(minimo * 1.5);
+            })
+            .map(producto -> {
+                Inventario inv = producto.getInventario();
+                int cantidad = inv.getCantidad_disponible();
+                int minimo = inv.getStock_minimo();
+                int necesita = Math.max(minimo - cantidad, 0);
+
+                // --- Determinar nivel de alerta ---
+                String nivel;
+                int nivelNumerico; // Para ordenamiento: mayor = más urgente
+
+                if (cantidad == 0) {
+                    nivel = "AGOTADO";
+                    nivelNumerico = 40;
+                } else if (cantidad <= (int)(minimo * 0.3)) {
+                    nivel = "CRITICO";
+                    nivelNumerico = 30;
+                } else if (cantidad <= minimo) {
+                    nivel = "BAJO";
+                    nivelNumerico = 20;
+                } else {
+                    // cantidad > minimo && cantidad <= minimo * 1.5
+                    nivel = "ADVERTENCIA";
+                    nivelNumerico = 10;
+                    necesita = 0; // Aún no necesita reabastecimiento urgente
+                }
+
+                // --- Cruce con popularidad ---
+                boolean esPopular = popularMap.containsKey(producto.getProducto_id());
+                Integer ranking = null;
+                Long totalVendido = null;
+
+                if (esPopular) {
+                    int[] data = popularMap.get(producto.getProducto_id());
+                    ranking = data[0];
+                    totalVendido = (long) data[1];
+                }
+
+                // Prioridad compuesta:
+                // Base: nivelNumerico (10-40)
+                // Bonus popularidad: +50 si es top 1-2, +40 si es top 3, +30 si es top 4-5
+                int prioridad = nivelNumerico;
+                if (esPopular && ranking != null) {
+                    if (ranking <= 2) prioridad += 50;
+                    else if (ranking == 3) prioridad += 40;
+                    else prioridad += 30;
+                }
+
+                // --- Construir DTO ---
+                AlertaStockDTO dto = new AlertaStockDTO();
+                dto.setProductoId(producto.getProducto_id());
+                dto.setNombre(producto.getNombre());
+                dto.setCategoria(producto.getCategoria());
+                dto.setMarca(producto.getMarca());
+                dto.setCantidadDisponible(cantidad);
+                dto.setStockMinimo(minimo);
+                dto.setUbicacion(inv.getUbicacion());
+                dto.setNivelAlerta(nivel);
+                dto.setCantidadNecesaria(necesita);
+                dto.setEsPopular(esPopular);
+                dto.setRankingPopular(ranking);
+                dto.setTotalVendido(totalVendido);
+                dto.setPrioridadCompuesta(prioridad);
+
+                // Datos del proveedor
+                if (producto.getProveedor() != null) {
+                    var prov = producto.getProveedor();
+                    dto.setProveedorId(prov.getProveedor_id());
+                    dto.setProveedorNombre(prov.getNombre());
+                    dto.setProveedorTelefono(prov.getTelefono());
+                    dto.setProveedorEmail(prov.getEmail());
+                    dto.setProveedorDireccion(prov.getDireccion());
+                }
+
+                return dto;
+            })
+            // Ordenar por prioridad compuesta descendente, luego por cantidad ascendente
+            .sorted((a, b) -> {
+                int cmp = b.getPrioridadCompuesta().compareTo(a.getPrioridadCompuesta());
+                if (cmp != 0) return cmp;
+                return a.getCantidadDisponible().compareTo(b.getCantidadDisponible());
+            })
+            .collect(Collectors.toList());
+    }}

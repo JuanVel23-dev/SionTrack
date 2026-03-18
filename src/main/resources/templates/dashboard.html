@@ -35,10 +35,7 @@
             <div class="stat-card-footer">
                 <a th:href="@{/web/clientes}" class="btn btn-ghost btn-sm" style="width: 100%;">
                     Ver todos
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="5" y1="12" x2="19" y2="12"></line>
-                        <polyline points="12 5 19 12 12 19"></polyline>
-                    </svg>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
                 </a>
             </div>
         </div>
@@ -59,10 +56,7 @@
             <div class="stat-card-footer">
                 <a th:href="@{/web/proveedores}" class="btn btn-ghost btn-sm" style="width: 100%;">
                     Ver todos
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="5" y1="12" x2="19" y2="12"></line>
-                        <polyline points="12 5 19 12 12 19"></polyline>
-                    </svg>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
                 </a>
             </div>
         </div>
@@ -83,34 +77,28 @@
             <div class="stat-card-footer">
                 <a th:href="@{/web/productos}" class="btn btn-ghost btn-sm" style="width: 100%;">
                     Ver todos
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="5" y1="12" x2="19" y2="12"></line>
-                        <polyline points="12 5 19 12 12 19"></polyline>
-                    </svg>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
                 </a>
             </div>
         </div>
 
         <div class="stat-card animate-in delay-4">
-    <div class="stat-card-header">
-        <div class="stat-card-icon" style="background: var(--warning-subtle); color: var(--warning);">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
-            </svg>
+            <div class="stat-card-header">
+                <div class="stat-card-icon" style="background: var(--warning-subtle); color: var(--warning);">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+                    </svg>
+                </div>
+            </div>
+            <div class="stat-card-value" th:text="${totalServicios != null ? totalServicios : '0'}">0</div>
+            <div class="stat-card-label">Servicios</div>
+            <div class="stat-card-footer">
+                <a th:href="@{/web/servicios}" class="btn btn-ghost btn-sm" style="width: 100%;">
+                    Ver todos
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                </a>
+            </div>
         </div>
-    </div>
-        <div class="stat-card-value" th:text="${totalServicios != null ? totalServicios : '0'}">0</div>
-        <div class="stat-card-label">Servicios</div>
-        <div class="stat-card-footer">
-            <a th:href="@{/web/servicios}" class="btn btn-ghost btn-sm" style="width: 100%;">
-                Ver todos
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                    <polyline points="12 5 19 12 12 19"></polyline>
-                </svg>
-            </a>
-        </div>
-</div>
     </div>
 
     <!-- Quick Actions Card -->
@@ -169,9 +157,14 @@
     <!-- Productos Populares -->
     <section id="popular-productos" class="animate-in" style="animation-delay: 550ms;"></section>
 
-    <!-- Stock Alerts Card -->
+    <!-- ============================================
+         STOCK ALERTS — v5
+         Insignia TOP inline, badges outline, sin banner
+         ============================================ -->
     <div class="stock-card animate-in" style="animation-delay:600ms"
          th:if="${alertasStock != null AND !alertasStock.isEmpty()}">
+
+        <!-- HEADER -->
         <div class="stock-card-header">
             <div class="stock-header-left">
                 <div class="stock-header-icon">
@@ -179,86 +172,208 @@
                 </div>
                 <div>
                     <div class="stock-header-title">Alertas de Stock</div>
-                    <div class="stock-header-subtitle" th:text="${#lists.size(alertasStock) + ' producto' + (#lists.size(alertasStock) == 1 ? ' requiere' : 's requieren') + ' atención'}"></div>
+                    <div class="stock-header-subtitle"
+                         th:text="${#lists.size(alertasStock) + ' producto' + (#lists.size(alertasStock) == 1 ? ' requiere' : 's requieren') + ' atención'}"></div>
                 </div>
             </div>
             <div class="stock-chips">
-                <div class="stock-chip critico"
-                     th:with="cnt=${#lists.size(alertasStock.?[nivelAlerta == 'CRITICO'])}"
-                     th:if="${cnt > 0}">
+                <div class="stock-chip prioritarios"
+                     th:if="${countPopulares != null and countPopulares > 0}">
                     <span class="stock-chip-dot"></span>
-                    <span th:text="${cnt + ' crítico' + (cnt > 1 ? 's' : '')}"></span>
+                    <span th:text="${countPopulares + ' prioritario' + (countPopulares > 1 ? 's' : '')}"></span>
+                </div>
+                <div class="stock-chip critico"
+                     th:if="${countCritico != null and countCritico > 0}">
+                    <span class="stock-chip-dot"></span>
+                    <span th:text="${countCritico + ' crítico' + (countCritico > 1 ? 's' : '')}"></span>
                 </div>
                 <div class="stock-chip bajo"
-                     th:with="cnt=${#lists.size(alertasStock.?[nivelAlerta == 'BAJO'])}"
-                     th:if="${cnt > 0}">
+                     th:if="${countBajo != null and countBajo > 0}">
                     <span class="stock-chip-dot"></span>
-                    <span th:text="${cnt + ' bajo' + (cnt > 1 ? 's' : '')}"></span>
+                    <span th:text="${countBajo + ' bajo' + (countBajo > 1 ? 's' : '')}"></span>
                 </div>
+                <div class="stock-chip advertencia"
+                     th:if="${countAdvertencia != null and countAdvertencia > 0}">
+                    <span class="stock-chip-dot"></span>
+                    <span th:text="${countAdvertencia + ' advertencia' + (countAdvertencia > 1 ? 's' : '')}"></span>
+                </div>
+                <!-- Botón reabastecer -->
+                <button class="stock-restock-btn" id="open-restock-modal">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
+                    <span>Reabastecer</span>
+                </button>
             </div>
         </div>
 
         <div class="stock-list">
-            <div class="stock-urgency-banner">
-                <div class="stock-urgency-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+
+            <!-- SEPARADOR: Requieren acción -->
+            <div class="stock-separator urgente"
+                 th:if="${(countAgotado != null and countAgotado > 0) or (countCritico != null and countCritico > 0) or (countBajo != null and countBajo > 0)}">
+                <div class="stock-separator-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
                 </div>
-                <div class="stock-urgency-text">
-                    <span th:text="${#lists.size(alertasStock) + ' producto' + (#lists.size(alertasStock) > 1 ? 's necesitan' : ' necesita') + ' reabastecimiento'}"></span>
-                </div>
-                <button class="stock-urgency-action" id="open-restock-modal">Reabastecer ahora</button>
+                <span>Requieren acción</span>
+                <div class="stock-separator-line"></div>
             </div>
 
-            <div th:each="alerta : ${alertasStock}" class="stock-item"
-                 th:classappend="${alerta.nivelAlerta.toLowerCase()}"
-                 th:attr="data-cantidad=${alerta.cantidadDisponible},data-minimo=${alerta.stockMinimo}">
+            <!-- Items AGOTADO, CRITICO, BAJO -->
+            <th:block th:each="alerta : ${alertasStock}">
+                <div th:if="${alerta.nivelAlerta != 'ADVERTENCIA'}"
+                     class="stock-item"
+                     th:classappend="${alerta.nivelAlerta.toLowerCase()}"
+                     th:attr="data-cantidad=${alerta.cantidadDisponible},
+                              data-minimo=${alerta.stockMinimo},
+                              data-productoid=${alerta.productoId},
+                              data-nombre=${alerta.nombre},
+                              data-categoria=${alerta.categoria},
+                              data-marca=${alerta.marca},
+                              data-ubicacion=${alerta.ubicacion},
+                              data-proveedor=${alerta.proveedorNombre},
+                              data-tel=${alerta.proveedorTelefono},
+                              data-email=${alerta.proveedorEmail},
+                              data-dir=${alerta.proveedorDireccion},
+                              data-popular=${alerta.esPopular},
+                              data-ranking=${alerta.rankingPopular},
+                              data-vendido=${alerta.totalVendido}">
 
-                <div class="stock-ring-wrap">
-                    <svg class="stock-ring-svg" viewBox="0 0 48 48">
-                        <circle class="stock-ring-bg" cx="24" cy="24" r="20"/>
-                        <circle class="stock-ring-fill" cx="24" cy="24" r="20"/>
-                    </svg>
-                    <span class="stock-ring-number" th:text="${alerta.cantidadDisponible}">0</span>
-                </div>
+                    <div class="stock-ring-wrap">
+                        <svg class="stock-ring-svg" viewBox="0 0 48 48">
+                            <circle class="stock-ring-bg" cx="24" cy="24" r="20"/>
+                            <circle class="stock-ring-fill" cx="24" cy="24" r="20"/>
+                        </svg>
+                        <span class="stock-ring-number" th:text="${alerta.cantidadDisponible}">0</span>
+                    </div>
 
-                <div class="stock-info">
-                    <div class="stock-name" th:text="${alerta.nombre}">Producto</div>
-                    <div class="stock-meta">
-                        <span class="stock-meta-item" th:if="${alerta.categoria != null}">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>
-                            <span th:text="${alerta.categoria}"></span>
+                    <div class="stock-info">
+                        <div class="stock-name">
+                            <span th:text="${alerta.nombre}">Producto</span>
+                        </div>
+                        <div class="stock-meta">
+                            <span class="stock-meta-item" th:if="${alerta.categoria != null}">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>
+                                <span th:text="${alerta.categoria}"></span>
+                            </span>
+                            <span class="stock-meta-item" th:if="${alerta.ubicacion != null and alerta.ubicacion != ''}">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                                <span th:text="${alerta.ubicacion}"></span>
+                            </span>
+                            <span class="stock-meta-item" th:text="'Mín: ' + ${alerta.stockMinimo}"></span>
+                            <span class="stock-meta-item stock-meta-sales" th:if="${alerta.esPopular and alerta.totalVendido != null}">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                                <span th:text="${alerta.totalVendido + ' vendidos'}"></span>
+                            </span>
+                        </div>
+                        <div class="stock-restock">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                        </div>
+                    </div>
+
+                    <div class="stock-progress-wrap">
+                        <div class="stock-progress-label">
+                            <span th:text="${alerta.cantidadDisponible}">0</span>
+                            <span th:text="' / ' + ${alerta.stockMinimo}">/ 0</span>
+                        </div>
+                        <div class="stock-progress-bar">
+                            <div class="stock-progress-fill"></div>
+                        </div>
+                    </div>
+
+                    <!-- Badge de nivel + insignia TOP inline -->
+                    <div class="stock-badges-wrap">
+                        <span class="stock-badge"
+                              th:classappend="${alerta.etiquetaUrgencia.toLowerCase()}"
+                              th:text="${alerta.etiquetaUrgencia}">BAJO</span>
+                        <span th:if="${alerta.esPopular}" class="stock-popular-tag"
+                              th:title="'Top ' + ${alerta.rankingPopular} + ' más vendido'">
+                            <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                            <span class="stock-popular-rank" th:text="${alerta.rankingPopular}"></span>
                         </span>
-                        <span class="stock-meta-item" th:if="${alerta.ubicacion != null and alerta.ubicacion != ''}">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                            <span th:text="${alerta.ubicacion}"></span>
-                        </span>
-                        <span class="stock-meta-item" th:text="'Mín: ' + ${alerta.stockMinimo}"></span>
                     </div>
-                    <div class="stock-restock">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                    </div>
+
+                    <a th:href="@{/web/productos/editar/{id}(id=${alerta.productoId})}"
+                       class="stock-action" title="Editar producto">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    </a>
                 </div>
+            </th:block>
 
-                <div class="stock-progress-wrap">
-                    <div class="stock-progress-label">
-                        <span th:text="${alerta.cantidadDisponible}">0</span>
-                        <span th:text="' / ' + ${alerta.stockMinimo}">/ 0</span>
-                    </div>
-                    <div class="stock-progress-bar">
-                        <div class="stock-progress-fill" th:classappend="${alerta.nivelAlerta.toLowerCase()}"></div>
-                    </div>
+            <!-- SEPARADOR: Advertencias -->
+            <div class="stock-separator advertencia"
+                 th:if="${countAdvertencia != null and countAdvertencia > 0}">
+                <div class="stock-separator-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                 </div>
-
-                <span class="stock-badge" th:classappend="${alerta.nivelAlerta.toLowerCase()}"
-                      th:text="${alerta.nivelAlerta}">BAJO</span>
-
-                <a th:href="@{/web/productos/editar/{id}(id=${alerta.productoId})}"
-                   class="stock-action" title="Editar producto">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                </a>
+                <span>Se acercan al mínimo</span>
+                <div class="stock-separator-line"></div>
             </div>
+
+            <!-- Items ADVERTENCIA -->
+            <th:block th:each="alerta : ${alertasStock}">
+                <div th:if="${alerta.nivelAlerta == 'ADVERTENCIA'}"
+                     class="stock-item advertencia"
+                     th:attr="data-cantidad=${alerta.cantidadDisponible},
+                              data-minimo=${alerta.stockMinimo},
+                              data-productoid=${alerta.productoId},
+                              data-nombre=${alerta.nombre},
+                              data-categoria=${alerta.categoria},
+                              data-marca=${alerta.marca},
+                              data-ubicacion=${alerta.ubicacion},
+                              data-proveedor=${alerta.proveedorNombre},
+                              data-tel=${alerta.proveedorTelefono},
+                              data-email=${alerta.proveedorEmail},
+                              data-dir=${alerta.proveedorDireccion},
+                              data-popular=${alerta.esPopular},
+                              data-ranking=${alerta.rankingPopular},
+                              data-vendido=${alerta.totalVendido}">
+
+                    <div class="stock-ring-wrap">
+                        <svg class="stock-ring-svg" viewBox="0 0 48 48">
+                            <circle class="stock-ring-bg" cx="24" cy="24" r="20"/>
+                            <circle class="stock-ring-fill" cx="24" cy="24" r="20"/>
+                        </svg>
+                        <span class="stock-ring-number" th:text="${alerta.cantidadDisponible}">0</span>
+                    </div>
+
+                    <div class="stock-info">
+                        <div class="stock-name" th:text="${alerta.nombre}">Producto</div>
+                        <div class="stock-meta">
+                            <span class="stock-meta-item" th:if="${alerta.categoria != null}">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>
+                                <span th:text="${alerta.categoria}"></span>
+                            </span>
+                            <span class="stock-meta-item" th:text="'Mín: ' + ${alerta.stockMinimo}"></span>
+                            <span class="stock-meta-item stock-meta-sales" th:if="${alerta.esPopular and alerta.totalVendido != null}">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                                <span th:text="${alerta.totalVendido + ' vendidos'}"></span>
+                            </span>
+                        </div>
+                        <div class="stock-restock">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        </div>
+                    </div>
+
+                    <div class="stock-progress-wrap">
+                        <div class="stock-progress-label">
+                            <span th:text="${alerta.cantidadDisponible}">0</span>
+                            <span th:text="' / ' + ${alerta.stockMinimo}">/ 0</span>
+                        </div>
+                        <div class="stock-progress-bar">
+                            <div class="stock-progress-fill"></div>
+                        </div>
+                    </div>
+
+                    <span class="stock-badge advertencia">Advertencia</span>
+
+                    <a th:href="@{/web/productos/editar/{id}(id=${alerta.productoId})}"
+                       class="stock-action" title="Editar producto">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    </a>
+                </div>
+            </th:block>
         </div>
 
+        <!-- FOOTER -->
         <div class="stock-card-footer">
             <div></div>
             <a th:href="@{/web/productos}" class="stock-footer-link">
