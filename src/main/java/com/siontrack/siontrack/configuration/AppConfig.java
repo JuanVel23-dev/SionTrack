@@ -24,7 +24,8 @@ public class AppConfig {
 
         modelMapper.createTypeMap(ProductosRequestDTO.class, Productos.class)
                 .addMappings(mapper -> {
-                    mapper.skip(Productos::setProducto_id); 
+                    mapper.skip(Productos::setProducto_id);
+                    mapper.map(src -> src.getCodigo_producto(), Productos::setCodigoProducto);
                 });
 
         modelMapper.createTypeMap(Detalle_Servicio.class, DetalleServicioResponseDTO.class)
@@ -37,7 +38,8 @@ public class AppConfig {
                 .addMappings(mapper -> {
                     mapper.map(src -> src.getInventario().getCantidad_disponible(),
                             ProductosResponseDTO::setCantidad_disponible);
-                });     
+                    mapper.map(Productos::getCodigoProducto, ProductosResponseDTO::setCodigo_producto);
+                });
 
         
         modelMapper.createTypeMap(ClienteRequestDTO.class, Clientes.class)

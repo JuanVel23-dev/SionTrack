@@ -48,11 +48,13 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf
-                        .ignoringRequestMatchers("/api/**"))
+                        .ignoringRequestMatchers("/api/**")
+                        .ignoringRequestMatchers("/api/webhook/**"))
 
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**", "/login", "/api/webhook").permitAll()
                         .requestMatchers("/api/**").authenticated()
+                        .requestMatchers("/api/webhook/**").permitAll()
                         .anyRequest().authenticated())
 
                 .formLogin(form -> form

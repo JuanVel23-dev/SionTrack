@@ -2,11 +2,14 @@ package com.siontrack.siontrack.services;
 
 import com.siontrack.siontrack.DTO.Request.PromocionesRequestDTO;
 import com.siontrack.siontrack.models.Clientes;
+import com.siontrack.siontrack.models.Detalle_Servicio;
 import com.siontrack.siontrack.models.Notificaciones;
+import com.siontrack.siontrack.models.Productos;
 import com.siontrack.siontrack.models.Vehiculos;
 import com.siontrack.siontrack.models.enums.ResultadoEnvioMensaje;
+import com.siontrack.siontrack.repository.DetalleServicioRepository;
 import com.siontrack.siontrack.repository.NotificacionesRepository;
-import com.siontrack.siontrack.repository.VehiculosRepository;
+import com.siontrack.siontrack.repository.ProductosRepository;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,9 +19,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -28,14 +35,17 @@ public class NotificacionesService {
 
     private final NotificacionesRepository notificacionesRepository;
     private final WhatsAppService whatsAppService;
-    private final VehiculosRepository vehiculosRepository;
+    private final ProductosRepository productosRepository;
+    private final DetalleServicioRepository detalleServicioRepository;
 
     public NotificacionesService(NotificacionesRepository notificacionesRepository,
                                          WhatsAppService whatsAppService,
-                                         VehiculosRepository vehiculosRepository) {
+                                         ProductosRepository productosRepository,
+                                         DetalleServicioRepository detalleServicioRepository) {
         this.notificacionesRepository = notificacionesRepository;
         this.whatsAppService = whatsAppService;
-        this.vehiculosRepository = vehiculosRepository;
+        this.productosRepository = productosRepository;
+        this.detalleServicioRepository = detalleServicioRepository;
     }
 
     // =============================================
@@ -109,35 +119,56 @@ public class NotificacionesService {
 
     @Transactional
     public Map<String, Object> enviarPromocion(PromocionesRequestDTO dto) {
-        log.info("📢 Enviando promoción para marca: {}", dto.getMarcaVehiculo());
+        Optional<Productos> productoOpt = productosRepository.findById(dto.getProductoId());
 
-        List<Vehiculos> vehiculos = vehiculosRepository.findByMarcaIgnoreCase(dto.getMarcaVehiculo());
+        Map<String, Object> resumen = new HashMap<>();
 
-        log.info("🚗 Vehículos encontrados: {}", vehiculos.size());
+        if (productoOpt.isEmpty()) {
+            log.warn("⚠️ Producto con ID {} no encontrado", dto.getProductoId());
+            resumen.put("clientesEncontrados", 0);
+            resumen.put("enviados", 0);
+            resumen.put("fallidos", 0);
+            resumen.put("sinTelefono", 0);
+            resumen.put("sinConsentimiento", 0);
+            return resumen;
+        }
+
+        Productos producto = productoOpt.get();
+        log.info("📢 Enviando promoción para producto: {}", producto.getNombre());
+
+        List<Detalle_Servicio> detalles = detalleServicioRepository.findByProductoId(dto.getProductoId());
+        log.info("🔍 Detalles de servicio encontrados: {}", detalles.size());
+
+        Set<Integer> clientesVistos = new HashSet<>();
+        List<Clientes> clientesUnicos = new ArrayList<>();
+
+        for (Detalle_Servicio detalle : detalles) {
+            if (detalle.getServicio() == null) continue;
+            Clientes cliente = detalle.getServicio().getClientes();
+            if (cliente == null) continue;
+            if (clientesVistos.add(cliente.getCliente_id())) {
+                clientesUnicos.add(cliente);
+            }
+        }
+
+        log.info("👥 Clientes únicos encontrados: {}", clientesUnicos.size());
 
         int enviados = 0, fallidos = 0, sinTelefono = 0, sinConsentimiento = 0;
 
         String descripcionPromo = dto.getPromocion() + " | Precio: " + dto.getPrecioOferta()
                 + " | Vigencia: " + dto.getRangoFechas();
 
-        for (Vehiculos vehiculo : vehiculos) {
-            Clientes cliente = vehiculo.getClientes();
-
-            if (cliente == null) {
-                log.warn("⚠️ Vehículo {} sin cliente asociado", vehiculo.getPlaca());
-                continue;
-            }
-
+        for (Clientes cliente : clientesUnicos) {
             if (!Boolean.TRUE.equals(cliente.getRecibeNotificaciones())) {
                 sinConsentimiento++;
-                guardarNotificacionPromocion(cliente, vehiculo, descripcionPromo,
+                guardarNotificacionPromocion(cliente, descripcionPromo,
                         "sin_consentimiento", "SIN_CONSENTIMIENTO");
                 continue;
             }
 
             if (cliente.getTelefonos() == null || cliente.getTelefonos().isEmpty()) {
                 sinTelefono++;
-                guardarNotificacionPromocion(cliente, vehiculo, descripcionPromo,
+                guardarNotificacionPromocion(cliente, descripcionPromo,
                         "fallido", "SIN_TELEFONO");
                 continue;
             }
@@ -145,24 +176,21 @@ public class NotificacionesService {
             String telefono = cliente.getTelefonos().get(0).getTelefono();
 
             ResultadoEnvioMensaje resultado = whatsAppService.enviarMensajePromo(
-                telefono, cliente.getNombre(), dto.getMarcaVehiculo(),
+                telefono, cliente.getNombre(), producto.getNombre(),
                 dto.getPromocion(), dto.getPrecioOferta(), dto.getRangoFechas()
             );
 
             if (resultado == ResultadoEnvioMensaje.ENVIADO) {
                 enviados++;
-                guardarNotificacionPromocion(cliente, vehiculo, descripcionPromo,
-                        "enviado", resultado.name());
+                guardarNotificacionPromocion(cliente, descripcionPromo, "enviado", resultado.name());
             } else {
                 fallidos++;
-                guardarNotificacionPromocion(cliente, vehiculo, descripcionPromo,
-                        "fallido", resultado.name());
+                guardarNotificacionPromocion(cliente, descripcionPromo, "fallido", resultado.name());
             }
         }
 
-        Map<String, Object> resumen = new HashMap<>();
-        resumen.put("marca", dto.getMarcaVehiculo());
-        resumen.put("vehiculosEncontrados", vehiculos.size());
+        resumen.put("producto", producto.getNombre());
+        resumen.put("clientesEncontrados", clientesUnicos.size());
         resumen.put("enviados", enviados);
         resumen.put("fallidos", fallidos);
         resumen.put("sinTelefono", sinTelefono);
@@ -170,12 +198,11 @@ public class NotificacionesService {
         return resumen;
     }
 
-    private void guardarNotificacionPromocion(Clientes cliente, Vehiculos vehiculo,
+    private void guardarNotificacionPromocion(Clientes cliente,
                                                String mensajePromo, String estado,
                                                String resultadoEnvio) {
         Notificaciones n = new Notificaciones();
         n.setClientes(cliente);
-        n.setVehiculo(vehiculo);
         n.setCanal("whatsapp");
         n.setTipoNotificacion("PROMOCION");
         n.setMensaje_enviado(mensajePromo);
@@ -203,11 +230,10 @@ public class NotificacionesService {
     }
 
     @Transactional(readOnly = true)
-    public List<String> obtenerMarcasVehiculos() {
-        return vehiculosRepository.findAll().stream()
-                .map(Vehiculos::getMarca)
-                .filter(m -> m != null && !m.trim().isEmpty())
-                .map(String::trim).distinct().sorted()
+    public List<Productos> obtenerProductosDisponibles() {
+        return productosRepository.findAll().stream()
+                .filter(p -> p.getNombre() != null && !p.getNombre().trim().isEmpty())
+                .sorted((a, b) -> a.getNombre().compareToIgnoreCase(b.getNombre()))
                 .collect(Collectors.toList());
     }
 }

@@ -34,7 +34,7 @@ public class PromocionesViewController {
     @GetMapping("/notificaciones/promocion/nueva")
     public String mostrarFormularioPromocion(Model model) {
         model.addAttribute("promocion", new PromocionesRequestDTO());
-        model.addAttribute("marcasDisponibles", notificacionesService.obtenerMarcasVehiculos());
+        model.addAttribute("productosDisponibles", notificacionesService.obtenerProductosDisponibles());
         return "promociones-form";
     }
 
@@ -52,18 +52,19 @@ public class PromocionesViewController {
             int fallidos = (int) resultado.getOrDefault("fallidos", 0);
             int sinTelefono = (int) resultado.getOrDefault("sinTelefono", 0);
             int sinConsentimiento = (int) resultado.getOrDefault("sinConsentimiento", 0);
-            int vehiculos = (int) resultado.getOrDefault("vehiculosEncontrados", 0);
+            int clientes = (int) resultado.getOrDefault("clientesEncontrados", 0);
+            String nombreProducto = (String) resultado.getOrDefault("producto", "");
 
             String mensaje = String.format(
                 "Promoción enviada — %d de %d clientes notificados. Fallidos: %d, Sin teléfono: %d, Sin consentimiento: %d",
-                enviados, vehiculos, fallidos, sinTelefono, sinConsentimiento
+                enviados, clientes, fallidos, sinTelefono, sinConsentimiento
             );
 
             if (enviados > 0) {
                 redirectAttributes.addFlashAttribute("successMessage", mensaje);
-            } else if (vehiculos == 0) {
+            } else if (clientes == 0) {
                 redirectAttributes.addFlashAttribute("errorMessage",
-                    "No se encontraron vehículos de marca \"" + dto.getMarcaVehiculo() + "\"");
+                    "No se encontraron clientes asociados al producto \"" + nombreProducto + "\"");
             } else {
                 redirectAttributes.addFlashAttribute("errorMessage", mensaje);
             }

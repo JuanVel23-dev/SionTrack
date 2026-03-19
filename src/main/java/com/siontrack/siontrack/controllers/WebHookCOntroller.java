@@ -1,6 +1,5 @@
 package com.siontrack.siontrack.controllers;
 
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -12,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.siontrack.siontrack.DTO.Request.WebhookPayloadDTO;
 import com.siontrack.siontrack.configuration.WhatsAppConfig;
 import com.siontrack.siontrack.services.WebhookService;
@@ -41,7 +41,7 @@ public class WebHookController {
             return ResponseEntity.ok(challenge);
         }
 
-        log.warn("❌ Verificación fallida");
+        log.info("❌ Verificación fallida");
         return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
 
@@ -50,8 +50,26 @@ public class WebHookController {
         try {
             webhookService.procesarPayload(payload);
         } catch (Exception e) {
-            log.error("❌ Error: {}", e.getMessage(), e);
+            log.info("❌ Error: {}", e.getMessage(), e);
         }
         return ResponseEntity.ok("EVENT_RECEIVED");
     }
+
+    /*
+     * @PostMapping
+     * public ResponseEntity<String> recibirMensaje(@RequestBody String rawPayload)
+     * {
+     * log.info("📥 Payload RAW recibido: {}", rawPayload);
+     * 
+     * try {
+     * ObjectMapper mapper = new ObjectMapper();
+     * WebhookPayloadDTO payload = mapper.readValue(rawPayload,
+     * WebhookPayloadDTO.class);
+     * webhookService.procesarPayload(payload);
+     * } catch (Exception e) {
+     * log.error("❌ Error procesando: {}", e.getMessage(), e);
+     * }
+     * return ResponseEntity.ok("EVENT_RECEIVED");
+     * }
+     */
 }

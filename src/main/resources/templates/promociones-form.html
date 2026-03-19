@@ -32,19 +32,21 @@
                 </h3>
 
                 <div class="form-group">
-                    <label class="form-label required">Marca de Vehículo</label>
-                    <div class="promo-select" id="marca-select">
+                    <label class="form-label required">Producto</label>
+                    <div class="promo-select" id="producto-select">
                         <button type="button" class="promo-select-btn">
-                            <span class="promo-select-texto placeholder">Seleccione una marca</span>
+                            <span class="promo-select-texto placeholder">Seleccione un producto</span>
                             <svg class="promo-select-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
                         </button>
                         <div class="promo-select-dropdown">
-                            <div class="promo-select-option disabled">Seleccione una marca</div>
-                            <div th:each="marca : ${marcasDisponibles}" class="promo-select-option" th:data-value="${marca}" th:text="${marca}">Marca</div>
+                            <div class="promo-select-option disabled">Seleccione un producto</div>
+                            <div th:each="producto : ${productosDisponibles}" class="promo-select-option"
+                                 th:data-value="${producto.producto_id}"
+                                 th:text="${producto.nombre}">Producto</div>
                         </div>
                     </div>
-                    <input type="hidden" id="marcaVehiculo" th:field="*{marcaVehiculo}" />
-                    <span class="form-help">Se enviará a clientes con vehículos de esta marca que aceptaron notificaciones</span>
+                    <input type="hidden" id="productoId" th:field="*{productoId}" />
+                    <span class="form-help">Se enviará a clientes que han utilizado este producto en sus servicios y aceptaron notificaciones</span>
                 </div>
 
                 <div class="divider"></div>

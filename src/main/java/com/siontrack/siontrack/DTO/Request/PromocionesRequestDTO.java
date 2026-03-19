@@ -9,7 +9,7 @@ public class PromocionesRequestDTO {
     private String nombreCliente;
 
     @Getter @Setter
-    private String marcaVehiculo;
+    private Integer productoId;
 
     @Getter @Setter
     private String promocion;

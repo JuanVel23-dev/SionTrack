@@ -30,7 +30,7 @@ public class WebhookService {
 
     public void procesarPayload(WebhookPayloadDTO payload) {
         if (payload.getEntry() == null || payload.getEntry().isEmpty()) {
-            log.debug("Payload vacío recibido");
+            log.info("Payload vacío recibido");
             return;
         }
 
@@ -135,7 +135,7 @@ public class WebhookService {
 
                 whatsAppService.enviarMensajeTexto(
                         telefonoCliente,
-                        "Entendido No recibirás notificaciones. Si cambias de opinión, contáctanos.");
+                        "Entendido No recibirás notificaciones. Si cambias de opinión, contáctanos :).");
             }
             case DESCONOCIDO -> {
                 log.warn("⚠️ Respuesta no reconocida de {}", cliente.getNombre());

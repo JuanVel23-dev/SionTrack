@@ -15,6 +15,9 @@ import com.siontrack.siontrack.models.Detalle_Servicio;
 @Repository
 public interface DetalleServicioRepository extends JpaRepository<Detalle_Servicio, Integer> {
 
+    @Query("SELECT d FROM Detalle_Servicio d WHERE d.producto.producto_id = :productoId")
+    List<Detalle_Servicio> findByProductoId(@Param("productoId") int productoId);
+
     @Query("SELECT new com.siontrack.siontrack.DTO.Response.ProductoPopularDTO(" +
            "d.producto.producto_id, " +
            "d.producto.nombre, " +
