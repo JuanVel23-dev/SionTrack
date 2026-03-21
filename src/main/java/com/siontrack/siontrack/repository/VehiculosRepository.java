@@ -8,5 +8,5 @@ import com.siontrack.siontrack.models.Vehiculos;
 
 public interface VehiculosRepository extends JpaRepository<Vehiculos, Integer>{
 
-     List<Vehiculos> findByMarcaIgnoreCase(String marca);
+     List<Vehiculos> findByPlacaIgnoreCase(String placa);
 }

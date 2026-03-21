@@ -50,66 +50,23 @@
 
                 <div class="form-grid">
                     <div class="form-group">
-                        <label for="marca" class="form-label required">Marca</label>
-                        <input type="text" 
-                               id="marca" 
-                               th:field="*{marca}" 
-                               class="form-input" 
-                               required
-                               placeholder="Ej: Chevrolet">
-                    </div>
-                    <div class="form-group">
-                        <label for="modelo" class="form-label required">Modelo</label>
-                        <input type="text" 
-                               id="modelo" 
-                               th:field="*{modelo}" 
-                               class="form-input" 
-                               required
-                               placeholder="Ej: D-Max">
-                    </div>
-                </div>
-
-                <div class="form-grid">
-                    <div class="form-group">
                         <label for="placa" class="form-label required">Placa</label>
-                        <input type="text" 
-                               id="placa" 
-                               th:field="*{placa}" 
-                               class="form-input" 
+                        <input type="text"
+                               id="placa"
+                               th:field="*{placa}"
+                               class="form-input"
                                required
                                placeholder="Ej: PAA-1234">
                     </div>
                     <div class="form-group">
-                        <label for="anio" class="form-label required">Año</label>
-                        <input type="number" 
-                               id="anio" 
-                               th:field="*{anio}" 
-                               class="form-input"
-                               required
-                               min="1900" 
-                               max="2030"
-                               placeholder="Ej: 2020">
-                    </div>
-                </div>
-
-                <div class="form-grid">
-                    <div class="form-group">
                         <label for="kilometraje_actual" class="form-label required">Kilometraje Actual</label>
-                        <input type="number" 
-                               id="kilometraje_actual" 
-                               th:field="*{kilometraje_actual}" 
+                        <input type="number"
+                               id="kilometraje_actual"
+                               th:field="*{kilometraje_actual}"
                                class="form-input"
                                required
                                min="0"
                                placeholder="Ej: 50000">
-                    </div>
-                    <div class="form-group">
-                        <label for="tipo_motor" class="form-label">Tipo de Motor</label>
-                        <input type="text" 
-                               id="tipo_motor" 
-                               th:field="*{tipo_motor}" 
-                               class="form-input"
-                               placeholder="Ej: 2.5L Diesel">
                     </div>
                 </div>
             </div>

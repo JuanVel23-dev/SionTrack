@@ -3,16 +3,22 @@ package com.siontrack.siontrack.services;
 import com.siontrack.siontrack.DTO.Request.*;
 import com.siontrack.siontrack.DTO.Response.ImportacionResponseDTO;
 import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.ss.util.NumberToTextConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.BufferedReader;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class ImportacionService {
@@ -40,67 +46,68 @@ public class ImportacionService {
         ImportacionResponseDTO resultado = new ImportacionResponseDTO();
         resultado.setTipoImportacion("CLIENTES");
 
-        try (InputStream is = archivo.getInputStream();
-             Workbook workbook = new XSSFWorkbook(is)) {
-
-            Sheet sheet = workbook.getSheetAt(0);
-            int filaInicio = 1;
-
-            for (int i = filaInicio; i <= sheet.getLastRowNum(); i++) {
-                Row row = sheet.getRow(i);
-                if (row == null || esFilaVacia(row)) continue;
-
-                resultado.setRegistrosProcesados(resultado.getRegistrosProcesados() + 1);
-
-                try {
-                    ClienteRequestDTO dto = new ClienteRequestDTO();
-                    dto.setNombre(getCellString(row, 0));
-                    dto.setCedula_ruc(getCellString(row, 1));
-                    dto.setTipo_cliente(getCellString(row, 2));
-
-                    // Teléfono
-                    String telefono = getCellString(row, 3);
-                    if (telefono != null && !telefono.trim().isEmpty()) {
-                        TelefonosRequestDTO telDto = new TelefonosRequestDTO();
-                        telDto.setTelefono(telefono);
-                        dto.setTelefonos(List.of(telDto));
-                    }
-
-                    // Correo
-                    String correo = getCellString(row, 4);
-                    if (correo != null && !correo.trim().isEmpty()) {
-                        CorreosRequestDTO correoDto = new CorreosRequestDTO();
-                        correoDto.setCorreo(correo);
-                        dto.setCorreos(List.of(correoDto));
-                    }
-
-                    // Dirección
-                    String direccion = getCellString(row, 5);
-                    if (direccion != null && !direccion.trim().isEmpty()) {
-                        DireccionesRequestDTO dirDto = new DireccionesRequestDTO();
-                        dirDto.setDireccion(direccion);
-                        dto.setDirecciones(List.of(dirDto));
-                    }
-
-                    // Validación
-                    if (dto.getNombre() == null || dto.getNombre().trim().isEmpty()) {
-                        resultado.agregarError(i + 1, "Nombre es requerido");
-                        resultado.setRegistrosFallidos(resultado.getRegistrosFallidos() + 1);
-                        continue;
-                    }
-
-                    clienteServicios.crearCliente(dto);
-                    resultado.setRegistrosExitosos(resultado.getRegistrosExitosos() + 1);
-
-                } catch (Exception e) {
-                    resultado.agregarError(i + 1, e.getMessage());
-                    resultado.setRegistrosFallidos(resultado.getRegistrosFallidos() + 1);
-                }
-            }
-
+        List<Map<String, String>> filas;
+        try {
+            filas = leerFilas(archivo);
         } catch (Exception e) {
-            log.error("Error leyendo archivo Excel: {}", e.getMessage());
+            log.error("Error leyendo archivo: {}", e.getMessage());
             resultado.agregarError(0, "Error leyendo archivo: " + e.getMessage());
+            return resultado;
+        }
+
+        for (int i = 0; i < filas.size(); i++) {
+            Map<String, String> fila = filas.get(i);
+            int numeroFila = i + 2;
+            resultado.setRegistrosProcesados(resultado.getRegistrosProcesados() + 1);
+
+            try {
+                ClienteRequestDTO dto = new ClienteRequestDTO();
+                dto.setNombre(get(fila, "nombre"));
+                dto.setCedula_ruc(get(fila, "cedula_ruc"));
+                dto.setTipo_cliente(get(fila, "tipo_cliente"));
+
+                String telefono = get(fila, "telefono");
+                if (telefono != null) {
+                    TelefonosRequestDTO telDto = new TelefonosRequestDTO();
+                    telDto.setTelefono(telefono);
+                    dto.setTelefonos(List.of(telDto));
+                }
+
+                String correo = get(fila, "correo");
+                if (correo != null) {
+                    CorreosRequestDTO correoDto = new CorreosRequestDTO();
+                    correoDto.setCorreo(correo);
+                    dto.setCorreos(List.of(correoDto));
+                }
+
+                String direccion = get(fila, "direccion");
+                if (direccion != null) {
+                    DireccionesRequestDTO dirDto = new DireccionesRequestDTO();
+                    dirDto.setDireccion(direccion);
+                    dto.setDirecciones(List.of(dirDto));
+                }
+
+                String placa = get(fila, "placa");
+                if (placa != null) {
+                    VehiculosRequestDTO vehiculoDto = new VehiculosRequestDTO();
+                    vehiculoDto.setPlaca(placa);
+                    vehiculoDto.setKilometraje_actual(get(fila, "kilometraje"));
+                    dto.setVehiculos(List.of(vehiculoDto));
+                }
+
+                if (dto.getNombre() == null || dto.getNombre().trim().isEmpty()) {
+                    resultado.agregarError(numeroFila, "Nombre es requerido");
+                    resultado.setRegistrosFallidos(resultado.getRegistrosFallidos() + 1);
+                    continue;
+                }
+
+                clienteServicios.crearCliente(dto);
+                resultado.setRegistrosExitosos(resultado.getRegistrosExitosos() + 1);
+
+            } catch (Exception e) {
+                resultado.agregarError(numeroFila, e.getMessage());
+                resultado.setRegistrosFallidos(resultado.getRegistrosFallidos() + 1);
+            }
         }
 
         return resultado;
@@ -112,58 +119,54 @@ public class ImportacionService {
         ImportacionResponseDTO resultado = new ImportacionResponseDTO();
         resultado.setTipoImportacion("PRODUCTOS");
 
-        try (InputStream is = archivo.getInputStream();
-             Workbook workbook = new XSSFWorkbook(is)) {
-
-            Sheet sheet = workbook.getSheetAt(0);
-            int filaInicio = 1;
-
-            for (int i = filaInicio; i <= sheet.getLastRowNum(); i++) {
-                Row row = sheet.getRow(i);
-                if (row == null || esFilaVacia(row)) continue;
-
-                resultado.setRegistrosProcesados(resultado.getRegistrosProcesados() + 1);
-
-                try {
-                    ProductosRequestDTO dto = new ProductosRequestDTO();
-                    dto.setNombre(getCellString(row, 0));
-                    dto.setCodigo_producto(getCellString(row, 1));
-                    dto.setCategoria(getCellString(row, 2));
-                    dto.setMarca(getCellString(row, 3));
-                    dto.setUnidad_medida(getCellString(row, 4));
-                    dto.setPrecio_compra(getCellBigDecimal(row, 5));
-                    dto.setPrecio_venta(getCellBigDecimal(row, 6));
-                    dto.setEstado(getCellString(row, 7));
-                    dto.setProveedor_id(getCellInteger(row, 8));
-                    dto.setCantidad_disponible(getCellInteger(row, 9));
-                    dto.setStock_minimo(getCellInteger(row, 10));
-                    dto.setUbicacion(getCellString(row, 11));
-
-                    // Validaciones
-                    if (dto.getNombre() == null || dto.getNombre().trim().isEmpty()) {
-                        resultado.agregarError(i + 1, "Nombre es requerido");
-                        resultado.setRegistrosFallidos(resultado.getRegistrosFallidos() + 1);
-                        continue;
-                    }
-
-                    if (dto.getProveedor_id() == null) {
-                        resultado.agregarError(i + 1, "Proveedor ID es requerido");
-                        resultado.setRegistrosFallidos(resultado.getRegistrosFallidos() + 1);
-                        continue;
-                    }
-
-                    productosServicios.crearProducto(dto);
-                    resultado.setRegistrosExitosos(resultado.getRegistrosExitosos() + 1);
-
-                } catch (Exception e) {
-                    resultado.agregarError(i + 1, e.getMessage());
-                    resultado.setRegistrosFallidos(resultado.getRegistrosFallidos() + 1);
-                }
-            }
-
+        List<Map<String, String>> filas;
+        try {
+            filas = leerFilas(archivo);
         } catch (Exception e) {
-            log.error("Error leyendo archivo Excel: {}", e.getMessage());
+            log.error("Error leyendo archivo: {}", e.getMessage());
             resultado.agregarError(0, "Error leyendo archivo: " + e.getMessage());
+            return resultado;
+        }
+
+        for (int i = 0; i < filas.size(); i++) {
+            Map<String, String> fila = filas.get(i);
+            int numeroFila = i + 2;
+            resultado.setRegistrosProcesados(resultado.getRegistrosProcesados() + 1);
+
+            try {
+                ProductosRequestDTO dto = new ProductosRequestDTO();
+                dto.setNombre(get(fila, "nombre"));
+                dto.setCodigo_producto(get(fila, "codigo_producto"));
+                dto.setCategoria(get(fila, "categoria"));
+                dto.setMarca(get(fila, "marca"));
+                dto.setUnidad_medida(get(fila, "unidad_medida"));
+                dto.setPrecio_compra(getBigDecimal(fila, "precio_compra"));
+                dto.setPrecio_venta(getBigDecimal(fila, "precio_venta"));
+                dto.setEstado(get(fila, "estado"));
+                dto.setProveedor_id(getInteger(fila, "proveedor_id"));
+                dto.setCantidad_disponible(getInteger(fila, "cantidad_disponible"));
+                dto.setStock_minimo(getInteger(fila, "stock_minimo"));
+                dto.setUbicacion(get(fila, "ubicacion"));
+
+                if (dto.getNombre() == null || dto.getNombre().trim().isEmpty()) {
+                    resultado.agregarError(numeroFila, "Nombre es requerido");
+                    resultado.setRegistrosFallidos(resultado.getRegistrosFallidos() + 1);
+                    continue;
+                }
+
+                if (dto.getProveedor_id() == null) {
+                    resultado.agregarError(numeroFila, "proveedor_id es requerido");
+                    resultado.setRegistrosFallidos(resultado.getRegistrosFallidos() + 1);
+                    continue;
+                }
+
+                productosServicios.crearProducto(dto);
+                resultado.setRegistrosExitosos(resultado.getRegistrosExitosos() + 1);
+
+            } catch (Exception e) {
+                resultado.agregarError(numeroFila, e.getMessage());
+                resultado.setRegistrosFallidos(resultado.getRegistrosFallidos() + 1);
+            }
         }
 
         return resultado;
@@ -175,45 +178,41 @@ public class ImportacionService {
         ImportacionResponseDTO resultado = new ImportacionResponseDTO();
         resultado.setTipoImportacion("PROVEEDORES");
 
-        try (InputStream is = archivo.getInputStream();
-             Workbook workbook = new XSSFWorkbook(is)) {
-
-            Sheet sheet = workbook.getSheetAt(0);
-            int filaInicio = 1;
-
-            for (int i = filaInicio; i <= sheet.getLastRowNum(); i++) {
-                Row row = sheet.getRow(i);
-                if (row == null || esFilaVacia(row)) continue;
-
-                resultado.setRegistrosProcesados(resultado.getRegistrosProcesados() + 1);
-
-                try {
-                    ProveedoresRequestDTO dto = new ProveedoresRequestDTO();
-                    dto.setNombre(getCellString(row, 0));
-                    dto.setTelefono(getCellString(row, 1));
-                    dto.setEmail(getCellString(row, 2));
-                    dto.setDireccion(getCellString(row, 3));
-                    dto.setNombre_contacto(getCellString(row, 4));
-
-                    // Validación
-                    if (dto.getNombre() == null || dto.getNombre().trim().isEmpty()) {
-                        resultado.agregarError(i + 1, "Nombre es requerido");
-                        resultado.setRegistrosFallidos(resultado.getRegistrosFallidos() + 1);
-                        continue;
-                    }
-
-                    proveedoresService.crearProveedor(dto);
-                    resultado.setRegistrosExitosos(resultado.getRegistrosExitosos() + 1);
-
-                } catch (Exception e) {
-                    resultado.agregarError(i + 1, e.getMessage());
-                    resultado.setRegistrosFallidos(resultado.getRegistrosFallidos() + 1);
-                }
-            }
-
+        List<Map<String, String>> filas;
+        try {
+            filas = leerFilas(archivo);
         } catch (Exception e) {
-            log.error("Error leyendo archivo Excel: {}", e.getMessage());
+            log.error("Error leyendo archivo: {}", e.getMessage());
             resultado.agregarError(0, "Error leyendo archivo: " + e.getMessage());
+            return resultado;
+        }
+
+        for (int i = 0; i < filas.size(); i++) {
+            Map<String, String> fila = filas.get(i);
+            int numeroFila = i + 2;
+            resultado.setRegistrosProcesados(resultado.getRegistrosProcesados() + 1);
+
+            try {
+                ProveedoresRequestDTO dto = new ProveedoresRequestDTO();
+                dto.setNombre(get(fila, "nombre"));
+                dto.setTelefono(get(fila, "telefono"));
+                dto.setEmail(get(fila, "email"));
+                dto.setDireccion(get(fila, "direccion"));
+                dto.setNombre_contacto(get(fila, "nombre_contacto"));
+
+                if (dto.getNombre() == null || dto.getNombre().trim().isEmpty()) {
+                    resultado.agregarError(numeroFila, "Nombre es requerido");
+                    resultado.setRegistrosFallidos(resultado.getRegistrosFallidos() + 1);
+                    continue;
+                }
+
+                proveedoresService.crearProveedor(dto);
+                resultado.setRegistrosExitosos(resultado.getRegistrosExitosos() + 1);
+
+            } catch (Exception e) {
+                resultado.agregarError(numeroFila, e.getMessage());
+                resultado.setRegistrosFallidos(resultado.getRegistrosFallidos() + 1);
+            }
         }
 
         return resultado;
@@ -225,65 +224,60 @@ public class ImportacionService {
         ImportacionResponseDTO resultado = new ImportacionResponseDTO();
         resultado.setTipoImportacion("SERVICIOS");
 
-        try (InputStream is = archivo.getInputStream();
-             Workbook workbook = new XSSFWorkbook(is)) {
-
-            Sheet sheet = workbook.getSheetAt(0);
-            int filaInicio = 1;
-
-            for (int i = filaInicio; i <= sheet.getLastRowNum(); i++) {
-                Row row = sheet.getRow(i);
-                if (row == null || esFilaVacia(row)) continue;
-
-                resultado.setRegistrosProcesados(resultado.getRegistrosProcesados() + 1);
-
-                try {
-                    ServicioRequestDTO dto = new ServicioRequestDTO();
-                    dto.setCliente_id(getCellInteger(row, 0));
-                    dto.setVehiculo_id(getCellInteger(row, 1));
-                    dto.setFecha_servicio(getCellLocalDate(row, 2));
-                    dto.setKilometraje_servicio(getCellString(row, 3));
-                    dto.setEstado(getCellString(row, 4));
-                    dto.setObservaciones(getCellString(row, 5));
-
-                    // Detalles del servicio (si hay)
-                    Integer productoId = getCellInteger(row, 6);
-                    BigDecimal cantidad = getCellBigDecimal(row, 7);
-                    String tipoItem = getCellString(row, 8);
-
-                    if (productoId != null && cantidad != null) {
-                        DetalleServicioRequestDTO detalle = new DetalleServicioRequestDTO();
-                        detalle.setProducto_id(productoId);
-                        detalle.setCantidad(cantidad);
-                        detalle.setTipoItem(tipoItem != null ? tipoItem : "PRODUCTO");
-                        dto.setDetalles(List.of(detalle));
-                    }
-
-                    // Validaciones
-                    if (dto.getCliente_id() == null) {
-                        resultado.agregarError(i + 1, "Cliente ID es requerido");
-                        resultado.setRegistrosFallidos(resultado.getRegistrosFallidos() + 1);
-                        continue;
-                    }
-
-                    if (dto.getVehiculo_id() == null) {
-                        resultado.agregarError(i + 1, "Vehículo ID es requerido");
-                        resultado.setRegistrosFallidos(resultado.getRegistrosFallidos() + 1);
-                        continue;
-                    }
-
-                    serviciosService.crearServicio(dto);
-                    resultado.setRegistrosExitosos(resultado.getRegistrosExitosos() + 1);
-
-                } catch (Exception e) {
-                    resultado.agregarError(i + 1, e.getMessage());
-                    resultado.setRegistrosFallidos(resultado.getRegistrosFallidos() + 1);
-                }
-            }
-
+        List<Map<String, String>> filas;
+        try {
+            filas = leerFilas(archivo);
         } catch (Exception e) {
-            log.error("Error leyendo archivo Excel: {}", e.getMessage());
+            log.error("Error leyendo archivo: {}", e.getMessage());
             resultado.agregarError(0, "Error leyendo archivo: " + e.getMessage());
+            return resultado;
+        }
+
+        for (int i = 0; i < filas.size(); i++) {
+            Map<String, String> fila = filas.get(i);
+            int numeroFila = i + 2;
+            resultado.setRegistrosProcesados(resultado.getRegistrosProcesados() + 1);
+
+            try {
+                ServicioRequestDTO dto = new ServicioRequestDTO();
+                dto.setCliente_id(getInteger(fila, "cliente_id"));
+                dto.setVehiculo_id(getInteger(fila, "vehiculo_id"));
+                dto.setFecha_servicio(getLocalDate(fila, "fecha_servicio"));
+                dto.setKilometraje_servicio(get(fila, "kilometraje_servicio"));
+                dto.setEstado(get(fila, "estado"));
+                dto.setObservaciones(get(fila, "observaciones"));
+
+                Integer productoId = getInteger(fila, "producto_id");
+                BigDecimal cantidad = getBigDecimal(fila, "cantidad");
+                String tipoItem = get(fila, "tipo_item");
+
+                if (productoId != null && cantidad != null) {
+                    DetalleServicioRequestDTO detalle = new DetalleServicioRequestDTO();
+                    detalle.setProducto_id(productoId);
+                    detalle.setCantidad(cantidad);
+                    detalle.setTipoItem(tipoItem != null ? tipoItem : "PRODUCTO");
+                    dto.setDetalles(List.of(detalle));
+                }
+
+                if (dto.getCliente_id() == null) {
+                    resultado.agregarError(numeroFila, "cliente_id es requerido");
+                    resultado.setRegistrosFallidos(resultado.getRegistrosFallidos() + 1);
+                    continue;
+                }
+
+                if (dto.getVehiculo_id() == null) {
+                    resultado.agregarError(numeroFila, "vehiculo_id es requerido");
+                    resultado.setRegistrosFallidos(resultado.getRegistrosFallidos() + 1);
+                    continue;
+                }
+
+                serviciosService.crearServicio(dto);
+                resultado.setRegistrosExitosos(resultado.getRegistrosExitosos() + 1);
+
+            } catch (Exception e) {
+                resultado.agregarError(numeroFila, e.getMessage());
+                resultado.setRegistrosFallidos(resultado.getRegistrosFallidos() + 1);
+            }
         }
 
         return resultado;
@@ -295,61 +289,167 @@ public class ImportacionService {
         ImportacionResponseDTO resultado = new ImportacionResponseDTO();
         resultado.setTipoImportacion("ACTUALIZACION_STOCK");
 
-        try (InputStream is = archivo.getInputStream();
-             Workbook workbook = new XSSFWorkbook(is)) {
-
-            Sheet sheet = workbook.getSheetAt(0);
-            int filaInicio = 1;
-
-            for (int i = filaInicio; i <= sheet.getLastRowNum(); i++) {
-                Row row = sheet.getRow(i);
-                if (row == null || esFilaVacia(row)) continue;
-
-                resultado.setRegistrosProcesados(resultado.getRegistrosProcesados() + 1);
-
-                try {
-                    Integer productoId = getCellInteger(row, 0);
-                    Integer cantidadNueva = getCellInteger(row, 1);
-                    String operacion = getCellString(row, 2); // "AGREGAR" o "ESTABLECER"
-
-                    if (productoId == null) {
-                        resultado.agregarError(i + 1, "ID de producto es requerido");
-                        resultado.setRegistrosFallidos(resultado.getRegistrosFallidos() + 1);
-                        continue;
-                    }
-
-                    // Obtener producto actual
-                    var productoActual = productosServicios.obtenerProductoByID(productoId);
-
-                    // Calcular nueva cantidad
-                    Integer cantidadFinal;
-                    if ("AGREGAR".equalsIgnoreCase(operacion)) {
-                        int cantidadActual = productoActual.getCantidad_disponible() != null 
-                                ? productoActual.getCantidad_disponible() : 0;
-                        cantidadFinal = cantidadActual + cantidadNueva;
-                    } else {
-                        cantidadFinal = cantidadNueva;
-                    }
-
-                    // Actualizar usando el servicio existente
-                    ProductosRequestDTO dto = new ProductosRequestDTO();
-                    dto.setCantidad_disponible(cantidadFinal);
-
-                    productosServicios.actualizarProducto(productoId, dto);
-                    resultado.setRegistrosExitosos(resultado.getRegistrosExitosos() + 1);
-
-                } catch (Exception e) {
-                    resultado.agregarError(i + 1, e.getMessage());
-                    resultado.setRegistrosFallidos(resultado.getRegistrosFallidos() + 1);
-                }
-            }
-
+        List<Map<String, String>> filas;
+        try {
+            filas = leerFilas(archivo);
         } catch (Exception e) {
-            log.error("Error leyendo archivo Excel: {}", e.getMessage());
+            log.error("Error leyendo archivo: {}", e.getMessage());
             resultado.agregarError(0, "Error leyendo archivo: " + e.getMessage());
+            return resultado;
+        }
+
+        for (int i = 0; i < filas.size(); i++) {
+            Map<String, String> fila = filas.get(i);
+            int numeroFila = i + 2;
+            resultado.setRegistrosProcesados(resultado.getRegistrosProcesados() + 1);
+
+            try {
+                Integer productoId = getInteger(fila, "producto_id");
+                Integer cantidadNueva = getInteger(fila, "cantidad");
+                String operacion = get(fila, "operacion"); // "AGREGAR" o "ESTABLECER"
+
+                if (productoId == null) {
+                    resultado.agregarError(numeroFila, "producto_id es requerido");
+                    resultado.setRegistrosFallidos(resultado.getRegistrosFallidos() + 1);
+                    continue;
+                }
+
+                if (cantidadNueva == null) {
+                    resultado.agregarError(numeroFila, "cantidad es requerida");
+                    resultado.setRegistrosFallidos(resultado.getRegistrosFallidos() + 1);
+                    continue;
+                }
+
+                Integer cantidadFinal;
+                if ("AGREGAR".equalsIgnoreCase(operacion)) {
+                    var productoActual = productosServicios.obtenerProductoByID(productoId);
+                    int cantidadActual = productoActual.getCantidad_disponible() != null
+                            ? productoActual.getCantidad_disponible() : 0;
+                    cantidadFinal = cantidadActual + cantidadNueva;
+                } else {
+                    cantidadFinal = cantidadNueva;
+                }
+
+                productosServicios.actualizarSoloStock(productoId, cantidadFinal);
+                resultado.setRegistrosExitosos(resultado.getRegistrosExitosos() + 1);
+
+            } catch (Exception e) {
+                resultado.agregarError(numeroFila, e.getMessage());
+                resultado.setRegistrosFallidos(resultado.getRegistrosFallidos() + 1);
+            }
         }
 
         return resultado;
+    }
+
+    // ==================== LECTURA DE ARCHIVO ====================
+
+    private List<Map<String, String>> leerFilas(MultipartFile archivo) throws Exception {
+        String nombre = archivo.getOriginalFilename();
+        if (nombre != null && nombre.toLowerCase().endsWith(".csv")) {
+            return leerFilasCSV(archivo.getInputStream());
+        } else {
+            return leerFilasExcel(archivo.getInputStream());
+        }
+    }
+
+    private List<Map<String, String>> leerFilasExcel(InputStream is) throws Exception {
+        List<Map<String, String>> filas = new ArrayList<>();
+        DataFormatter formatter = new DataFormatter();
+
+        try (Workbook workbook = WorkbookFactory.create(is)) {
+            Sheet sheet = workbook.getSheetAt(0);
+
+            // Leer cabeceras de la primera fila
+            Row filaCabecera = sheet.getRow(0);
+            if (filaCabecera == null) return filas;
+
+            List<String> cabeceras = new ArrayList<>();
+            for (int j = 0; j < filaCabecera.getLastCellNum(); j++) {
+                Cell cell = filaCabecera.getCell(j);
+                String cabecera = cell != null ? formatter.formatCellValue(cell).trim().toLowerCase() : "";
+                cabeceras.add(cabecera);
+            }
+
+            // Leer filas de datos desde la segunda fila
+            for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+                Row row = sheet.getRow(i);
+                if (row == null || esFilaVacia(row)) continue;
+
+                Map<String, String> fila = new LinkedHashMap<>();
+                for (int j = 0; j < cabeceras.size(); j++) {
+                    String cabecera = cabeceras.get(j);
+                    if (cabecera.isEmpty()) continue;
+
+                    Cell cell = row.getCell(j);
+                    String valor = null;
+                    if (cell != null) {
+                        if (cell.getCellType() == CellType.NUMERIC && !DateUtil.isCellDateFormatted(cell)) {
+                            valor = NumberToTextConverter.toText(cell.getNumericCellValue()).trim();
+                        } else {
+                            valor = formatter.formatCellValue(cell).trim();
+                        }
+                        if (valor.isEmpty()) valor = null;
+                    }
+                    fila.put(cabecera, valor);
+                }
+                filas.add(fila);
+            }
+        }
+
+        return filas;
+    }
+
+    private List<Map<String, String>> leerFilasCSV(InputStream is) throws Exception {
+        List<Map<String, String>> filas = new ArrayList<>();
+        List<String> cabeceras = null;
+
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
+            String linea;
+            while ((linea = reader.readLine()) != null) {
+                if (linea.trim().isEmpty()) continue;
+                String[] campos = parsearLineaCSV(linea);
+
+                if (cabeceras == null) {
+                    cabeceras = new ArrayList<>();
+                    for (String campo : campos) {
+                        cabeceras.add(campo.trim().toLowerCase());
+                    }
+                    continue;
+                }
+
+                Map<String, String> fila = new LinkedHashMap<>();
+                for (int j = 0; j < cabeceras.size(); j++) {
+                    String cabecera = cabeceras.get(j);
+                    if (cabecera.isEmpty()) continue;
+                    String valor = j < campos.length ? campos[j].trim() : null;
+                    fila.put(cabecera, (valor == null || valor.isEmpty()) ? null : valor);
+                }
+                filas.add(fila);
+            }
+        }
+
+        return filas;
+    }
+
+    private String[] parsearLineaCSV(String linea) {
+        List<String> campos = new ArrayList<>();
+        boolean enComillas = false;
+        StringBuilder campo = new StringBuilder();
+
+        for (char c : linea.toCharArray()) {
+            if (c == '"') {
+                enComillas = !enComillas;
+            } else if (c == ',' && !enComillas) {
+                campos.add(campo.toString());
+                campo.setLength(0);
+            } else {
+                campo.append(c);
+            }
+        }
+        campos.add(campo.toString());
+
+        return campos.toArray(new String[0]);
     }
 
     // ==================== MÉTODOS AUXILIARES ====================
@@ -364,65 +464,38 @@ public class ImportacionService {
         return true;
     }
 
-    private String getCellString(Row row, int index) {
-        Cell cell = row.getCell(index);
-        if (cell == null) return null;
-
-        return switch (cell.getCellType()) {
-            case STRING -> cell.getStringCellValue().trim();
-            case NUMERIC -> String.valueOf((long) cell.getNumericCellValue());
-            case BOOLEAN -> String.valueOf(cell.getBooleanCellValue());
-            default -> null;
-        };
+    private String get(Map<String, String> fila, String cabecera) {
+        String val = fila.get(cabecera.toLowerCase());
+        return (val == null || val.isEmpty()) ? null : val;
     }
 
-    private Integer getCellInteger(Row row, int index) {
-        Cell cell = row.getCell(index);
-        if (cell == null) return null;
-
-        return switch (cell.getCellType()) {
-            case NUMERIC -> (int) cell.getNumericCellValue();
-            case STRING -> {
-                try {
-                    yield Integer.parseInt(cell.getStringCellValue().trim());
-                } catch (NumberFormatException e) {
-                    yield null;
-                }
-            }
-            default -> null;
-        };
-    }
-
-    private BigDecimal getCellBigDecimal(Row row, int index) {
-        Cell cell = row.getCell(index);
-        if (cell == null) return null;
-
-        return switch (cell.getCellType()) {
-            case NUMERIC -> BigDecimal.valueOf(cell.getNumericCellValue());
-            case STRING -> {
-                try {
-                    yield new BigDecimal(cell.getStringCellValue().trim().replace(",", "."));
-                } catch (NumberFormatException e) {
-                    yield null;
-                }
-            }
-            default -> null;
-        };
-    }
-
-    private LocalDate getCellLocalDate(Row row, int index) {
-        Cell cell = row.getCell(index);
-        if (cell == null) return null;
-
+    private Integer getInteger(Map<String, String> fila, String cabecera) {
+        String val = get(fila, cabecera);
+        if (val == null) return null;
         try {
-            if (cell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(cell)) {
-                return cell.getLocalDateTimeCellValue().toLocalDate();
-            } else if (cell.getCellType() == CellType.STRING) {
-                return LocalDate.parse(cell.getStringCellValue().trim());
-            }
+            return (int) Double.parseDouble(val);
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    private BigDecimal getBigDecimal(Map<String, String> fila, String cabecera) {
+        String val = get(fila, cabecera);
+        if (val == null) return null;
+        try {
+            return new BigDecimal(val.replace(",", "."));
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    private LocalDate getLocalDate(Map<String, String> fila, String cabecera) {
+        String val = get(fila, cabecera);
+        if (val == null) return null;
+        try {
+            return LocalDate.parse(val);
         } catch (Exception e) {
             return null;
         }
-        return null;
     }
 }

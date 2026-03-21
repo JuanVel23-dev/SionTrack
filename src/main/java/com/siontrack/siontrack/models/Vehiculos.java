@@ -32,26 +32,19 @@ public class Vehiculos {
     private int vehiculo_id;
 
     @Getter @Setter
-    private String marca;
-
-    @Getter @Setter
-    private String modelo;
-
-    @Getter @Setter
-    private int anio;
-
-    @Getter @Setter
     private String placa;
-
-    @Getter @Setter
-    private String tipo_motor;
 
     @Getter @Setter
     private String kilometraje_actual;
 
     @Getter @Setter
-    @Column(name = "creado_en" , nullable = false , updatable = false)
+    @Column(name = "creado_en", nullable = false, updatable = false)
     private Timestamp creado_en;
+
+    @PrePersist
+    protected void establecerFecha() {
+        creado_en = Timestamp.valueOf(LocalDateTime.now());
+    }
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cliente_id", nullable = false)
@@ -59,15 +52,7 @@ public class Vehiculos {
     @Getter @Setter
     private Clientes clientes;
 
-
     @OneToMany(mappedBy = "vehiculos", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @Getter @Setter
     private List<Servicios> servicios = new ArrayList<>();
-
-    @PrePersist
-    protected void establecerFecha(){
-        creado_en = Timestamp.valueOf(LocalDateTime.now());
-    }
-    
-
 }

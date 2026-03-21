@@ -97,7 +97,7 @@
         html += '</div>';
 
         // --- Sección: Vehículo ---
-        var tieneVehiculo = d.vehiculoMarca || d.vehiculoModelo;
+        var tieneVehiculo = d.vehiculoPlaca;
         html += '<div class="srv-detail-section">';
         html +=   '<div class="srv-detail-section-title">';
         html +=     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.24a2 2 0 0 0-1.8 1.1l-.8 1.63A6 6 0 0 0 2 12.42V16h2"/><circle cx="6.5" cy="16.5" r="2.5"/><circle cx="16.5" cy="16.5" r="2.5"/></svg>';
@@ -106,11 +106,8 @@
 
         if (tieneVehiculo) {
             html += '<div class="srv-detail-grid">';
-            html +=   campo('Marca', d.vehiculoMarca || '-');
-            html +=   campo('Modelo', d.vehiculoModelo || '-');
             html +=   campo('Placa', d.vehiculoPlaca || '-');
-            html +=   campo('Año', d.vehiculoAnio || '-');
-            html +=   campo('Motor', d.vehiculoMotor || '-');
+            html +=   campo('Kilometraje', d.vehiculoKm ? d.vehiculoKm + ' km' : '-');
             html += '</div>';
         } else {
             html += '<div class="srv-detail-empty">Sin vehículo asignado</div>';

@@ -83,7 +83,6 @@
                     </td>
                     <td data-label="Vehículo" class="text-left">
                         <div th:if="${srv.vehiculo != null}">
-                            <span th:text="${srv.vehiculo.marca + ' ' + srv.vehiculo.modelo}">Marca Modelo</span>
                             <div class="contact-info-item-small" th:if="${srv.vehiculo.placa != null}">
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <rect x="2" y="6" width="20" height="12" rx="2"></rect>
@@ -122,11 +121,8 @@
                                     th:data-cliente-nombre="${srv.cliente != null ? srv.cliente.nombre : 'Sin asignar'}"
                                     th:data-cliente-cedula="${srv.cliente != null ? srv.cliente.cedula_ruc : ''}"
                                     th:data-cliente-tipo="${srv.cliente != null ? srv.cliente.tipo_cliente : ''}"
-                                    th:data-vehiculo-marca="${srv.vehiculo != null ? srv.vehiculo.marca : ''}"
-                                    th:data-vehiculo-modelo="${srv.vehiculo != null ? srv.vehiculo.modelo : ''}"
                                     th:data-vehiculo-placa="${srv.vehiculo != null ? srv.vehiculo.placa : ''}"
-                                    th:data-vehiculo-anio="${srv.vehiculo != null ? srv.vehiculo.anio : ''}"
-                                    th:data-vehiculo-motor="${srv.vehiculo != null ? srv.vehiculo.tipo_motor : ''}"
+                                    th:data-vehiculo-km="${srv.vehiculo != null ? srv.vehiculo.kilometraje_actual : ''}"
                                     th:data-detalles-json="${srv.detalles != null ? srv.detalles : '[]'}">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>

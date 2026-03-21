@@ -166,6 +166,21 @@ public class ProductosServicios {
     }
 
     @Transactional
+    public void actualizarSoloStock(Integer id, Integer cantidad) {
+        Productos producto = productosRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Producto no encontrado con ID: " + id));
+
+        Inventario inventario = producto.getInventario();
+        if (inventario == null) {
+            inventario = new Inventario();
+            inventario.setProducto(producto);
+            producto.setInventario(inventario);
+        }
+        inventario.setCantidad_disponible(cantidad);
+        productosRepository.save(producto);
+    }
+
+    @Transactional
     public void borrarProducto(Integer id) {
         if (!productosRepository.existsById(id)) {
             throw new RuntimeException("Producto no encontrado con ID: " + id);
