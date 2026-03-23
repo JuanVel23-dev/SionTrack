@@ -123,7 +123,11 @@ public class ProductosServicios {
         Productos productoExistente = productosRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Producto no encontrado con ID: " + id));
 
+        LocalDate fechaCompraActual = productoExistente.getFecha_compra();
         modelMapper.map(dto, productoExistente);
+        if (dto.getFecha_compra() == null) {
+            productoExistente.setFecha_compra(fechaCompraActual);
+        }
 
         if (dto.getProveedor_id() != null &&
                 (productoExistente.getProveedor() == null

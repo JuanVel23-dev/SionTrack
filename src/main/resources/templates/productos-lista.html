@@ -34,7 +34,7 @@
                     </svg>
                     <input type="text"
                            id="searchInput"
-                           placeholder="Buscar por nombre o categoría..."
+                           placeholder="Buscar por nombre, categoría, marca o proveedor..."
                            aria-label="Buscar productos">
                 </div>
             </div>
@@ -47,17 +47,26 @@
                     <th class="text-left">Nombre</th>
                     <th class="text-left">Categoría</th>
                     <th class="text-left">Marca</th>
+                    <th class="text-left">Proveedor</th>
                     <th class="text-right">Precio Venta</th>
                     <th class="text-center">Stock</th>
+                    <th class="text-center">Fecha Compra</th>
                     <th>Acciones</th>
                 </tr>
             </thead>
             <tbody>
                 <tr th:each="prod : ${productos}" class="data-row">
                     <td th:text="${prod.producto_id}" data-label="ID" class="text-left">1</td>
-                    <td th:text="${prod.nombre}" data-label="Nombre" class="text-left">Producto</td>
+                    <td data-label="Nombre" class="text-left">
+                        <span th:text="${prod.nombre}">Producto</span>
+                        <small th:if="${prod.codigo_producto != null}"
+                               style="display:block; color: var(--text-muted); font-size: 0.75rem;"
+                               th:text="${prod.codigo_producto}"></small>
+                    </td>
                     <td th:text="${prod.categoria}" data-label="Categoría" class="text-left">Categoría</td>
                     <td th:text="${prod.marca}" data-label="Marca" class="text-left">Marca</td>
+                    <td data-label="Proveedor" class="text-left"
+                        th:text="${prod.proveedor != null ? prod.proveedor.nombre : '—'}">—</td>
                     <td data-label="Precio" class="text-right">
                         <span th:text="${'$ ' + #numbers.formatDecimal(prod.precio_venta, 1, 2)}">$ 0.00</span>
                     </td>
@@ -66,6 +75,8 @@
                               th:classappend="${prod.alerta_stock} ? 'stock-badge-danger' : 'stock-badge-ok'"
                               th:text="${prod.cantidad_disponible}">0</span>
                     </td>
+                    <td data-label="Fecha Compra" class="text-center"
+                        th:text="${prod.fecha_compra != null ? #temporals.format(prod.fecha_compra, 'dd/MM/yyyy') : '—'}">—</td>
                     <td data-label="Acciones">
                         <div class="table-actions">
                             <a th:href="@{/web/productos/editar/{id}(id=${prod.producto_id})}"

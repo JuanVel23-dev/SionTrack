@@ -1,6 +1,7 @@
 package com.siontrack.siontrack.DTO.Request;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -38,6 +39,10 @@ public class ProductosRequestDTO {
     @Getter
     @Setter
     private String estado;
+
+    @Getter
+    @Setter
+    private LocalDate fecha_compra;
 
     @Getter
     @Setter

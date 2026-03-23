@@ -6,6 +6,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
@@ -62,6 +63,11 @@ public class Productos {
     @Getter
     @Setter
     private String estado;
+
+    @Column(name = "fecha_compra")
+    @Getter
+    @Setter
+    private LocalDate fecha_compra;
 
 
     @ManyToOne(fetch = FetchType.LAZY)

@@ -367,7 +367,7 @@ public class ImportacionService {
             List<String> cabeceras = new ArrayList<>();
             for (int j = 0; j < filaCabecera.getLastCellNum(); j++) {
                 Cell cell = filaCabecera.getCell(j);
-                String cabecera = cell != null ? formatter.formatCellValue(cell).trim().toLowerCase() : "";
+                String cabecera = cell != null ? normalizarCabecera(formatter.formatCellValue(cell)) : "";
                 cabeceras.add(cabecera);
             }
 
@@ -413,7 +413,7 @@ public class ImportacionService {
                 if (cabeceras == null) {
                     cabeceras = new ArrayList<>();
                     for (String campo : campos) {
-                        cabeceras.add(campo.trim().toLowerCase());
+                        cabeceras.add(normalizarCabecera(campo));
                     }
                     continue;
                 }
@@ -462,6 +462,11 @@ public class ImportacionService {
             }
         }
         return true;
+    }
+
+    private String normalizarCabecera(String cabecera) {
+        if (cabecera == null) return "";
+        return cabecera.trim().toLowerCase().replaceAll("\\s+", "_");
     }
 
     private String get(Map<String, String> fila, String cabecera) {
