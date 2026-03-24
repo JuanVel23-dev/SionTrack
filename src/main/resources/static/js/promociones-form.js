@@ -242,5 +242,5 @@
         });
     });
 
-    function esc(t) { if(!t)return''; var d=document.createElement('div'); d.textContent=t; return d.innerHTML; }
+    function esc(t) { return SionUtils.esc(t, ''); }
 })();

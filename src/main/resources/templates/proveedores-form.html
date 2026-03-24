@@ -3,9 +3,7 @@
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/base}">
 
-<th:block layout:fragment="customCSS">
-    <link th:href="@{/css/telefono-selector.css}" rel="stylesheet">
-</th:block>
+<th:block layout:fragment="customCSS"></th:block>
 
 <th:block layout:fragment="content">
     <div class="card animate-in">
@@ -171,6 +169,7 @@
 </th:block>
 
 <th:block layout:fragment="customJS">
+    <script th:src="@{/js/selector-telefono.js}"></script>
     <script th:src="@{/js/proveedores-telefono.js}"></script>
 </th:block>
 

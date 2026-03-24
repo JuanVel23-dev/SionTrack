@@ -28,11 +28,14 @@ function showToast(message, type, duration) {
     error: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>'
   };
 
+  // Sanitizar mensaje para prevenir XSS
+  var msgSeguro = typeof SionUtils !== 'undefined' ? SionUtils.esc(message, message) : message;
+
   var toast = document.createElement('div');
   toast.className = 'toast toast-' + type;
-  toast.innerHTML = 
+  toast.innerHTML =
     '<span class="toast-icon">' + (icons[type] || icons.success) + '</span>' +
-    '<span class="toast-message">' + message + '</span>' +
+    '<span class="toast-message">' + msgSeguro + '</span>' +
     '<button class="toast-close" type="button" aria-label="Cerrar">' +
       '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
         '<line x1="18" y1="6" x2="6" y2="18"></line>' +
@@ -137,8 +140,6 @@ var SidebarManager = {
     document.addEventListener('keydown', function(e) {
       if (e.key === 'Escape') this.close();
     }.bind(this));
-
-    this.setActiveLink();
   },
 
   toggle: function() {
@@ -149,27 +150,6 @@ var SidebarManager = {
   close: function() {
     this.sidebar.classList.remove('open');
     if (this.overlay) this.overlay.classList.remove('active');
-  },
-
-  setActiveLink: function() {
-    var path = window.location.pathname;
-    var links = this.sidebar.querySelectorAll('.nav-link');
-    
-    links.forEach(function(link) {
-      link.classList.remove('active');
-      var href = link.getAttribute('href');
-      if (href && path.indexOf(href) !== -1 && href !== '/') {
-        link.classList.add('active');
-      }
-    });
-
-    if (path === '/' || path.indexOf('dashboard') !== -1) {
-      var dash = this.sidebar.querySelector('[href*="dashboard"]');
-      if (dash) {
-        links.forEach(function(l) { l.classList.remove('active'); });
-        dash.classList.add('active');
-      }
-    }
   }
 };
 
@@ -209,17 +189,18 @@ function convertAlertsToToasts() {
 // ============================================
 function confirmAction(message, onConfirm, options) {
   options = options || {};
-  
+  var esc = typeof SionUtils !== 'undefined' ? SionUtils.esc : function(t) { return t; };
+
   var modal = document.createElement('div');
   modal.className = 'confirm-modal';
-  modal.innerHTML = 
+  modal.innerHTML =
     '<div class="confirm-backdrop"></div>' +
     '<div class="confirm-dialog">' +
-      '<h3 class="confirm-title">' + (options.title || 'Confirmar') + '</h3>' +
+      '<h3 class="confirm-title">' + esc(options.title || 'Confirmar', 'Confirmar') + '</h3>' +
       '<p class="confirm-message">' + message + '</p>' +
       '<div class="confirm-actions">' +
-        '<button class="btn btn-secondary" data-action="cancel">' + (options.cancelText || 'Cancelar') + '</button>' +
-        '<button class="btn btn-' + (options.type === 'danger' ? 'danger' : 'primary') + '" data-action="confirm">' + (options.confirmText || 'Confirmar') + '</button>' +
+        '<button class="btn btn-secondary" data-action="cancel">' + esc(options.cancelText || 'Cancelar', 'Cancelar') + '</button>' +
+        '<button class="btn btn-' + (options.type === 'danger' ? 'danger' : 'primary') + '" data-action="confirm">' + esc(options.confirmText || 'Confirmar', 'Confirmar') + '</button>' +
       '</div>' +
     '</div>';
 
@@ -289,36 +270,6 @@ function setupFormValidation() {
 }
 
 // ============================================
-// TABLE FILTER
-// ============================================
-function setupTableFilter() {
-  var search = document.getElementById('searchInput');
-  var filter = document.getElementById('filterTipo');
-  var rows = document.querySelectorAll('.table tbody tr.data-row');
-
-  if (!search && !filter) return;
-
-  function doFilter() {
-    var term = search ? search.value.toLowerCase() : '';
-    var tipo = filter ? filter.value : '';
-
-    rows.forEach(function(row) {
-      var nombre = (row.children[1] ? row.children[1].textContent : '').toLowerCase();
-      var cedula = (row.children[2] ? row.children[2].textContent : '').toLowerCase();
-      var rowTipo = row.dataset.tipo || '';
-
-      var matchSearch = nombre.indexOf(term) !== -1 || cedula.indexOf(term) !== -1;
-      var matchTipo = !tipo || rowTipo === tipo;
-
-      row.classList.toggle('hidden', !(matchSearch && matchTipo));
-    });
-  }
-
-  if (search) search.addEventListener('input', doFilter);
-  if (filter) filter.addEventListener('change', doFilter);
-}
-
-// ============================================
 // INIT
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
@@ -327,7 +278,6 @@ document.addEventListener('DOMContentLoaded', function() {
   convertAlertsToToasts();
   setupDeleteConfirmations();
   setupFormValidation();
-  setupTableFilter();
 });
 
 window.SionTrack = {

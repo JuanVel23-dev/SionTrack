@@ -24,17 +24,34 @@
             });
         });
 
-        // Búsqueda independiente por panel
+        // Búsqueda independiente por panel con animación suave
         document.querySelectorAll('.ntab-search').forEach(function(input) {
-            input.addEventListener('input', function() {
-                var target = this.dataset.target;
-                var term = this.value.toLowerCase().trim();
+            input.addEventListener('input', SionUtils.debounce(function() {
+                var target = input.dataset.target;
+                var term = input.value.toLowerCase().trim();
                 var rows = document.querySelectorAll('.data-row-' + target);
 
                 rows.forEach(function(row) {
-                    row.style.display = row.textContent.toLowerCase().indexOf(term) !== -1 ? '' : 'none';
+                    var visible = row.textContent.toLowerCase().indexOf(term) !== -1;
+
+                    if (visible && row.style.display === 'none') {
+                        row.style.display = '';
+                        row.style.opacity = '0';
+                        requestAnimationFrame(function() {
+                            row.style.transition = 'opacity 0.2s ease';
+                            row.style.opacity = '1';
+                        });
+                    } else if (!visible && row.style.display !== 'none') {
+                        row.style.transition = 'opacity 0.15s ease';
+                        row.style.opacity = '0';
+                        (function(r) {
+                            setTimeout(function() {
+                                if (r.style.opacity === '0') r.style.display = 'none';
+                            }, 150);
+                        })(row);
+                    }
                 });
-            });
+            }, 200));
         });
     });
 })();

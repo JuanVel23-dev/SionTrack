@@ -8,15 +8,18 @@
 (function() {
     'use strict';
 
-    var overlay = document.getElementById('cli-modal-overlay');
     var modalBody = document.getElementById('cli-modal-body');
     var modalSubtitle = document.getElementById('cli-modal-subtitle');
     var modalBadge = document.getElementById('cli-modal-badge');
     var modalFecha = document.getElementById('cli-modal-fecha');
-    var closeBtn = document.getElementById('cli-modal-close');
-    var closeBtnFooter = document.getElementById('cli-modal-close-btn');
 
-    if (!overlay) return;
+    // Inicializar modal con patrón reutilizable
+    var modal = SionUtils.crearModal({
+        overlayId: 'cli-modal-overlay',
+        closeBtnIds: ['cli-modal-close', 'cli-modal-close-btn']
+    });
+
+    if (!modal) return;
 
     // ===== ABRIR MODAL =====
     document.addEventListener('click', function(e) {
@@ -29,26 +32,10 @@
         var clienteId = btn.dataset.id;
         if (!clienteId) return;
 
-        abrirModal(clienteId);
+        cargarCliente(clienteId);
     });
 
-    // ===== CERRAR MODAL =====
-    if (closeBtn) closeBtn.addEventListener('click', cerrarModal);
-    if (closeBtnFooter) closeBtnFooter.addEventListener('click', cerrarModal);
-
-    overlay.addEventListener('click', function(e) {
-        if (e.target === overlay) cerrarModal();
-    });
-
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && overlay.classList.contains('open')) cerrarModal();
-    });
-
-    function cerrarModal() {
-        overlay.classList.remove('open');
-    }
-
-    function abrirModal(clienteId) {
+    function cargarCliente(clienteId) {
         // Mostrar loading
         modalSubtitle.textContent = 'Cargando...';
         modalBadge.textContent = '';
@@ -60,7 +47,7 @@
                 '<span style="color:var(--fg-muted);font-size:14px;">Cargando datos del cliente...</span>' +
             '</div>';
 
-        overlay.classList.add('open');
+        modal.abrir();
 
         // Fetch datos completos del cliente
         fetch('/api/clientes/' + clienteId, {
@@ -208,7 +195,11 @@
         modalBody.innerHTML = html;
     }
 
-    // ===== HELPERS =====
+    // ===== HELPERS (delegados a SionUtils) =====
+
+    var esc = SionUtils.esc;
+    var formatearFecha = SionUtils.formatearFecha;
+    var formatearTelefono = SionUtils.formatearTelefono;
 
     function seccionInicio(icon, titulo) {
         return '<div class="cli-detail-section">' +
@@ -222,48 +213,15 @@
     function campo(label, valor) {
         return '<div class="cli-detail-field">' +
             '<div class="cli-detail-field-label">' + label + '</div>' +
-            '<div class="cli-detail-field-value">' + esc(valor || '—') + '</div>' +
+            '<div class="cli-detail-field-value">' + esc(valor) + '</div>' +
         '</div>';
     }
 
     function vehicleCampo(label, valor) {
         return '<div>' +
             '<div class="cli-detail-vehicle-field-label">' + label + '</div>' +
-            '<div class="cli-detail-vehicle-field-value">' + esc(valor || '—') + '</div>' +
+            '<div class="cli-detail-vehicle-field-value">' + esc(valor) + '</div>' +
         '</div>';
-    }
-
-    function formatearFecha(str) {
-        if (!str) return '—';
-        var parts = str.split('-');
-        if (parts.length === 3) {
-            return parts[2] + '/' + parts[1] + '/' + parts[0];
-        }
-        return str;
-    }
-
-    function formatearTelefono(texto) {
-        if (!texto) return '—';
-        var CODIGOS = ['591','593','595','598','502','503','504','505','506','507','351',
-                       '52','51','54','55','56','57','58','34','33','39','44','49','1'];
-        var limpio = texto.replace(/[^0-9]/g, '');
-        if (limpio.length < 10) return texto;
-
-        for (var i = 0; i < CODIGOS.length; i++) {
-            if (limpio.indexOf(CODIGOS[i]) === 0 && limpio.length > CODIGOS[i].length) {
-                return '+' + CODIGOS[i] + ' ' + limpio.substring(CODIGOS[i].length);
-            }
-        }
-        return texto;
-    }
-
-    function esc(text) {
-        if (text === null || text === undefined) return '—';
-        var str = '' + text;
-        if (str === '') return '—';
-        var div = document.createElement('div');
-        div.textContent = str;
-        return div.innerHTML;
     }
 
     // ===== SVG ICONS =====

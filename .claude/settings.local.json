@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(for sel:*)",
+      "Bash(do echo:*)",
+      "Bash(grep -c \"$sel\" componentes.css)",
+      "Bash(done)"
+    ]
+  }
+}

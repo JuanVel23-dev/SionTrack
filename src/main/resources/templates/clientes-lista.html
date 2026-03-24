@@ -3,112 +3,7 @@
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/base}">
 
-<th:block layout:fragment="customCSS">
-    <link rel="stylesheet" th:href="@{/css/clientes-detalle.css}" />
-    <style>
-        /* ============================================
-           TABLA CLIENTES — Layout mejorado
-           ============================================ */
-
-        /* Desktop: layout fijo con anchos proporcionales */
-        @media (min-width: 769px) {
-            .clientes-table {
-                table-layout: fixed;
-                width: 100%;
-            }
-
-            .clientes-table .col-nombre       { width: 20%; }
-            .clientes-table .col-cedula       { width: 14%; }
-            .clientes-table .col-tipo         { width: 16%; }
-            .clientes-table .col-contacto     { width: 20%; }
-            .clientes-table .col-notif        { width: 13%; }
-            .clientes-table .col-acciones     { width: 17%; }
-        }
-
-        /* Centrado vertical y horizontal por defecto */
-        .clientes-table th,
-        .clientes-table td {
-            vertical-align: middle;
-            text-align: center;
-        }
-
-        /* Alineación izquierda solo donde corresponde */
-        .clientes-table .al-left {
-            text-align: left;
-        }
-
-        /* Celda de nombre con truncado */
-        .clientes-table .cell-nombre {
-            font-weight: 500;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        /* Celda cédula monoespaciada */
-        .clientes-table .cell-cedula {
-            font-family: var(--font-mono, 'SF Mono', 'Fira Code', monospace);
-            font-size: 0.85rem;
-            letter-spacing: 0.3px;
-            color: var(--fg-secondary, #a0a0a0);
-        }
-
-        /* Contacto mejorado */
-        .contact-cell {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            min-width: 0;
-        }
-
-        .contact-row {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            min-width: 0;
-        }
-
-        .contact-row svg {
-            flex-shrink: 0;
-            opacity: 0.5;
-        }
-
-        .contact-row span {
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            font-size: 0.85rem;
-        }
-
-        .contact-row-email span {
-            font-size: 0.8rem;
-            color: var(--fg-secondary, #a0a0a0);
-        }
-
-        /* Acciones en grid 2x2 */
-        .clientes-table .table-actions {
-            display: grid;
-            grid-template-columns: repeat(2, auto);
-            gap: 6px;
-            justify-content: center;
-        }
-
-        /* Mobile: deshabilitar truncados y ajustar layout */
-        @media (max-width: 768px) {
-            .clientes-table .cell-nombre {
-                white-space: normal;
-            }
-
-            .contact-row span {
-                white-space: normal;
-            }
-
-            .clientes-table .table-actions {
-                justify-content: flex-start;
-            }
-        }
-    </style>
-</th:block>
+<th:block layout:fragment="customCSS"></th:block>
 
 <th:block layout:fragment="content">
     <!-- Page Header -->
@@ -357,8 +252,33 @@
 </th:block>
 
 <th:block layout:fragment="customJS">
-    <script th:src="@{/js/clientes-filter.js}"></script>
+    <script th:src="@{/js/filtro-desplegable.js}"></script>
+    <script th:src="@{/js/filtro-tabla.js}"></script>
     <script th:src="@{/js/clientes-detalle.js}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Inicializar filtro de tabla para clientes
+            FiltroDesplegable.inicializar({
+                dropdownId: 'filterDropdown',
+                menuId: 'filterMenu',
+                botonId: 'filterBtn',
+                textoId: 'filterTexto',
+                hiddenId: 'filterTipo',
+                onCambio: function() { if (filtro) filtro.filtrar(); }
+            });
+
+            var filtro = SionFiltroTabla.init({
+                searchInput: '#searchInput',
+                rows: '.table tbody tr.data-row',
+                searchColumns: [0, 1],
+                filterHiddenId: 'filterTipo',
+                filterAttribute: 'data-tipo'
+            });
+
+            // Formatear teléfonos visibles
+            SionUtils.formatearTelefonosVisibles('.contact-row span, .contact-row-email span');
+        });
+    </script>
 </th:block>
 
 </html>

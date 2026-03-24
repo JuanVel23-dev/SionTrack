@@ -312,12 +312,20 @@ class ProductosPopulares {
             const pct      = Math.round((p.totalVendido / maxVendido) * 100);
             const categoria = p.categoria || 'Sin categoría';
 
+            // Insignia de estrella compacta (igual que en la campana)
+            const starTag = rank <= 3
+                ? `<span class="popular-star-tag top-${rank}" title="Top ${rank} más vendido">
+                       <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                   </span>`
+                : '';
+
             return `
             <div class="popular-item">
                 <div class="popular-rank ${rankCls}">${rank}</div>
                 <div class="popular-info">
                     <div class="popular-name" title="${this._escape(p.nombre)}">
                         ${this._escape(p.nombre)}
+                        ${starTag}
                     </div>
                     <div class="popular-category">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -676,8 +684,6 @@ class ProductosPopulares {
     }
 
     _escape(str) {
-        const div = document.createElement('div');
-        div.textContent = str;
-        return div.innerHTML;
+        return SionUtils.esc(str, '');
     }
 }

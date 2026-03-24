@@ -1,6 +1,6 @@
 /* ============================================
-   SIONTRACK v2.0 - LAYOUT
-   Estructura principal, sidebar y header
+   SIONTRACK v2.0 - ESTRUCTURA
+   Layout principal, sidebar y header
    ============================================ */
 
 /* ============================================
@@ -28,7 +28,6 @@
   transition: transform var(--duration-normal) var(--ease-out);
 }
 
-/* Sidebar Header */
 .sidebar-header {
   padding: var(--space-5);
   border-bottom: 1px solid var(--border-muted);
@@ -67,7 +66,6 @@
   color: var(--accent-primary);
 }
 
-/* Botón cerrar (móvil) */
 .sidebar-close {
   display: none;
   margin-left: auto;
@@ -85,7 +83,6 @@
   color: var(--fg-default);
 }
 
-/* Sidebar Navigation */
 .sidebar-nav {
   flex: 1;
   overflow-y: auto;
@@ -170,7 +167,6 @@
   opacity: 1;
 }
 
-/* Sidebar Footer */
 .sidebar-footer {
   padding: var(--space-4);
   border-top: 1px solid var(--border-muted);
@@ -241,7 +237,6 @@
   background: var(--error-subtle);
 }
 
-/* Form de logout */
 .logout-form {
   margin: 0;
   padding: 0;
@@ -249,7 +244,7 @@
 }
 
 /* ============================================
-   MAIN WRAPPER
+   CONTENEDOR PRINCIPAL
    ============================================ */
 .main-wrapper {
   flex: 1;
@@ -304,7 +299,6 @@
   margin: 0;
 }
 
-/* Icon Button */
 .icon-btn {
   display: flex;
   align-items: center;
@@ -332,12 +326,10 @@
   height: 20px;
 }
 
-/* Menú Toggle (móvil) - OCULTO por defecto en desktop */
 .menu-toggle {
   display: none;
 }
 
-/* Theme Toggle */
 .theme-toggle:hover {
   color: var(--accent-primary);
   border-color: var(--accent-muted);
@@ -370,7 +362,7 @@
 }
 
 /* ============================================
-   MAIN CONTENT
+   CONTENIDO PRINCIPAL
    ============================================ */
 .main-content {
   flex: 1;
@@ -380,7 +372,6 @@
   margin: 0 auto;
 }
 
-/* Page Header */
 .page-header {
   display: flex;
   align-items: center;
@@ -409,7 +400,7 @@
 }
 
 /* ============================================
-   OVERLAY (para móvil)
+   OVERLAY SIDEBAR (móvil)
    ============================================ */
 .sidebar-overlay {
   display: none;
@@ -433,67 +424,63 @@
 /* ============================================
    RESPONSIVE
    ============================================ */
-
-/* Tablets y pantallas medianas */
 @media (max-width: 1024px) {
   .sidebar {
     transform: translateX(-100%);
   }
-  
+
   .sidebar.open {
     transform: translateX(0);
   }
-  
+
   .main-wrapper {
     margin-left: 0;
   }
-  
-  /* Mostrar menú hamburguesa en móvil */
+
   .menu-toggle {
     display: flex;
   }
-  
+
   .sidebar-close {
     display: flex;
   }
-  
+
   .sidebar-overlay.active {
     display: block;
   }
-  
+
   .page-header {
     flex-direction: column;
     align-items: flex-start;
   }
 }
 
-/* Móviles */
 @media (max-width: 640px) {
   :root {
     --header-height: 56px;
   }
-  
+
   .main-header {
     padding: 0 var(--space-4);
   }
-  
+
   .main-content {
     padding: var(--space-4);
   }
-  
+
   .page-title {
     font-size: var(--text-lg);
   }
-  
+
   .page-header-title {
     font-size: var(--text-xl);
   }
-  
+
   .icon-btn {
     width: 36px;
     height: 36px;
   }
-  
+
   .sidebar {
     width: 85%;
     max-width: 300px;

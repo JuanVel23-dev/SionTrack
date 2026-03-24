@@ -134,7 +134,19 @@
 </th:block>
 
 <th:block layout:fragment="customJS">
-    <script th:src="@{/js/proveedores-filter.js}"></script>
+    <script th:src="@{/js/filtro-tabla.js}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            SionFiltroTabla.init({
+                searchInput: '#searchInput',
+                rows: '.table tbody tr.data-row',
+                searchColumns: [0, 1, 2, 3, 4]
+            });
+
+            // Formatear teléfonos visibles
+            SionUtils.formatearTelefonosVisibles('.contact-info-item span');
+        });
+    </script>
     <script th:inline="javascript">
         /*<![CDATA[*/
         (function() {

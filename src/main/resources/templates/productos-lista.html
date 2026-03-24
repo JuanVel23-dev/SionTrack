@@ -3,9 +3,7 @@
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/base}">
 
-<th:block layout:fragment="customCSS">
-    <link th:href="@{/css/productos.css}" rel="stylesheet">
-</th:block>
+<th:block layout:fragment="customCSS"></th:block>
 
 <th:block layout:fragment="content">
     <!-- Page Header -->
@@ -131,7 +129,16 @@
 </th:block>
 
 <th:block layout:fragment="customJS">
-    <script th:src="@{/js/productos-filter.js}"></script>
+    <script th:src="@{/js/filtro-tabla.js}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            SionFiltroTabla.init({
+                searchInput: '#searchInput',
+                rows: '.table tbody tr.data-row',
+                searchColumns: [0, 1, 2, 3, 4]
+            });
+        });
+    </script>
     <script th:inline="javascript">
         /*<![CDATA[*/
         (function() {

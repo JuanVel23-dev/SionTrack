@@ -149,15 +149,23 @@
         // =============================================
         // DETECTAR CAMBIO DE TIPO DE CLIENTE
         // =============================================
-        var ultimoTipo = tipoHidden.value;
-        setInterval(function() {
-            if (tipoHidden.value !== ultimoTipo) {
-                ultimoTipo = tipoHidden.value;
+        tipoHidden.addEventListener('change', actualizarCampo);
+
+        // Observar cambios en el valor del hidden (asignados por JS del custom select)
+        var observer = new MutationObserver(function() {
+            actualizarCampo();
+        });
+        observer.observe(tipoHidden, { attributes: true, attributeFilter: ['value'] });
+
+        // Interceptar asignaciones directas a .value
+        var descriptor = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+        Object.defineProperty(tipoHidden, 'value', {
+            get: function() { return descriptor.get.call(this); },
+            set: function(val) {
+                descriptor.set.call(this, val);
                 actualizarCampo();
             }
-        }, 200);
-
-        tipoHidden.addEventListener('change', actualizarCampo);
+        });
 
         // =============================================
         // VALIDACIÓN AL SUBMIT

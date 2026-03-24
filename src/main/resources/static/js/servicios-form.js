@@ -319,13 +319,10 @@
     }
 
     function escapeHtml(text) {
-        var div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
+        return SionUtils.esc(text, '');
     }
 
     function escapeAttr(text) {
-        if (!text) return '';
-        return text.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        return SionUtils.escAttr(text);
     }
 })();

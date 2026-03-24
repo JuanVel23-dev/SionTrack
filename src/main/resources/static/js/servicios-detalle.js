@@ -6,15 +6,18 @@
 (function() {
     'use strict';
 
-    var overlay = document.getElementById('srv-modal-overlay');
     var modalBody = document.getElementById('srv-modal-body');
     var modalSubtitle = document.getElementById('srv-modal-subtitle');
     var modalBadge = document.getElementById('srv-modal-badge');
     var modalCreado = document.getElementById('srv-modal-creado');
-    var closeBtn = document.getElementById('srv-modal-close');
-    var closeBtnFooter = document.getElementById('srv-modal-close-btn');
 
-    if (!overlay) return;
+    // Inicializar modal con patrón reutilizable
+    var modal = SionUtils.crearModal({
+        overlayId: 'srv-modal-overlay',
+        closeBtnIds: ['srv-modal-close', 'srv-modal-close-btn']
+    });
+
+    if (!modal) return;
 
     // ===== ABRIR MODAL =====
     document.addEventListener('click', function(e) {
@@ -25,22 +28,6 @@
         e.stopPropagation();
         abrirModal(btn);
     });
-
-    // ===== CERRAR MODAL =====
-    if (closeBtn) closeBtn.addEventListener('click', cerrarModal);
-    if (closeBtnFooter) closeBtnFooter.addEventListener('click', cerrarModal);
-
-    overlay.addEventListener('click', function(e) {
-        if (e.target === overlay) cerrarModal();
-    });
-
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') cerrarModal();
-    });
-
-    function cerrarModal() {
-        overlay.classList.remove('open');
-    }
 
     function abrirModal(btn) {
         var d = btn.dataset;
@@ -164,21 +151,24 @@
         html += '</div>';
 
         modalBody.innerHTML = html;
-        overlay.classList.add('open');
+        modal.abrir();
     }
 
-    // ===== HELPERS =====
+    // ===== HELPERS (delegados a SionUtils) =====
+
+    var esc = function(text) { return SionUtils.esc(text, '-'); };
+    var formatearFecha = function(str) { return SionUtils.formatearFecha(str, '-'); };
+    var formatearFechaHora = SionUtils.formatearFechaHora;
 
     function campo(label, valor) {
         return '<div class="srv-detail-field">' +
             '<div class="srv-detail-field-label">' + label + '</div>' +
-            '<div class="srv-detail-field-value">' + esc(valor || '-') + '</div>' +
+            '<div class="srv-detail-field-value">' + esc(valor) + '</div>' +
         '</div>';
     }
 
     /**
-     * Intenta obtener detalles desde el data-attribute JSON,
-     * si falla intenta parsear un formato simple
+     * Intenta obtener detalles desde el data-attribute JSON
      */
     function obtenerDetallesDeFila(btn) {
         var raw = btn.getAttribute('data-detalles-json');
@@ -201,31 +191,6 @@
         }
 
         return [];
-    }
-
-    function formatearFecha(str) {
-        if (!str) return '-';
-        var parts = str.split('-');
-        if (parts.length === 3) {
-            return parts[2] + '/' + parts[1] + '/' + parts[0];
-        }
-        return str;
-    }
-
-    function formatearFechaHora(date) {
-        if (!(date instanceof Date) || isNaN(date)) return '-';
-        var d = pad(date.getDate()) + '/' + pad(date.getMonth() + 1) + '/' + date.getFullYear();
-        var t = pad(date.getHours()) + ':' + pad(date.getMinutes());
-        return d + ' ' + t;
-    }
-
-    function pad(n) { return n < 10 ? '0' + n : n; }
-
-    function esc(text) {
-        if (!text) return '-';
-        var div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
     }
 
 })();

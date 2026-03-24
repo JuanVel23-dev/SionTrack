@@ -10,13 +10,12 @@
 
     <title th:text="${pageTitle != null ? pageTitle + ' - SionTrack' : 'SionTrack'}">SionTrack</title>
 
-    <!-- Stylesheets -->
-    <link rel="stylesheet" th:href="@{/css/main.css}">
-    <link rel="stylesheet" th:href="@{/css/layout.css}">
-    <link rel="stylesheet" th:href="@{/css/components.css}">
-    <link rel="stylesheet" th:href="@{/css/tables.css}">
-    <link rel="stylesheet" th:href="@{/css/modals.css}">
-    <link rel="stylesheet" th:href="@{/css/notifications.css}">
+    <!-- Stylesheets consolidados -->
+    <link rel="stylesheet" th:href="@{/css/nucleo.css}">
+    <link rel="stylesheet" th:href="@{/css/estructura.css}">
+    <link rel="stylesheet" th:href="@{/css/componentes.css}">
+    <link rel="stylesheet" th:href="@{/css/notificaciones.css}">
+    <link rel="stylesheet" th:href="@{/css/paginas.css}">
 
     <th:block layout:fragment="customCSS"></th:block>
 </head>
@@ -274,10 +273,10 @@
             <div class="restock-modal-header">
                 <div class="restock-header-left">
                     <div class="restock-header-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
                     </div>
                     <div>
-                        <div class="restock-header-title">Reabastecimiento Requerido</div>
+                        <div class="restock-header-title">Reabastecer</div>
                         <div class="restock-header-desc">Productos que necesitan compra de stock</div>
                     </div>
                 </div>
@@ -298,30 +297,28 @@
         </div>
     </div>
 
-    <!-- Scripts -->
+    <!-- Scripts: módulos compartidos -->
+    <script th:src="@{/js/utilidades.js}"></script>
     <script th:src="@{/js/main.js}"></script>
-    <script th:src="@{/js/form-utils.js}"></script>
-    <script th:src="@{/js/notifications.js}"></script>
-    <script th:src="@{/js/stock-alerts.js}"></script>
-    <!-- Script para marcar página activa -->
+    <script th:src="@{/js/alertas-stock.js}"></script>
+
+    <!-- Navegación activa -->
     <script>
         (function() {
-            const path = window.location.pathname;
-            const navLinks = document.querySelectorAll('.nav-link[data-page]');
+            var path = window.location.pathname;
+            var navLinks = document.querySelectorAll('.nav-link[data-page]');
 
-            navLinks.forEach(link => {
+            navLinks.forEach(function(link) {
                 link.classList.remove('active');
-                const page = link.dataset.page;
-
-                if (path.includes(page)) {
+                if (path.indexOf(link.dataset.page) !== -1) {
                     link.classList.add('active');
                 }
             });
 
-            if (path === '/' || path === '/web' || path === '/web/' || path.includes('dashboard')) {
-                const dashboardLink = document.querySelector('[data-page="dashboard"]');
+            if (path === '/' || path === '/web' || path === '/web/' || path.indexOf('dashboard') !== -1) {
+                var dashboardLink = document.querySelector('[data-page="dashboard"]');
                 if (dashboardLink) {
-                    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                    navLinks.forEach(function(l) { l.classList.remove('active'); });
                     dashboardLink.classList.add('active');
                 }
             }

@@ -3,10 +3,7 @@
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/base}">
 
-<th:block layout:fragment="customCSS">
-    <link rel="stylesheet" th:href="@{/css/telefono-selector.css}" />
-    <link rel="stylesheet" th:href="@{/css/notif-warning.css}" />
-</th:block>
+<th:block layout:fragment="customCSS"></th:block>
 
 <th:block layout:fragment="content">
     <div class="card animate-in">
@@ -254,9 +251,10 @@
 </th:block>
 
 <th:block layout:fragment="customJS">
+    <script th:src="@{/js/selector-telefono.js}"></script>
     <script th:src="@{/js/clientes-telefono.js}"></script>
     <script th:src="@{/js/clientes-cedula-nit.js}"></script>
-    <script th:src="@{/js/clientes-notif-warning.js}"></script>
+    <script th:src="@{/js/clientes-notif-advertencia.js}"></script>
 </th:block>
 
 </html>
