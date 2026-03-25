@@ -134,16 +134,17 @@
         var params = new URLSearchParams(window.location.search);
         var tieneError = params.has('error');
         var tieneExpired = params.has('expired');
+        var tieneLogout = params.has('logout');
 
-        // Si hay error o sesion expirada, NO animar entrada — sacudir el form
-        if (tieneError || tieneExpired) {
+        // Si viene con alerta (error, expired, logout), mostrar todo de inmediato
+        if (tieneError || tieneExpired || tieneLogout) {
             if (tieneError) {
                 sacudirForm();
             }
             return;
         }
 
-        // Carga limpia o logout: activar animacion completa
+        // Solo carga limpia (sin params): activar animacion completa
         card.classList.add('animating');
 
         card.addEventListener('animationend', function handler(e) {
