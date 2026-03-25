@@ -106,6 +106,20 @@
                         </div>
                         <span class="form-help">Si está activo, el cliente recibirá recordatorios y promociones por WhatsApp</span>
                     </div>
+
+                    <!-- Aviso legal visible sobre notificaciones -->
+                    <div class="notif-legal-info">
+                        <div class="notif-legal-info-icon">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                                <line x1="12" y1="9" x2="12" y2="13"></line>
+                                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                            </svg>
+                        </div>
+                        <div class="notif-legal-info-text">
+                            <strong>Aviso legal:</strong> Activar o desactivar las notificaciones sin el consentimiento explícito del cliente puede tener consecuencias legales según la <strong>Ley 1581 de 2012</strong> de protección de datos personales en Colombia y las políticas de <strong>WhatsApp Business</strong>. Se requiere autorización previa del titular.
+                        </div>
+                    </div>
                 </div>
 
                 <div class="divider"></div>
@@ -209,39 +223,79 @@
         </form>
     </div>
 
-    <!-- Modal Advertencia Legal - Fuera del card/form para cubrir toda la pantalla -->
-    <div class="notif-warn-overlay" id="notif-warn-overlay">
-        <div class="notif-warn-modal">
-            <div class="notif-warn-header">
-                <div class="notif-warn-icon-container">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-                        <line x1="12" y1="9" x2="12" y2="13"></line>
-                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                    </svg>
+    <!-- Modal Advertencia Legal - Estilo cli-modal -->
+    <div class="cli-modal-overlay" id="notif-warn-overlay">
+        <div class="cli-modal notif-warn-modal">
+            <!-- Header -->
+            <div class="cli-modal-header">
+                <div class="cli-modal-header-left">
+                    <div class="cli-modal-icon notif-warn-icon-accent">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                            <line x1="12" y1="9" x2="12" y2="13"></line>
+                            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="cli-modal-title">Advertencia Legal</div>
+                        <div class="cli-modal-subtitle">Modificación de notificaciones</div>
+                    </div>
                 </div>
-                <h3 class="notif-warn-title">Advertencia legal</h3>
-            </div>
-            <p class="notif-warn-message" id="notif-warn-message"></p>
-            <div class="notif-warn-legal">
-                <div class="notif-warn-legal-icon">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <line x1="12" y1="16" x2="12" y2="12"></line>
-                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
-                    </svg>
+                <div class="cli-modal-header-right">
+                    <button class="cli-modal-close" id="notif-warn-cancel">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
                 </div>
-                <p class="notif-warn-legal-text">
-                    Modificar este estado sin el consentimiento explícito del cliente puede constituir una infracción a la <strong>Ley 1581 de 2012</strong> (Protección de Datos Personales) y a las políticas de <strong>WhatsApp Business</strong>.
-                </p>
             </div>
-            <div class="notif-warn-question">¿Deseas continuar con el cambio?</div>
-            <div class="notif-warn-actions">
-                <button type="button" class="btn btn-secondary" id="notif-warn-cancel">
+
+            <!-- Body -->
+            <div class="cli-modal-body">
+                <div class="notif-warn-body-content">
+                    <!-- Mensaje dinámico -->
+                    <div class="notif-warn-msg-section">
+                        <div class="notif-warn-msg-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                            </svg>
+                        </div>
+                        <p class="notif-warn-msg-text" id="notif-warn-message"></p>
+                    </div>
+
+                    <!-- Aviso legal detallado -->
+                    <div class="notif-warn-legal-section">
+                        <div class="notif-warn-legal-header">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="16" x2="12" y2="12"></line>
+                                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                            </svg>
+                            <span>Marco legal aplicable</span>
+                        </div>
+                        <ul class="notif-warn-legal-list">
+                            <li><strong>Ley 1581 de 2012</strong> — Protección de datos personales en Colombia. El tratamiento de datos requiere autorización previa, expresa e informada del titular.</li>
+                            <li><strong>Decreto 1377 de 2013</strong> — Reglamenta la revocatoria de la autorización y los mecanismos de supresión de datos.</li>
+                            <li><strong>Políticas de WhatsApp Business</strong> — Enviar mensajes sin consentimiento puede resultar en el bloqueo de la línea comercial.</li>
+                        </ul>
+                    </div>
+
+                    <!-- Pregunta de confirmación -->
+                    <div class="notif-warn-confirm-question">
+                        ¿Deseas continuar con este cambio?
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="cli-modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" id="notif-warn-cancel-btn">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                     Cancelar
                 </button>
-                <button type="button" class="btn btn-danger" id="notif-warn-accept">
+                <button type="button" class="btn btn-danger btn-sm" id="notif-warn-accept">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
                     Sí, cambiar estado
                 </button>

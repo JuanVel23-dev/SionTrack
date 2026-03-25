@@ -1,7 +1,7 @@
 /**
  * SionTrack - Advertencia Legal Notificaciones
  * Intercepta el toggle de notificaciones y muestra
- * un modal de confirmación con advertencia legal.
+ * un modal de confirmación con advertencia legal (estilo cli-modal).
  *
  * Solo revierte el toggle si el usuario cancela;
  * no afecta ningún otro campo del formulario.
@@ -33,7 +33,7 @@
         // Inicializar modal con patrón reutilizable (al cerrar → revertir)
         var modal = SionUtils.crearModal({
             overlayId: 'notif-warn-overlay',
-            closeBtnIds: ['notif-warn-cancel'],
+            closeBtnIds: ['notif-warn-cancel', 'notif-warn-cancel-btn'],
             onClose: revertir
         });
 
@@ -58,7 +58,7 @@
         btnAccept.addEventListener('click', function() {
             estadoOriginal = checkbox.checked;
             updateLabel();
-            // Cerrar sin revertir: temporalmente quitar onClose
+            // Cerrar sin ejecutar onClose (que revertiría)
             var overlay = document.getElementById('notif-warn-overlay');
             overlay.classList.remove('open');
             document.body.style.overflow = '';

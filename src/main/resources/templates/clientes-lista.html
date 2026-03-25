@@ -35,24 +35,45 @@
                            placeholder="Buscar clientes..."
                            aria-label="Buscar clientes">
                 </div>
-                
-                <!-- Dropdown Filtro Personalizado -->
-                <div class="filter-dropdown" id="filterDropdown">
-                    <button type="button" class="filter-dropdown-btn" id="filterBtn">
-                        <span id="filterTexto">Todos los tipos</span>
-                        <svg class="filter-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polyline points="6 9 12 15 18 9"></polyline>
-                        </svg>
-                    </button>
-                    <div class="filter-dropdown-menu" id="filterMenu">
-                        <div class="filter-option disabled">Seleccione un tipo</div>
-                        <div class="filter-option selected" data-value="">Todos los tipos</div>
-                        <div class="filter-option" data-value="Persona Natural">Persona Natural</div>
-                        <div class="filter-option" data-value="Empresa">Empresa</div>
-                    </div>
-                    <input type="hidden" id="filterTipo" value="">
-                </div>
             </div>
+        </div>
+
+        <!-- Filtros rápidos -->
+        <div class="filter-chips" id="filterChips">
+            <!-- Tipo de cliente -->
+            <button type="button" class="filter-chip active" data-filter="tipo" data-value="">Todos</button>
+            <button type="button" class="filter-chip" data-filter="tipo" data-value="Persona Natural">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                Persona Natural
+            </button>
+            <button type="button" class="filter-chip" data-filter="tipo" data-value="Empresa">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                Empresa
+            </button>
+
+            <span class="filter-chips-divider"></span>
+
+            <!-- Notificaciones -->
+            <button type="button" class="filter-chip" data-filter="notif" data-value="1">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                Notificaciones activas
+            </button>
+            <button type="button" class="filter-chip" data-filter="notif" data-value="0">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="1" y1="1" x2="23" y2="23"/><path d="M18 8A6 6 0 0 0 6 8c0 3.09-.78 5.2-1.65 6.68"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/><path d="M21 15s-2-1.26-2-5"/></svg>
+                Sin notificaciones
+            </button>
+
+            <span class="filter-chips-divider"></span>
+
+            <!-- Vehículos -->
+            <button type="button" class="filter-chip" data-filter="vehiculo" data-value="1">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.24a2 2 0 0 0-1.8 1.1l-.8 1.63A6 6 0 0 0 2 12.42V16h2"/><circle cx="6.5" cy="16.5" r="2.5"/><circle cx="16.5" cy="16.5" r="2.5"/></svg>
+                Con vehículo
+            </button>
+            <button type="button" class="filter-chip" data-filter="vehiculo" data-value="0">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                Sin vehículo
+            </button>
         </div>
 
         <table class="table clientes-table" th:if="${clientes != null AND !clientes.isEmpty()}">
@@ -75,7 +96,11 @@
                 </tr>
             </thead>
             <tbody>
-                <tr th:each="cliente : ${clientes}" th:data-tipo="${cliente.tipo_cliente}" class="data-row">
+                <tr th:each="cliente : ${clientes}"
+                    th:data-tipo="${cliente.tipo_cliente}"
+                    th:data-notif="${cliente.recibe_notificaciones ? '1' : '0'}"
+                    th:data-vehiculo="${cliente.vehiculos != null AND !cliente.vehiculos.isEmpty() ? '1' : '0'}"
+                    class="data-row">
                     <!-- Nombre -->
                     <td data-label="Nombre" class="al-left cell-nombre"
                         th:text="${cliente.nombre}"
@@ -252,33 +277,8 @@
 </th:block>
 
 <th:block layout:fragment="customJS">
-    <script th:src="@{/js/filtro-desplegable.js}"></script>
-    <script th:src="@{/js/filtro-tabla.js}"></script>
     <script th:src="@{/js/clientes-detalle.js}"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Inicializar filtro de tabla para clientes
-            FiltroDesplegable.inicializar({
-                dropdownId: 'filterDropdown',
-                menuId: 'filterMenu',
-                botonId: 'filterBtn',
-                textoId: 'filterTexto',
-                hiddenId: 'filterTipo',
-                onCambio: function() { if (filtro) filtro.filtrar(); }
-            });
-
-            var filtro = SionFiltroTabla.init({
-                searchInput: '#searchInput',
-                rows: '.table tbody tr.data-row',
-                searchColumns: [0, 1],
-                filterHiddenId: 'filterTipo',
-                filterAttribute: 'data-tipo'
-            });
-
-            // Formatear teléfonos visibles
-            SionUtils.formatearTelefonosVisibles('.contact-row span, .contact-row-email span');
-        });
-    </script>
+    <script th:src="@{/js/clientes-filtros.js}"></script>
 </th:block>
 
 </html>

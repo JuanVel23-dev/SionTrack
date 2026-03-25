@@ -137,6 +137,13 @@
             detallesContainer.appendChild(fila);
             detalleIndex++;
 
+            // Inicializar custom selects de la fila
+            if (window.SionSelect) {
+                fila.querySelectorAll('select.form-select').forEach(function(s) {
+                    SionSelect.init(s);
+                });
+            }
+
             // Animación
             requestAnimationFrame(function() {
                 fila.style.transition = 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)';
@@ -170,6 +177,8 @@
                 } else {
                     tipoSelect.value = 'PRODUCTO';
                 }
+                // Sincronizar visual del custom select
+                tipoSelect.dispatchEvent(new Event('change', { bubbles: true }));
 
                 recalcularTotal();
             });
