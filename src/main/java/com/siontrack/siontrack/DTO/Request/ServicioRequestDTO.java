@@ -28,7 +28,7 @@ public class ServicioRequestDTO {
 
     @Getter
     @Setter
-    private String estado;
+    private String tipo_servicio;
 
     @Getter
     @Setter

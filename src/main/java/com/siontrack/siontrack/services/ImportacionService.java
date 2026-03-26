@@ -244,7 +244,7 @@ public class ImportacionService {
                 dto.setVehiculo_id(getInteger(fila, "vehiculo_id"));
                 dto.setFecha_servicio(getLocalDate(fila, "fecha_servicio"));
                 dto.setKilometraje_servicio(get(fila, "kilometraje_servicio"));
-                dto.setEstado(get(fila, "estado"));
+                dto.setTipo_servicio(get(fila, "tipo_servicio"));
                 dto.setObservaciones(get(fila, "observaciones"));
 
                 Integer productoId = getInteger(fila, "producto_id");

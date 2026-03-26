@@ -32,16 +32,32 @@
                     </svg>
                     <input type="text"
                            id="searchInput"
-                           placeholder="Buscar por nombre, categoría, marca o proveedor..."
+                           placeholder="Buscar por código, nombre, categoría, marca o proveedor..."
                            aria-label="Buscar productos">
                 </div>
             </div>
         </div>
 
+        <!-- Filtros rapidos -->
+        <div class="filter-chips" id="filterChips">
+            <button type="button" class="filter-chip active" data-filter="stock" data-value="">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+                Todos
+            </button>
+            <button type="button" class="filter-chip filter-chip-success" data-filter="stock" data-value="0">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                Stock Normal
+            </button>
+            <button type="button" class="filter-chip filter-chip-danger" data-filter="stock" data-value="1">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                Stock Bajo
+            </button>
+        </div>
+
         <table class="table" th:if="${productos != null and not productos.empty}">
             <thead>
                 <tr>
-                    <th class="text-left">ID</th>
+                    <th class="text-left">Código</th>
                     <th class="text-left">Nombre</th>
                     <th class="text-left">Categoría</th>
                     <th class="text-left">Marca</th>
@@ -53,13 +69,14 @@
                 </tr>
             </thead>
             <tbody>
-                <tr th:each="prod : ${productos}" class="data-row">
-                    <td th:text="${prod.producto_id}" data-label="ID" class="text-left">1</td>
+                <tr th:each="prod : ${productos}"
+                    th:data-stock="${prod.alerta_stock ? '1' : '0'}"
+                    class="data-row">
+                    <td data-label="Código" class="text-left">
+                        <span class="producto-codigo" th:text="${prod.codigo_producto != null ? prod.codigo_producto : '—'}">—</span>
+                    </td>
                     <td data-label="Nombre" class="text-left">
                         <span th:text="${prod.nombre}">Producto</span>
-                        <small th:if="${prod.codigo_producto != null}"
-                               style="display:block; color: var(--text-muted); font-size: 0.75rem;"
-                               th:text="${prod.codigo_producto}"></small>
                     </td>
                     <td th:text="${prod.categoria}" data-label="Categoría" class="text-left">Categoría</td>
                     <td th:text="${prod.marca}" data-label="Marca" class="text-left">Marca</td>
@@ -129,16 +146,7 @@
 </th:block>
 
 <th:block layout:fragment="customJS">
-    <script th:src="@{/js/filtro-tabla.js}"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            SionFiltroTabla.init({
-                searchInput: '#searchInput',
-                rows: '.table tbody tr.data-row',
-                searchColumns: [0, 1, 2, 3, 4]
-            });
-        });
-    </script>
+    <script th:src="@{/js/productos-filtros.js}"></script>
     <script th:inline="javascript">
         /*<![CDATA[*/
         (function() {

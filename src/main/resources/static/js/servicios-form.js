@@ -1,7 +1,8 @@
 /**
  * SionTrack - Servicios Form
  *
- * Vehículos: se cargan via FETCH a /api/clientes/{id}/vehiculos
+ * Toggle tipo de servicio (PRODUCTO / MANO_DE_OBRA)
+ * Vehiculos: se cargan via FETCH a /api/clientes/{id}/vehiculos
  * Productos: se leen del DOM (divs ocultos con data-attributes)
  */
 (function() {
@@ -21,6 +22,22 @@
         var totalDisplay = document.getElementById('total-display');
         var form = document.getElementById('servicioForm');
 
+        // Tipo de servicio
+        var tipoToggle = document.getElementById('tipoServicioToggle');
+        var tipoInput = document.getElementById('tipo_servicio');
+        var tipoBtns = tipoToggle ? tipoToggle.querySelectorAll('.tipo-servicio-btn') : [];
+
+        // Seccion vehiculo
+        var vehiculoWrap = document.getElementById('vehiculoWrap');
+        var vehiculoSection = document.getElementById('vehiculoSection');
+        var vehiculoAddBtn = document.getElementById('toggleVehiculoAdd');
+        var vehiculoCloseBtn = document.getElementById('toggleVehiculoClose');
+        var vehiculoLabel = document.getElementById('vehiculoLabel');
+        var kmLabel = document.getElementById('kmLabel');
+
+        var tipoActual = '';
+        var vehiculoVisible = false;
+
         // Leer productos del DOM
         var productosData = leerProductosDelDOM();
 
@@ -31,7 +48,175 @@
         }
 
         // =============================================
-        // CASCADA CLIENTE → VEHÍCULOS (via FETCH)
+        // TOGGLE TIPO DE SERVICIO
+        // =============================================
+        tipoBtns.forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var valor = this.dataset.value;
+
+                // Actualizar visual
+                tipoBtns.forEach(function(b) { b.classList.remove('activo'); });
+                this.classList.add('activo');
+
+                // Actualizar input oculto
+                tipoInput.value = valor;
+                tipoActual = valor;
+
+                // Configurar campos segun tipo
+                configurarCamposVehiculo();
+            });
+        });
+
+        function configurarCamposVehiculo() {
+            if (tipoActual === 'MANO_DE_OBRA') {
+                // Vehiculo y km son obligatorios, siempre visibles
+                vehiculoWrap.style.display = '';
+                vehiculoAddBtn.style.display = 'none';
+                vehiculoCloseBtn.style.display = 'none';
+                expandirCampos(true);
+                vehiculoLabel.classList.add('required');
+                kmLabel.classList.add('required');
+                vehiculoSelect.setAttribute('required', '');
+            } else if (tipoActual === 'PRODUCTO') {
+                // Vehiculo y km son opcionales
+                vehiculoWrap.style.display = '';
+                vehiculoLabel.classList.remove('required');
+                kmLabel.classList.remove('required');
+                vehiculoSelect.removeAttribute('required');
+
+                // Resetear: ocultar campos, mostrar boton de añadir
+                vehiculoVisible = false;
+                vehiculoSection.style.display = 'none';
+                vehiculoSection.style.opacity = '';
+                vehiculoSection.style.transform = '';
+                vehiculoSection.style.maxHeight = '';
+                vehiculoAddBtn.style.display = '';
+                vehiculoCloseBtn.style.display = 'none';
+
+                // Limpiar valores
+                vehiculoSelect.value = '';
+                var kmInput = document.getElementById('kilometraje_servicio');
+                if (kmInput) kmInput.value = '';
+            } else {
+                // Sin tipo seleccionado — ocultar todo
+                vehiculoWrap.style.display = 'none';
+                vehiculoVisible = false;
+                vehiculoLabel.classList.remove('required');
+                kmLabel.classList.remove('required');
+                vehiculoSelect.removeAttribute('required');
+            }
+        }
+
+        // Expandir campos con animacion
+        function expandirCampos(inmediato) {
+            vehiculoVisible = true;
+            vehiculoSection.style.display = '';
+
+            if (inmediato) {
+                vehiculoSection.style.opacity = '1';
+                vehiculoSection.style.transform = 'translateY(0)';
+                vehiculoSection.style.maxHeight = '300px';
+                return;
+            }
+
+            vehiculoSection.style.opacity = '0';
+            vehiculoSection.style.transform = 'translateY(-10px)';
+            vehiculoSection.style.maxHeight = '0';
+            vehiculoSection.style.overflow = 'hidden';
+
+            requestAnimationFrame(function() {
+                vehiculoSection.style.transition = 'opacity 0.35s ease, transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), max-height 0.35s ease';
+                vehiculoSection.style.opacity = '1';
+                vehiculoSection.style.transform = 'translateY(0)';
+                vehiculoSection.style.maxHeight = '300px';
+
+                setTimeout(function() {
+                    vehiculoSection.style.overflow = '';
+                    vehiculoSection.style.maxHeight = '';
+                }, 350);
+            });
+        }
+
+        // Colapsar campos con animacion elegante
+        function colapsarCampos() {
+            vehiculoVisible = false;
+            vehiculoSection.style.overflow = 'hidden';
+            vehiculoSection.style.transition =
+                'opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), ' +
+                'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), ' +
+                'filter 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+            vehiculoSection.style.opacity = '0';
+            vehiculoSection.style.transform = 'scale(0.96)';
+            vehiculoSection.style.filter = 'blur(4px)';
+
+            setTimeout(function() {
+                vehiculoSection.style.display = 'none';
+                vehiculoSection.style.overflow = '';
+                vehiculoSection.style.filter = '';
+                vehiculoSection.style.transform = '';
+            }, 300);
+
+            // Limpiar valores
+            vehiculoSelect.value = '';
+            var kmInput = document.getElementById('kilometraje_servicio');
+            if (kmInput) kmInput.value = '';
+        }
+
+        // Boton "Añadir vehiculo" (modo PRODUCTO)
+        if (vehiculoAddBtn) {
+            vehiculoAddBtn.addEventListener('click', function() {
+                // Ocultar boton de añadir con animacion
+                this.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
+                this.style.opacity = '0';
+                this.style.transform = 'scale(0.97)';
+
+                var addBtn = this;
+                setTimeout(function() {
+                    addBtn.style.display = 'none';
+                    addBtn.style.opacity = '';
+                    addBtn.style.transform = '';
+
+                    // Mostrar campos y boton cerrar
+                    vehiculoCloseBtn.style.display = '';
+                    expandirCampos(false);
+                }, 200);
+            });
+        }
+
+        // Boton "Quitar vehiculo" (X en header de campos)
+        if (vehiculoCloseBtn) {
+            vehiculoCloseBtn.addEventListener('click', function() {
+                colapsarCampos();
+
+                // Materializar boton de añadir tras colapso
+                setTimeout(function() {
+                    vehiculoAddBtn.style.display = '';
+                    vehiculoAddBtn.style.opacity = '0';
+                    vehiculoAddBtn.style.transform = 'translateY(8px) scale(0.98)';
+                    vehiculoAddBtn.style.filter = 'blur(3px)';
+
+                    requestAnimationFrame(function() {
+                        vehiculoAddBtn.style.transition =
+                            'opacity 0.4s cubic-bezier(0, 0, 0.2, 1), ' +
+                            'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), ' +
+                            'filter 0.35s cubic-bezier(0, 0, 0.2, 1)';
+                        vehiculoAddBtn.style.opacity = '1';
+                        vehiculoAddBtn.style.transform = 'translateY(0) scale(1)';
+                        vehiculoAddBtn.style.filter = 'blur(0px)';
+
+                        // Limpiar estilos inline despues de la animacion
+                        setTimeout(function() {
+                            vehiculoAddBtn.style.transition = '';
+                            vehiculoAddBtn.style.filter = '';
+                            vehiculoAddBtn.style.transform = '';
+                        }, 420);
+                    });
+                }, 280);
+            });
+        }
+
+        // =============================================
+        // CASCADA CLIENTE → VEHICULOS (via FETCH)
         // =============================================
         if (clienteSelect) {
             clienteSelect.addEventListener('change', function() {
@@ -77,7 +262,7 @@
         }
 
         // =============================================
-        // FILAS DE DETALLE DINÁMICAS
+        // FILAS DE DETALLE DINAMICAS
         // =============================================
         if (addDetalleBtn) {
             addDetalleBtn.addEventListener('click', function(e) {
@@ -101,20 +286,12 @@
             });
 
             fila.innerHTML =
+                '<input type="hidden" name="detalles[' + detalleIndex + '].tipoItem" value="PRODUCTO" />' +
                 '<div class="detalle-fila-grid">' +
                     '<div class="form-group">' +
                         '<label class="form-label">Producto</label>' +
                         '<select name="detalles[' + detalleIndex + '].producto_id" class="form-select detalle-producto" required>' +
                             productosOptions +
-                        '</select>' +
-                    '</div>' +
-                    '<div class="form-group">' +
-                        '<label class="form-label">Tipo</label>' +
-                        '<select name="detalles[' + detalleIndex + '].tipoItem" class="form-select detalle-tipo">' +
-                            '<option value="PRODUCTO">Producto</option>' +
-                            '<option value="SERVICIO">Servicio</option>' +
-                            '<option value="INSUMO">Insumo</option>' +
-                            '<option value="PAQUETE">Paquete</option>' +
                         '</select>' +
                     '</div>' +
                     '<div class="form-group">' +
@@ -144,7 +321,7 @@
                 });
             }
 
-            // Animación
+            // Animacion
             requestAnimationFrame(function() {
                 fila.style.transition = 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)';
                 fila.style.opacity = '1';
@@ -152,34 +329,16 @@
             });
 
             var productoSelect = fila.querySelector('.detalle-producto');
-            var tipoSelect = fila.querySelector('.detalle-tipo');
             var cantidadInput = fila.querySelector('.detalle-cantidad');
             var precioInput = fila.querySelector('.detalle-precio');
 
-            // Al seleccionar producto → precio + tipo automáticos
+            // Al seleccionar producto → auto-precio
             productoSelect.addEventListener('change', function() {
                 var selected = this.options[this.selectedIndex];
-
-                // Auto-precio
                 var precio = selected.getAttribute('data-precio');
                 if (precio) {
                     precioInput.value = parseFloat(precio).toFixed(2);
                 }
-
-                // Auto-tipo según categoría
-                var categoria = (selected.getAttribute('data-categoria') || '').toLowerCase();
-                if (categoria.indexOf('servicio') !== -1 || categoria.indexOf('mano de obra') !== -1) {
-                    tipoSelect.value = 'SERVICIO';
-                } else if (categoria.indexOf('insumo') !== -1) {
-                    tipoSelect.value = 'INSUMO';
-                } else if (categoria.indexOf('paquete') !== -1 || categoria.indexOf('combo') !== -1) {
-                    tipoSelect.value = 'PAQUETE';
-                } else {
-                    tipoSelect.value = 'PRODUCTO';
-                }
-                // Sincronizar visual del custom select
-                tipoSelect.dispatchEvent(new Event('change', { bubbles: true }));
-
                 recalcularTotal();
             });
 
@@ -248,12 +407,21 @@
         }
 
         // =============================================
-        // VALIDACIÓN
+        // VALIDACION
         // =============================================
         if (form) {
             form.addEventListener('submit', function(e) {
                 var ok = true;
                 var errores = [];
+
+                // Tipo de servicio obligatorio
+                if (!tipoInput.value) {
+                    ok = false;
+                    errores.push('Seleccione un tipo de servicio');
+                    tipoToggle.classList.add('error');
+                } else {
+                    tipoToggle.classList.remove('error');
+                }
 
                 if (!clienteSelect.value) {
                     ok = false;
@@ -263,7 +431,8 @@
                     clienteSelect.classList.remove('error');
                 }
 
-                if (!vehiculoSelect.value) {
+                // Vehiculo obligatorio solo en MANO_DE_OBRA
+                if (tipoActual === 'MANO_DE_OBRA' && !vehiculoSelect.value) {
                     ok = false;
                     vehiculoSelect.classList.add('error');
                     errores.push('Seleccione un vehículo');

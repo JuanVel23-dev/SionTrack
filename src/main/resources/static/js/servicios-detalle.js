@@ -35,15 +35,14 @@
         // Header
         modalSubtitle.textContent = 'Servicio #' + (d.id || '0');
 
-        // Badge de estado
-        var estadoMap = {
-            'EN_PROCESO': { text: 'En Proceso', cls: 'badge-warning' },
-            'COMPLETADO': { text: 'Completado', cls: 'badge-success' },
-            'CANCELADO':  { text: 'Cancelado', cls: 'badge-error' }
+        // Badge de tipo de servicio
+        var tipoServicioMap = {
+            'PRODUCTO':      { text: 'Producto', cls: 'badge-info' },
+            'MANO_DE_OBRA':  { text: 'Mano de Obra', cls: 'badge-warning' }
         };
-        var estado = estadoMap[d.estado] || { text: d.estado || '-', cls: 'badge-neutral' };
-        modalBadge.textContent = estado.text;
-        modalBadge.className = 'badge ' + estado.cls;
+        var tipoSrv = tipoServicioMap[d.tipoServicio] || { text: d.tipoServicio || '-', cls: 'badge-neutral' };
+        modalBadge.textContent = tipoSrv.text;
+        modalBadge.className = 'badge ' + tipoSrv.cls;
 
         // Footer - fecha creación
         if (d.creado) {
@@ -66,7 +65,7 @@
         html +=     campo('Fecha del Servicio', formatearFecha(d.fecha));
         html +=     campo('Kilometraje', d.km ? d.km + ' km' : 'No registrado');
         html +=     campo('Total', d.total ? '$ ' + parseFloat(d.total).toLocaleString('es-CO', { minimumFractionDigits: 2 }) : '$ 0.00');
-        html +=     campo('Estado', estado.text);
+        html +=     campo('Tipo de Servicio', tipoSrv.text);
         html +=   '</div>';
         html += '</div>';
 

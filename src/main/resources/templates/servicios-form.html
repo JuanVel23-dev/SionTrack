@@ -22,7 +22,47 @@
               id="servicioForm">
 
             <div class="card-body">
-                <!-- Información General -->
+                <!-- Selector de tipo de servicio -->
+                <h3 class="form-section-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+                    </svg>
+                    Tipo de Servicio
+                </h3>
+
+                <!-- Botones de tipo -->
+                <div class="tipo-servicio-toggle" id="tipoServicioToggle">
+                    <button type="button" class="tipo-servicio-btn" data-value="PRODUCTO">
+                        <div class="tipo-servicio-btn-icono">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="16.5" y1="9.4" x2="7.5" y2="4.21"></line>
+                                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                                <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                                <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                            </svg>
+                        </div>
+                        <div class="tipo-servicio-btn-texto">
+                            <span class="tipo-servicio-btn-titulo">Producto</span>
+                            <span class="tipo-servicio-btn-desc">Venta de productos, vehiculo opcional</span>
+                        </div>
+                    </button>
+                    <button type="button" class="tipo-servicio-btn" data-value="MANO_DE_OBRA">
+                        <div class="tipo-servicio-btn-icono">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+                            </svg>
+                        </div>
+                        <div class="tipo-servicio-btn-texto">
+                            <span class="tipo-servicio-btn-titulo">Mano de Obra</span>
+                            <span class="tipo-servicio-btn-desc">Servicio tecnico, vehiculo obligatorio</span>
+                        </div>
+                    </button>
+                    <input type="hidden" id="tipo_servicio" th:field="*{tipo_servicio}" required>
+                </div>
+
+                <div class="divider"></div>
+
+                <!-- Informacion General -->
                 <h3 class="form-section-title">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
@@ -49,48 +89,85 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="vehiculo_id" class="form-label required">Vehículo</label>
-                        <select id="vehiculo_id"
-                                th:field="*{vehiculo_id}"
-                                class="form-select"
-                                required>
-                            <option value="">Seleccione primero un cliente</option>
-                        </select>
-                        <span class="form-help">Los vehículos se cargan según el cliente seleccionado</span>
-                    </div>
-                </div>
-
-                <div class="form-grid">
-                    <div class="form-group">
                         <label for="fecha_servicio" class="form-label required">Fecha del Servicio</label>
-                        <input type="date"
-                               id="fecha_servicio"
-                               th:field="*{fecha_servicio}"
-                               class="form-input"
-                               required>
-                    </div>
-                    <div class="form-group">
-                        <label for="kilometraje_servicio" class="form-label">Kilometraje</label>
-                        <input type="number"
-                               id="kilometraje_servicio"
-                               th:field="*{kilometraje_servicio}"
-                               class="form-input"
-                               min="0"
-                               placeholder="Ej: 50000">
+                        <div class="sion-datepicker" id="datepicker_fecha_servicio">
+                            <button type="button" class="sion-datepicker-btn">
+                                <svg class="sion-datepicker-icono" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                                </svg>
+                                <span class="sion-datepicker-texto placeholder">Selecciona una fecha</span>
+                                <svg class="sion-datepicker-flecha" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            </button>
+                            <input type="date"
+                                   id="fecha_servicio"
+                                   th:field="*{fecha_servicio}"
+                                   class="sion-datepicker-hidden"
+                                   required>
+                        </div>
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="estado" class="form-label required">Estado</label>
-                    <select id="estado"
-                            th:field="*{estado}"
-                            class="form-select"
-                            required>
-                        <option value="">Seleccione un estado</option>
-                        <option value="EN_PROCESO">En Proceso</option>
-                        <option value="COMPLETADO">Completado</option>
-                        <option value="CANCELADO">Cancelado</option>
-                    </select>
+                <!-- Vehiculo y Kilometraje — visibilidad condicional -->
+                <div class="srv-vehiculo-wrap" id="vehiculoWrap" style="display: none;">
+                    <!-- Botón para añadir (modo PRODUCTO) -->
+                    <button type="button" class="srv-vehiculo-add" id="toggleVehiculoAdd">
+                        <div class="srv-vehiculo-add-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                            </svg>
+                        </div>
+                        <div class="srv-vehiculo-add-texto">
+                            <span class="srv-vehiculo-add-titulo">Añadir vehículo y kilometraje</span>
+                            <span class="srv-vehiculo-add-desc">Opcional — asocia un vehículo a este servicio</span>
+                        </div>
+                        <svg class="srv-vehiculo-add-flecha" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="9 18 15 12 9 6"></polyline>
+                        </svg>
+                    </button>
+
+                    <!-- Campos expandibles -->
+                    <div class="srv-vehiculo-campos" id="vehiculoSection" style="display: none;">
+                        <div class="srv-vehiculo-campos-header">
+                            <div class="srv-vehiculo-campos-titulo">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.24a2 2 0 0 0-1.8 1.1l-.8 1.63A6 6 0 0 0 2 12.42V16h2"></path>
+                                    <circle cx="6.5" cy="16.5" r="2.5"></circle>
+                                    <circle cx="16.5" cy="16.5" r="2.5"></circle>
+                                </svg>
+                                <span>Vehículo y Kilometraje</span>
+                            </div>
+                            <button type="button" class="srv-vehiculo-campos-close" id="toggleVehiculoClose" title="Quitar vehículo">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="vehiculo_id" class="form-label" id="vehiculoLabel">Vehículo</label>
+                                <select id="vehiculo_id"
+                                        th:field="*{vehiculo_id}"
+                                        class="form-select">
+                                    <option value="">Seleccione primero un cliente</option>
+                                </select>
+                                <span class="form-help">Los vehículos se cargan según el cliente seleccionado</span>
+                            </div>
+                            <div class="form-group">
+                                <label for="kilometraje_servicio" class="form-label" id="kmLabel">Kilometraje</label>
+                                <input type="number"
+                                       id="kilometraje_servicio"
+                                       th:field="*{kilometraje_servicio}"
+                                       class="form-input"
+                                       min="0"
+                                       placeholder="Ej: 50000">
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="form-group">

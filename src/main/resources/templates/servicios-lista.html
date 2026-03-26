@@ -32,47 +32,43 @@
                     </svg>
                     <input type="text"
                            id="searchInput"
-                           placeholder="Buscar por cliente, vehículo o estado..."
+                           placeholder="Buscar por cliente, vehículo o tipo..."
                            aria-label="Buscar servicios">
                 </div>
-
-                <!-- Dropdown Filtro por Estado -->
-                <div class="filter-dropdown" id="filterDropdown">
-                    <button type="button" class="filter-dropdown-btn" id="filterBtn">
-                        <span id="filterTexto">Todos los estados</span>
-                        <svg class="filter-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polyline points="6 9 12 15 18 9"></polyline>
-                        </svg>
-                    </button>
-                    <div class="filter-dropdown-menu" id="filterMenu">
-                        <div class="filter-option disabled">Filtrar por estado</div>
-                        <div class="filter-option selected" data-value="">Todos los estados</div>
-                        <div class="filter-option" data-value="EN_PROCESO">En Proceso</div>
-                        <div class="filter-option" data-value="COMPLETADO">Completado</div>
-                        <div class="filter-option" data-value="CANCELADO">Cancelado</div>
-                    </div>
-                    <input type="hidden" id="filterEstado" value="">
-                </div>
             </div>
+        </div>
+
+        <!-- Filtros rapidos -->
+        <div class="filter-chips" id="filterChips">
+            <button type="button" class="filter-chip active" data-filter="tipo-servicio" data-value="">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+                Todos
+            </button>
+            <button type="button" class="filter-chip filter-chip-info" data-filter="tipo-servicio" data-value="PRODUCTO">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+                Producto
+            </button>
+            <button type="button" class="filter-chip filter-chip-warning" data-filter="tipo-servicio" data-value="MANO_DE_OBRA">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+                Mano de Obra
+            </button>
         </div>
 
         <table class="table" th:if="${servicios != null and not servicios.empty}">
             <thead>
                 <tr>
-                    <th class="text-left">ID</th>
                     <th class="text-left">Fecha</th>
                     <th class="text-left">Cliente</th>
                     <th class="text-left">Vehículo</th>
                     <th>Kilometraje</th>
                     <th class="text-right">Total</th>
-                    <th>Estado</th>
+                    <th>Tipo</th>
                     <th>Acciones</th>
                 </tr>
             </thead>
             <tbody>
                 <tr th:each="srv : ${servicios}" class="data-row"
-                    th:data-estado="${srv.estado}">
-                    <td th:text="${srv.servicio_id}" data-label="ID" class="text-left">1</td>
+                    th:data-tipo-servicio="${srv.tipo_servicio}">
                     <td data-label="Fecha" class="text-left"
                         th:text="${srv.fecha_servicio != null ? srv.fecha_servicio : '-'}">2025-01-15</td>
                     <td data-label="Cliente" class="text-left">
@@ -96,12 +92,11 @@
                         <span th:if="${srv.total != null}" th:text="${'$ ' + #numbers.formatDecimal(srv.total, 1, 2)}">$ 0.00</span>
                         <span th:if="${srv.total == null}" class="text-subtle">-</span>
                     </td>
-                    <td data-label="Estado">
-                        <span th:if="${srv.estado == 'EN_PROCESO'}" class="badge badge-warning">En Proceso</span>
-                        <span th:if="${srv.estado == 'COMPLETADO'}" class="badge badge-success">Completado</span>
-                        <span th:if="${srv.estado == 'CANCELADO'}" class="badge badge-error">Cancelado</span>
-                        <span th:if="${srv.estado != 'EN_PROCESO' and srv.estado != 'COMPLETADO' and srv.estado != 'CANCELADO'}"
-                              class="badge badge-neutral" th:text="${srv.estado}">Estado</span>
+                    <td data-label="Tipo">
+                        <span th:if="${srv.tipo_servicio == 'PRODUCTO'}" class="badge badge-info">Producto</span>
+                        <span th:if="${srv.tipo_servicio == 'MANO_DE_OBRA'}" class="badge badge-warning">Mano de Obra</span>
+                        <span th:if="${srv.tipo_servicio != 'PRODUCTO' and srv.tipo_servicio != 'MANO_DE_OBRA'}"
+                              class="badge badge-neutral" th:text="${srv.tipo_servicio}">Tipo</span>
                     </td>
                     <td data-label="Acciones">
                         <div class="table-actions">
@@ -113,7 +108,7 @@
                                     th:data-fecha="${srv.fecha_servicio}"
                                     th:data-km="${srv.kilometraje_servicio}"
                                     th:data-total="${srv.total}"
-                                    th:data-estado="${srv.estado}"
+                                    th:data-tipo-servicio="${srv.tipo_servicio}"
                                     th:data-observaciones="${srv.observaciones}"
                                     th:data-creado="${srv.creadoEn}"
                                     th:data-cliente-nombre="${srv.cliente != null ? srv.cliente.nombre : 'Sin asignar'}"
@@ -214,29 +209,8 @@
 </th:block>
 
 <th:block layout:fragment="customJS">
-    <script th:src="@{/js/filtro-desplegable.js}"></script>
-    <script th:src="@{/js/filtro-tabla.js}"></script>
+    <script th:src="@{/js/servicios-filtros.js}"></script>
     <script th:src="@{/js/servicios-detalle.js}"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            FiltroDesplegable.inicializar({
-                dropdownId: 'filterDropdown',
-                menuId: 'filterMenu',
-                botonId: 'filterBtn',
-                textoId: 'filterTexto',
-                hiddenId: 'filterEstado',
-                onCambio: function() { if (filtro) filtro.filtrar(); }
-            });
-
-            var filtro = SionFiltroTabla.init({
-                searchInput: '#searchInput',
-                rows: '.table tbody tr.data-row',
-                searchColumns: [0, 1, 2, 3],
-                filterHiddenId: 'filterEstado',
-                filterAttribute: 'data-estado'
-            });
-        });
-    </script>
     <script th:inline="javascript">
         /*<![CDATA[*/
         (function() {

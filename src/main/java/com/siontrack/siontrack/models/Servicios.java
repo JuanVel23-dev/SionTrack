@@ -48,9 +48,10 @@ public class Servicios {
     @Setter
     private BigDecimal total;
 
+    @Column(name = "tipo_servicio")
     @Getter
     @Setter
-    private String estado;
+    private String tipo_servicio;
 
     @Getter
     @Setter

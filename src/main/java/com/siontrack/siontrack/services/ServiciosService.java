@@ -78,7 +78,7 @@ public class ServiciosService {
         Servicios servicio = new Servicios();
         servicio.setFecha_servicio(dto.getFecha_servicio());
         servicio.setKilometraje_servicio(dto.getKilometraje_servicio());
-        servicio.setEstado(dto.getEstado() != null ? dto.getEstado() : "EN_PROCESO");
+        servicio.setTipo_servicio(dto.getTipo_servicio() != null ? dto.getTipo_servicio() : "PRODUCTO");
         servicio.setObservaciones(dto.getObservaciones());
         servicio.setCreado_en(LocalDateTime.now());
 
