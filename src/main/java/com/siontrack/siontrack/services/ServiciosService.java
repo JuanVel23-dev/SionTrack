@@ -71,8 +71,11 @@ public class ServiciosService {
         Clientes cliente = clienteRepository.findById(dto.getCliente_id())
                 .orElseThrow(() -> new RuntimeException("Cliente no encontrado: " + dto.getCliente_id()));
 
-        Vehiculos vehiculo = vehiculoRepository.findById(dto.getVehiculo_id())
-                .orElseThrow(() -> new RuntimeException("Vehículo no encontrado: " + dto.getVehiculo_id()));
+        Vehiculos vehiculo = null;
+        if (dto.getVehiculo_id() != null) {
+            vehiculo = vehiculoRepository.findById(dto.getVehiculo_id())
+                    .orElseThrow(() -> new RuntimeException("Vehículo no encontrado: " + dto.getVehiculo_id()));
+        }
 
         // 2. Crear Entidad Servicio Base
         Servicios servicio = new Servicios();
@@ -86,7 +89,7 @@ public class ServiciosService {
         servicio.setClientes(cliente);
         servicio.setVehiculos(vehiculo);
 
-        if (servicio.getKilometraje_servicio() != null) {
+        if (vehiculo != null && servicio.getKilometraje_servicio() != null) {
             actualizarKilometrajeVehiculo(vehiculo, servicio.getKilometraje_servicio());
         }
 

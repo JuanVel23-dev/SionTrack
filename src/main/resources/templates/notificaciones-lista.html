@@ -77,7 +77,7 @@
                                 </td>
                                 <td data-label="Vehículo" class="text-left">
                                     <div th:if="${item.vehiculo != null}">
-                                        <span th:text="${(item.vehiculo.marca ?: '') + ' ' + (item.vehiculo.modelo ?: '')}">Marca Modelo</span>
+                                        <span th:text="${item.vehiculo.placa ?: '—'}">Placa</span>
                                         <div th:if="${item.vehiculo.placa != null}" class="contact-info-item-small">
                                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"></rect><line x1="2" y1="12" x2="22" y2="12"></line></svg>
                                             <span th:text="${item.vehiculo.placa}">ABC-1234</span>
@@ -154,7 +154,7 @@
                                 </td>
                                 <td data-label="Vehículo" class="text-left">
                                     <div th:if="${item.vehiculo != null}">
-                                        <span th:text="${(item.vehiculo.marca ?: '') + ' ' + (item.vehiculo.modelo ?: '')}">Marca Modelo</span>
+                                        <span th:text="${item.vehiculo.placa ?: '—'}">Placa</span>
                                         <div th:if="${item.vehiculo.placa != null}" class="contact-info-item-small">
                                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"></rect><line x1="2" y1="12" x2="22" y2="12"></line></svg>
                                             <span th:text="${item.vehiculo.placa}">ABC-1234</span>

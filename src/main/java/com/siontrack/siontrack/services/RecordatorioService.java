@@ -54,6 +54,17 @@ public class RecordatorioService {
         log.info("📅 Servicio: {} | Próximo: {} | Recordatorios: {} y {}",
                 fechaServicio, fechaProximoServicio, fechaPrimerRecordatorio, fechaSegundoRecordatorio);
 
+        Integer clienteId = servicio.getClientes().getCliente_id();
+        Integer vehiculoId = servicio.getVehiculos() != null ? servicio.getVehiculos().getVehiculo_id() : null;
+        Timestamp fechaProximoServicioTs = Timestamp.valueOf(fechaProximoServicio.atStartOfDay());
+
+        // Verificar si ya existe un recordatorio para este cliente+vehículo con la misma fecha objetivo
+        if (notificacionesRepository.existsRecordatorioDuplicado(clienteId, vehiculoId, fechaProximoServicioTs)) {
+            log.info("Ya existen recordatorios para cliente {} y vehículo {} con fecha objetivo {}",
+                    clienteId, vehiculoId, fechaProximoServicio);
+            return;
+        }
+
         // Primer recordatorio: 1 mes antes
         if (fechaPrimerRecordatorio.isAfter(LocalDate.now()) || fechaPrimerRecordatorio.equals(LocalDate.now())) {
             crearNotificacion(servicio, fechaPrimerRecordatorio, fechaProximoServicio, 1);

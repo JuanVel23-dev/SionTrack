@@ -2,6 +2,12 @@ package com.siontrack.siontrack.services;
 
 import com.siontrack.siontrack.DTO.Request.*;
 import com.siontrack.siontrack.DTO.Response.ImportacionResponseDTO;
+import com.siontrack.siontrack.models.Clientes;
+import com.siontrack.siontrack.models.Vehiculos;
+import com.siontrack.siontrack.repository.ClienteRepository;
+import com.siontrack.siontrack.repository.ProductosRepository;
+import com.siontrack.siontrack.repository.ServiciosRepository;
+import com.siontrack.siontrack.repository.VehiculosRepository;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.NumberToTextConverter;
 import org.slf4j.Logger;
@@ -15,10 +21,14 @@ import java.io.InputStreamReader;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Service
 public class ImportacionService {
@@ -29,15 +39,27 @@ public class ImportacionService {
     private final ProductosServicios productosServicios;
     private final ProveedoresService proveedoresService;
     private final ServiciosService serviciosService;
+    private final ClienteRepository clienteRepository;
+    private final VehiculosRepository vehiculosRepository;
+    private final ProductosRepository productosRepository;
+    private final ServiciosRepository serviciosRepository;
 
     public ImportacionService(ClienteServicios clienteServicios,
                         ProductosServicios productosServicios,
                         ProveedoresService proveedoresService,
-                        ServiciosService serviciosService) {
+                        ServiciosService serviciosService,
+                        ClienteRepository clienteRepository,
+                        VehiculosRepository vehiculosRepository,
+                        ProductosRepository productosRepository,
+                        ServiciosRepository serviciosRepository) {
         this.clienteServicios = clienteServicios;
         this.productosServicios = productosServicios;
         this.proveedoresService = proveedoresService;
         this.serviciosService = serviciosService;
+        this.clienteRepository = clienteRepository;
+        this.vehiculosRepository = vehiculosRepository;
+        this.productosRepository = productosRepository;
+        this.serviciosRepository = serviciosRepository;
     }
 
     // ==================== IMPORTAR CLIENTES ====================
@@ -55,6 +77,9 @@ public class ImportacionService {
             return resultado;
         }
 
+        // Rastrear cédulas/nombres ya procesados en este archivo para ignorar duplicados internos
+        Set<String> procesadosEnArchivo = new HashSet<>();
+
         for (int i = 0; i < filas.size(); i++) {
             Map<String, String> fila = filas.get(i);
             int numeroFila = i + 2;
@@ -65,6 +90,24 @@ public class ImportacionService {
                 dto.setNombre(get(fila, "nombre"));
                 dto.setCedula_ruc(get(fila, "cedula_ruc"));
                 dto.setTipo_cliente(get(fila, "tipo_cliente"));
+
+                if (dto.getNombre() == null || dto.getNombre().trim().isEmpty()) {
+                    resultado.agregarError(numeroFila, "Nombre es requerido");
+                    resultado.setRegistrosFallidos(resultado.getRegistrosFallidos() + 1);
+                    continue;
+                }
+
+                // Clave de identificación para detectar duplicados dentro del archivo
+                String claveArchivo = dto.getCedula_ruc() != null
+                        ? dto.getCedula_ruc().trim().toLowerCase()
+                        : dto.getNombre().trim().toLowerCase();
+
+                if (procesadosEnArchivo.contains(claveArchivo)) {
+                    resultado.agregarError(numeroFila, "Duplicado en el archivo: " + claveArchivo + " (omitido)");
+                    resultado.setRegistrosFallidos(resultado.getRegistrosFallidos() + 1);
+                    continue;
+                }
+                procesadosEnArchivo.add(claveArchivo);
 
                 String telefono = get(fila, "telefono");
                 if (telefono != null) {
@@ -91,17 +134,31 @@ public class ImportacionService {
                 if (placa != null) {
                     VehiculosRequestDTO vehiculoDto = new VehiculosRequestDTO();
                     vehiculoDto.setPlaca(placa);
-                    vehiculoDto.setKilometraje_actual(get(fila, "kilometraje"));
+                    String km = get(fila, "kilometraje_actual");
+                    if (km == null) km = get(fila, "kilometraje");
+                    if (km == null) km = "0";
+                    vehiculoDto.setKilometraje_actual(km);
                     dto.setVehiculos(List.of(vehiculoDto));
                 }
 
-                if (dto.getNombre() == null || dto.getNombre().trim().isEmpty()) {
-                    resultado.agregarError(numeroFila, "Nombre es requerido");
-                    resultado.setRegistrosFallidos(resultado.getRegistrosFallidos() + 1);
-                    continue;
+                // Buscar si el cliente ya existe en BD (por cédula primero, luego por nombre)
+                com.siontrack.siontrack.models.Clientes existente = null;
+                if (dto.getCedula_ruc() != null) {
+                    existente = clienteRepository.findByCedulaRuc(dto.getCedula_ruc()).orElse(null);
+                }
+                if (existente == null) {
+                    existente = clienteRepository.findByNombreIgnoreCase(dto.getNombre()).orElse(null);
                 }
 
-                clienteServicios.crearCliente(dto);
+                if (existente != null) {
+                    // Actualizar cliente existente
+                    clienteServicios.actualizarCliente(existente.getCliente_id(), dto);
+                    resultado.setRegistrosActualizados(resultado.getRegistrosActualizados() + 1);
+                } else {
+                    // Crear cliente nuevo
+                    clienteServicios.crearCliente(dto);
+                    resultado.setRegistrosCreados(resultado.getRegistrosCreados() + 1);
+                }
                 resultado.setRegistrosExitosos(resultado.getRegistrosExitosos() + 1);
 
             } catch (Exception e) {
@@ -143,7 +200,6 @@ public class ImportacionService {
                 dto.setPrecio_compra(getBigDecimal(fila, "precio_compra"));
                 dto.setPrecio_venta(getBigDecimal(fila, "precio_venta"));
                 dto.setEstado(get(fila, "estado"));
-                dto.setProveedor_id(getInteger(fila, "proveedor_id"));
                 dto.setCantidad_disponible(getInteger(fila, "cantidad_disponible"));
                 dto.setStock_minimo(getInteger(fila, "stock_minimo"));
                 dto.setUbicacion(get(fila, "ubicacion"));
@@ -154,14 +210,23 @@ public class ImportacionService {
                     continue;
                 }
 
-                if (dto.getProveedor_id() == null) {
-                    resultado.agregarError(numeroFila, "proveedor_id es requerido");
+                // Buscar proveedor por nombre en lugar de por ID
+                String nombreProveedor = get(fila, "proveedor");
+                if (nombreProveedor == null || nombreProveedor.trim().isEmpty()) {
+                    resultado.agregarError(numeroFila, "El nombre del proveedor es requerido");
                     resultado.setRegistrosFallidos(resultado.getRegistrosFallidos() + 1);
                     continue;
                 }
+                dto.setProveedor_id(proveedoresService.buscarIdPorNombre(nombreProveedor));
 
-                productosServicios.crearProducto(dto);
+                // Upsert: actualiza si existe, crea si no existe
+                boolean fueActualizado = productosServicios.upsertProducto(dto);
                 resultado.setRegistrosExitosos(resultado.getRegistrosExitosos() + 1);
+                if (fueActualizado) {
+                    resultado.setRegistrosActualizados(resultado.getRegistrosActualizados() + 1);
+                } else {
+                    resultado.setRegistrosCreados(resultado.getRegistrosCreados() + 1);
+                }
 
             } catch (Exception e) {
                 resultado.agregarError(numeroFila, e.getMessage());
@@ -239,19 +304,64 @@ public class ImportacionService {
             resultado.setRegistrosProcesados(resultado.getRegistrosProcesados() + 1);
 
             try {
+                // Buscar cliente por cédula primero, luego por nombre
+                Clientes cliente = null;
+                String cedulaRuc = get(fila, "cedula_ruc");
+                String nombreCliente = get(fila, "cliente");
+
+                if (cedulaRuc != null) {
+                    cliente = clienteRepository.findByCedulaRuc(cedulaRuc).orElse(null);
+                }
+                if (cliente == null && nombreCliente != null) {
+                    cliente = clienteRepository.findByNombreIgnoreCase(nombreCliente).orElse(null);
+                }
+                if (cliente == null) {
+                    resultado.agregarError(numeroFila, "No se encontró cliente con cédula '" + cedulaRuc + "' o nombre '" + nombreCliente + "'");
+                    resultado.setRegistrosFallidos(resultado.getRegistrosFallidos() + 1);
+                    continue;
+                }
+
+                // Vehículo es opcional (puede ser una venta sin vehículo)
+                final Clientes clienteFinal = cliente;
+                String placa = get(fila, "placa");
+                Integer vehiculoId = null;
+
+                if (placa != null && !placa.isBlank()) {
+                    Vehiculos vehiculo = vehiculosRepository.findByPlacaIgnoreCase(placa)
+                            .stream()
+                            .filter(v -> v.getClientes().getCliente_id() == clienteFinal.getCliente_id())
+                            .findFirst()
+                            .orElse(null);
+
+                    if (vehiculo == null) {
+                        // Crear el vehículo asociado al cliente
+                        Vehiculos nuevoVehiculo = new Vehiculos();
+                        nuevoVehiculo.setPlaca(placa);
+                        String km = get(fila, "kilometraje");
+                        nuevoVehiculo.setKilometraje_actual(km != null ? km : "0");
+                        nuevoVehiculo.setClientes(clienteFinal);
+                        vehiculo = vehiculosRepository.save(nuevoVehiculo);
+                    }
+
+                    vehiculoId = vehiculo.getVehiculo_id();
+                }
+
                 ServicioRequestDTO dto = new ServicioRequestDTO();
-                dto.setCliente_id(getInteger(fila, "cliente_id"));
-                dto.setVehiculo_id(getInteger(fila, "vehiculo_id"));
+                dto.setCliente_id(clienteFinal.getCliente_id());
+                dto.setVehiculo_id(vehiculoId);
                 dto.setFecha_servicio(getLocalDate(fila, "fecha_servicio"));
                 dto.setKilometraje_servicio(get(fila, "kilometraje_servicio"));
                 dto.setTipo_servicio(get(fila, "tipo_servicio"));
                 dto.setObservaciones(get(fila, "observaciones"));
 
-                Integer productoId = getInteger(fila, "producto_id");
+                String codigoProducto = get(fila, "codigo_producto");
                 BigDecimal cantidad = getBigDecimal(fila, "cantidad");
                 String tipoItem = get(fila, "tipo_item");
 
-                if (productoId != null && cantidad != null) {
+                if (codigoProducto != null && cantidad != null) {
+                    Integer productoId = productosRepository.findByCodigoProducto(codigoProducto)
+                            .map(p -> p.getProducto_id())
+                            .orElseThrow(() -> new RuntimeException("Producto no encontrado con código: " + codigoProducto));
                     DetalleServicioRequestDTO detalle = new DetalleServicioRequestDTO();
                     detalle.setProducto_id(productoId);
                     detalle.setCantidad(cantidad);
@@ -259,14 +369,12 @@ public class ImportacionService {
                     dto.setDetalles(List.of(detalle));
                 }
 
-                if (dto.getCliente_id() == null) {
-                    resultado.agregarError(numeroFila, "cliente_id es requerido");
-                    resultado.setRegistrosFallidos(resultado.getRegistrosFallidos() + 1);
-                    continue;
-                }
-
-                if (dto.getVehiculo_id() == null) {
-                    resultado.agregarError(numeroFila, "vehiculo_id es requerido");
+                // Verificar duplicado: mismo cliente, vehículo, fecha y tipo de servicio
+                LocalDate fechaServicio = dto.getFecha_servicio();
+                String tipoServicio = dto.getTipo_servicio();
+                if (fechaServicio != null && tipoServicio != null &&
+                        serviciosRepository.existsDuplicado(dto.getCliente_id(), dto.getVehiculo_id(), fechaServicio, tipoServicio)) {
+                    resultado.agregarError(numeroFila, "Servicio duplicado: ya existe un registro con el mismo cliente, vehículo, fecha y tipo");
                     resultado.setRegistrosFallidos(resultado.getRegistrosFallidos() + 1);
                     continue;
                 }
@@ -384,7 +492,10 @@ public class ImportacionService {
                     Cell cell = row.getCell(j);
                     String valor = null;
                     if (cell != null) {
-                        if (cell.getCellType() == CellType.NUMERIC && !DateUtil.isCellDateFormatted(cell)) {
+                        if (cell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(cell)) {
+                            // Extraer fecha directamente en formato ISO para evitar problemas de localización
+                            valor = DateUtil.getLocalDateTime(cell.getNumericCellValue()).toLocalDate().toString();
+                        } else if (cell.getCellType() == CellType.NUMERIC) {
                             valor = NumberToTextConverter.toText(cell.getNumericCellValue()).trim();
                         } else {
                             valor = formatter.formatCellValue(cell).trim();
@@ -494,13 +605,24 @@ public class ImportacionService {
         }
     }
 
+    private static final List<DateTimeFormatter> FORMATOS_FECHA = List.of(
+        DateTimeFormatter.ISO_LOCAL_DATE,                    // 2026-03-26
+        DateTimeFormatter.ofPattern("dd/MM/yyyy"),           // 26/03/2026
+        DateTimeFormatter.ofPattern("MM/dd/yyyy"),           // 03/26/2026
+        DateTimeFormatter.ofPattern("dd-MM-yyyy"),           // 26-03-2026
+        DateTimeFormatter.ofPattern("yyyy/MM/dd")            // 2026/03/26
+    );
+
     private LocalDate getLocalDate(Map<String, String> fila, String cabecera) {
         String val = get(fila, cabecera);
         if (val == null) return null;
-        try {
-            return LocalDate.parse(val);
-        } catch (Exception e) {
-            return null;
+        for (DateTimeFormatter fmt : FORMATOS_FECHA) {
+            try {
+                return LocalDate.parse(val, fmt);
+            } catch (DateTimeParseException e) {
+                // Intentar con el siguiente formato
+            }
         }
+        return null;
     }
 }

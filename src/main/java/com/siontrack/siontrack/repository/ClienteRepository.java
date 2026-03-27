@@ -16,6 +16,11 @@ public interface ClienteRepository extends JpaRepository<Clientes, Integer> {
     @Query("SELECT COUNT(c) > 0 FROM Clientes c WHERE c.cedula_ruc = :cedulaRuc")
     boolean existsByCedula_ruc(@Param("cedulaRuc") String cedulaRuc);
 
+    @Query("SELECT c FROM Clientes c WHERE c.cedula_ruc = :cedulaRuc")
+    Optional<Clientes> findByCedulaRuc(@Param("cedulaRuc") String cedulaRuc);
+
+    Optional<Clientes> findByNombreIgnoreCase(String nombre);
+
     Optional<Clientes> findByTelefonos_Telefono(String telefono);
 
     @Query("SELECT DISTINCT c FROM Clientes c JOIN c.telefonos t WHERE t.telefono = :telefono")

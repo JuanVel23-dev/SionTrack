@@ -63,7 +63,7 @@ public class Servicios {
     private LocalDateTime creado_en;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "vehiculo_id", nullable = false)
+    @JoinColumn(name = "vehiculo_id", nullable = true)
     @JsonIgnore
     @Getter
     @Setter

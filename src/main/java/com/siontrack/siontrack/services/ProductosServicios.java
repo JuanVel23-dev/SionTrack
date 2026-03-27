@@ -3,8 +3,10 @@ package com.siontrack.siontrack.services;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
-import com.siontrack.siontrack.DTO.Response.AlertaStockDTO;
+
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -13,10 +15,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.siontrack.siontrack.DTO.Request.ProductosRequestDTO;
+import com.siontrack.siontrack.DTO.Response.AlertaStockDTO;
 import com.siontrack.siontrack.DTO.Response.ProductoPopularDTO;
 import com.siontrack.siontrack.DTO.Response.ProductosResponseDTO;
-import java.util.HashMap;
-import java.util.Map;
 import com.siontrack.siontrack.models.Inventario;
 import com.siontrack.siontrack.models.Productos;
 import com.siontrack.siontrack.models.Proveedores;
@@ -101,10 +102,10 @@ public class ProductosServicios {
 
         producto.setProveedor(proveedor);
 
-        if (dto.getCantidad_disponible() != null) {
+        if (dto.getCantidad_disponible() != null || dto.getStock_minimo() != null || dto.getUbicacion() != null) {
             Inventario inventario = new Inventario();
-            inventario.setCantidad_disponible(dto.getCantidad_disponible());
-            inventario.setStock_minimo(dto.getStock_minimo());
+            inventario.setCantidad_disponible(dto.getCantidad_disponible() != null ? dto.getCantidad_disponible() : 0);
+            inventario.setStock_minimo(dto.getStock_minimo() != null ? dto.getStock_minimo() : 10);
             inventario.setUbicacion(dto.getUbicacion());
 
             inventario.setProducto(producto);
@@ -115,6 +116,57 @@ public class ProductosServicios {
         Productos savedProducto = productosRepository.save(producto);
 
         return modelMapper.map(savedProducto, ProductosResponseDTO.class);
+    }
+
+    /**
+     * Upsert: si el producto ya existe (por código o nombre) lo actualiza,
+     * si no existe lo crea. Devuelve true si fue actualización, false si fue creación.
+     */
+    @Transactional
+    public boolean upsertProducto(ProductosRequestDTO dto) {
+        // Buscar producto existente por código primero, luego por nombre
+        Optional<Productos> existente = Optional.empty();
+
+        if (dto.getCodigo_producto() != null && !dto.getCodigo_producto().isBlank()) {
+            existente = productosRepository.findByCodigoProducto(dto.getCodigo_producto());
+        }
+        if (existente.isEmpty() && dto.getNombre() != null && !dto.getNombre().isBlank()) {
+            existente = productosRepository.findByNombreIgnoreCase(dto.getNombre());
+        }
+
+        if (existente.isPresent()) {
+            // Actualizar campos del producto existente
+            Productos producto = existente.get();
+
+            if (dto.getPrecio_compra() != null) producto.setPrecio_compra(dto.getPrecio_compra());
+            if (dto.getPrecio_venta() != null) producto.setPrecio_venta(dto.getPrecio_venta());
+            if (dto.getEstado() != null) producto.setEstado(dto.getEstado());
+            if (dto.getMarca() != null) producto.setMarca(dto.getMarca());
+            if (dto.getUnidad_medida() != null) producto.setUnidad_medida(dto.getUnidad_medida());
+
+            // Actualizar inventario si se proporcionan datos de stock
+            if (dto.getCantidad_disponible() != null || dto.getStock_minimo() != null || dto.getUbicacion() != null) {
+                Inventario inventario = producto.getInventario();
+                if (inventario == null) {
+                    inventario = new Inventario();
+                    inventario.setProducto(producto);
+                    producto.setInventario(inventario);
+                }
+                if (dto.getCantidad_disponible() != null) {
+                    // Sumar al stock existente en lugar de reemplazarlo
+                    inventario.setCantidad_disponible(inventario.getCantidad_disponible() + dto.getCantidad_disponible());
+                }
+                if (dto.getStock_minimo() != null) inventario.setStock_minimo(dto.getStock_minimo());
+                if (dto.getUbicacion() != null) inventario.setUbicacion(dto.getUbicacion());
+            }
+
+            productosRepository.save(producto);
+            return true; // fue actualización
+        }
+
+        // No existe → crear nuevo
+        crearProducto(dto);
+        return false; // fue creación
     }
 
     @Transactional

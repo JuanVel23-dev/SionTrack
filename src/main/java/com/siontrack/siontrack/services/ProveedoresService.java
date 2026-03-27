@@ -73,6 +73,13 @@ public class ProveedoresService {
         return modelMapper.map(proveedorActualizado, ProveedoresResponseDTO.class);
     }
 
+    @Transactional(readOnly = true)
+    public Integer buscarIdPorNombre(String nombre) {
+        return proveedoresRepository.findByNombreIgnoreCase(nombre)
+                .map(Proveedores::getProveedor_id)
+                .orElseThrow(() -> new RuntimeException("Proveedor no encontrado con nombre: " + nombre));
+    }
+
     @Transactional
     public void borrarProveedor(Integer id) {
         if (!proveedoresRepository.existsById(id)) {

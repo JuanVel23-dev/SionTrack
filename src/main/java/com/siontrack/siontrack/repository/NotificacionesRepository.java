@@ -29,6 +29,15 @@ public interface NotificacionesRepository extends JpaRepository<Notificaciones, 
 
     boolean existsByServicio(Servicios servicio);
 
+    @Query("SELECT COUNT(n) > 0 FROM Notificaciones n " +
+           "WHERE n.clientes.cliente_id = :clienteId " +
+           "AND (:vehiculoId IS NULL OR n.vehiculo.vehiculo_id = :vehiculoId) " +
+           "AND n.tipoNotificacion = 'RECORDATORIO_SERVICIO' " +
+           "AND n.fechaProximoServicio = :fechaProximoServicio")
+    boolean existsRecordatorioDuplicado(@Param("clienteId") Integer clienteId,
+                                        @Param("vehiculoId") Integer vehiculoId,
+                                        @Param("fechaProximoServicio") Timestamp fechaProximoServicio);
+
     @Query("SELECT DISTINCT n FROM Notificaciones n " +
            "LEFT JOIN FETCH n.clientes c " +
            "LEFT JOIN FETCH c.telefonos " +

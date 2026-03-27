@@ -13,6 +13,8 @@ public class ImportacionResponseDTO {
     private String tipoImportacion;
     private int registrosProcesados;
     private int registrosExitosos;
+    private int registrosCreados;
+    private int registrosActualizados;
     private int registrosFallidos;
     private List<String> errores = new ArrayList<>();
 

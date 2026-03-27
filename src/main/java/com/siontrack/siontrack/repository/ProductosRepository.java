@@ -11,4 +11,6 @@ import com.siontrack.siontrack.models.Productos;
 public interface ProductosRepository extends JpaRepository<Productos, Integer> {
 
     Optional<Productos> findByCodigoProducto(String codigoProducto);
+
+    Optional<Productos> findByNombreIgnoreCase(String nombre);
 }
