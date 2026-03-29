@@ -171,8 +171,22 @@
                                     <span th:if="${item.estado != 'pendiente' and item.estado != 'enviado' and item.estado != 'fallido'}" class="badge badge-neutral" th:text="${item.estado}">-</span>
                                 </td>
                                 <td data-label="Programado" class="text-left">
-                                    <span th:if="${item.fecha_programada != null}" th:text="${#dates.format(item.fecha_programada, 'dd/MM/yyyy')}">01/01/2026</span>
-                                    <span th:if="${item.fecha_programada == null}" class="text-subtle">—</span>
+                                    <div class="notif-fecha-cell">
+                                        <span class="notif-fecha-texto"
+                                              th:if="${item.fecha_programada != null}"
+                                              th:text="${#dates.format(item.fecha_programada, 'dd/MM/yyyy')}">01/01/2026</span>
+                                        <span th:if="${item.fecha_programada == null}" class="text-subtle">—</span>
+                                        <button th:if="${item.estado == 'pendiente'}"
+                                                type="button"
+                                                class="btn-editar-fecha"
+                                                th:attr="data-id=${item.notificacion_id},data-fecha=${item.fecha_programada != null ? #dates.format(item.fecha_programada, 'yyyy-MM-dd') : ''}"
+                                                title="Cambiar fecha de envío">
+                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         </tbody>
@@ -192,6 +206,42 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal: cambiar fecha de envío de recordatorio -->
+    <div class="srv-modal-overlay" id="modalFechaOverlay" role="dialog" aria-modal="true" aria-labelledby="modalFechaTitulo">
+    <div class="srv-modal" style="max-width: 400px;">
+        <div class="srv-modal-header">
+            <div class="srv-modal-header-left">
+                <div class="srv-modal-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="srv-modal-title" id="modalFechaTitulo">Cambiar fecha de envío</h3>
+                    <p class="srv-modal-subtitle">Solo se modifica la fecha de este recordatorio</p>
+                </div>
+            </div>
+            <button type="button" class="btn-icon" id="btnCerrarModalFecha" aria-label="Cerrar">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+        <div style="padding: var(--space-6);">
+            <label class="form-label" for="inputNuevaFecha">Nueva fecha de envío</label>
+            <input type="date" id="inputNuevaFecha" class="form-control" style="width: 100%;">
+        </div>
+        <div style="padding: 0 var(--space-6) var(--space-6); display: flex; gap: var(--space-3); justify-content: flex-end;">
+            <button type="button" class="btn btn-secondary" id="btnCancelarFecha">Cancelar</button>
+            <button type="button" class="btn btn-primary" id="btnGuardarFecha">Guardar</button>
+        </div>
+    </div>
+</div>
 </th:block>
 
 <th:block layout:fragment="customJS">
@@ -203,6 +253,87 @@
             if (s && typeof showToast === 'function') showToast(s, 'success');
             if (e && typeof showToast === 'function') showToast(e, 'error');
         })();
+    </script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var overlay      = document.getElementById('modalFechaOverlay');
+        var inputFecha   = document.getElementById('inputNuevaFecha');
+        var btnGuardar   = document.getElementById('btnGuardarFecha');
+        var btnCancelar  = document.getElementById('btnCancelarFecha');
+        var btnCerrar    = document.getElementById('btnCerrarModalFecha');
+
+        if (!overlay || !inputFecha || !btnGuardar) return;
+
+        // Mover el modal directamente al body para evitar problemas
+        // con stacking contexts creados por transform/will-change en ancestros
+        document.body.appendChild(overlay);
+
+        var notifIdActual = null;
+        var celdaActual   = null;
+
+        // Abrir modal al hacer clic en cualquier botón de edición
+        document.addEventListener('click', function (e) {
+            var btn = e.target.closest('.btn-editar-fecha');
+            if (!btn) return;
+
+            notifIdActual = btn.getAttribute('data-id');
+            celdaActual   = btn.closest('td').querySelector('.notif-fecha-texto');
+            inputFecha.value = btn.getAttribute('data-fecha') || '';
+            overlay.classList.add('open');
+            setTimeout(function () { inputFecha.focus(); }, 50);
+        });
+
+        function cerrarModal() {
+            overlay.classList.remove('open');
+            notifIdActual = null;
+            celdaActual   = null;
+        }
+
+        btnCerrar.addEventListener('click', cerrarModal);
+        btnCancelar.addEventListener('click', cerrarModal);
+        overlay.addEventListener('click', function (e) {
+            if (e.target === overlay) cerrarModal();
+        });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') cerrarModal();
+        });
+
+        btnGuardar.addEventListener('click', function () {
+            var fecha = inputFecha.value;
+            if (!fecha || !notifIdActual) return;
+
+            btnGuardar.disabled = true;
+            btnGuardar.textContent = 'Guardando...';
+
+            fetch('/api/promociones/recordatorio/' + notifIdActual + '/fecha', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ fecha: fecha })
+            })
+            .then(function (res) {
+                if (!res.ok) return res.json().then(function (d) { throw new Error(d.mensaje || 'Error al guardar'); });
+                return res.json();
+            })
+            .then(function () {
+                if (celdaActual) {
+                    var partes = fecha.split('-');
+                    celdaActual.textContent = partes[2] + '/' + partes[1] + '/' + partes[0];
+                }
+                var btn = document.querySelector('.btn-editar-fecha[data-id="' + notifIdActual + '"]');
+                if (btn) btn.setAttribute('data-fecha', fecha);
+
+                cerrarModal();
+                if (typeof showToast === 'function') showToast('Fecha actualizada correctamente', 'success');
+            })
+            .catch(function (err) {
+                if (typeof showToast === 'function') showToast(err.message, 'error');
+            })
+            .finally(function () {
+                btnGuardar.disabled = false;
+                btnGuardar.textContent = 'Guardar';
+            });
+        });
+    });
     </script>
 </th:block>
 

@@ -298,6 +298,10 @@ public class ImportacionService {
             return resultado;
         }
 
+        // Mapa ordenado: clave del servicio → datos agrupados de todas sus filas
+        Map<String, GrupoServicio> grupos = new LinkedHashMap<>();
+
+        // Primera pasada: resolver entidades y agrupar filas por servicio
         for (int i = 0; i < filas.size(); i++) {
             Map<String, String> fila = filas.get(i);
             int numeroFila = i + 2;
@@ -346,14 +350,27 @@ public class ImportacionService {
                     vehiculoId = vehiculo.getVehiculo_id();
                 }
 
-                ServicioRequestDTO dto = new ServicioRequestDTO();
-                dto.setCliente_id(clienteFinal.getCliente_id());
-                dto.setVehiculo_id(vehiculoId);
-                dto.setFecha_servicio(getLocalDate(fila, "fecha_servicio"));
-                dto.setKilometraje_servicio(get(fila, "kilometraje_servicio"));
-                dto.setTipo_servicio(get(fila, "tipo_servicio"));
-                dto.setObservaciones(get(fila, "observaciones"));
+                LocalDate fechaServicio = getLocalDate(fila, "fecha_servicio");
+                String tipoServicio = get(fila, "tipo_servicio");
 
+                // Clave de agrupación: mismo cliente + vehículo + fecha + tipo = un único servicio
+                final Integer vehiculoIdFinal = vehiculoId;
+                String claveGrupo = cliente.getCliente_id() + "|" + vehiculoId + "|" + fechaServicio + "|" + tipoServicio;
+
+                // Obtener el grupo existente o crear uno nuevo con los datos de la primera fila
+                GrupoServicio grupo = grupos.computeIfAbsent(claveGrupo, k -> {
+                    GrupoServicio g = new GrupoServicio();
+                    g.clienteId = clienteFinal.getCliente_id();
+                    g.vehiculoId = vehiculoIdFinal;
+                    g.fechaServicio = fechaServicio;
+                    g.tipoServicio = tipoServicio;
+                    g.kilometrajeServicio = get(fila, "kilometraje_servicio");
+                    g.observaciones = get(fila, "observaciones");
+                    return g;
+                });
+                grupo.filas.add(numeroFila);
+
+                // Agregar detalle de producto si está presente en la fila
                 String codigoProducto = get(fila, "codigo_producto");
                 BigDecimal cantidad = getBigDecimal(fila, "cantidad");
                 String tipoItem = get(fila, "tipo_item");
@@ -366,21 +383,8 @@ public class ImportacionService {
                     detalle.setProducto_id(productoId);
                     detalle.setCantidad(cantidad);
                     detalle.setTipoItem(tipoItem != null ? tipoItem : "PRODUCTO");
-                    dto.setDetalles(List.of(detalle));
+                    grupo.detalles.add(detalle);
                 }
-
-                // Verificar duplicado: mismo cliente, vehículo, fecha y tipo de servicio
-                LocalDate fechaServicio = dto.getFecha_servicio();
-                String tipoServicio = dto.getTipo_servicio();
-                if (fechaServicio != null && tipoServicio != null &&
-                        serviciosRepository.existsDuplicado(dto.getCliente_id(), dto.getVehiculo_id(), fechaServicio, tipoServicio)) {
-                    resultado.agregarError(numeroFila, "Servicio duplicado: ya existe un registro con el mismo cliente, vehículo, fecha y tipo");
-                    resultado.setRegistrosFallidos(resultado.getRegistrosFallidos() + 1);
-                    continue;
-                }
-
-                serviciosService.crearServicio(dto);
-                resultado.setRegistrosExitosos(resultado.getRegistrosExitosos() + 1);
 
             } catch (Exception e) {
                 resultado.agregarError(numeroFila, e.getMessage());
@@ -388,7 +392,51 @@ public class ImportacionService {
             }
         }
 
+        // Segunda pasada: crear un servicio por cada grupo agrupado
+        for (GrupoServicio grupo : grupos.values()) {
+            try {
+                // Verificar si el servicio ya existe en base de datos
+                if (grupo.fechaServicio != null && grupo.tipoServicio != null &&
+                        serviciosRepository.existsDuplicado(grupo.clienteId, grupo.vehiculoId, grupo.fechaServicio, grupo.tipoServicio)) {
+                    resultado.agregarAdvertencia(grupo.filas.get(0),
+                            "Servicio ya registrado (filas " + grupo.filas + "): mismo cliente, vehículo, fecha y tipo — omitido");
+                    resultado.setRegistrosOmitidos(resultado.getRegistrosOmitidos() + 1);
+                    continue;
+                }
+
+                ServicioRequestDTO dto = new ServicioRequestDTO();
+                dto.setCliente_id(grupo.clienteId);
+                dto.setVehiculo_id(grupo.vehiculoId);
+                dto.setFecha_servicio(grupo.fechaServicio);
+                dto.setKilometraje_servicio(grupo.kilometrajeServicio);
+                dto.setTipo_servicio(grupo.tipoServicio);
+                dto.setObservaciones(grupo.observaciones);
+                dto.setDetalles(grupo.detalles.isEmpty() ? null : grupo.detalles);
+
+                serviciosService.crearServicio(dto);
+                resultado.setRegistrosExitosos(resultado.getRegistrosExitosos() + 1);
+                resultado.setRegistrosCreados(resultado.getRegistrosCreados() + 1);
+
+            } catch (Exception e) {
+                resultado.agregarError(grupo.filas.get(0),
+                        "Error en filas " + grupo.filas + ": " + e.getMessage());
+                resultado.setRegistrosFallidos(resultado.getRegistrosFallidos() + grupo.filas.size());
+            }
+        }
+
         return resultado;
+    }
+
+    // Clase auxiliar para agrupar las filas del Excel que pertenecen al mismo servicio
+    private static class GrupoServicio {
+        int clienteId;
+        Integer vehiculoId;
+        LocalDate fechaServicio;
+        String kilometrajeServicio;
+        String tipoServicio;
+        String observaciones;
+        List<DetalleServicioRequestDTO> detalles = new ArrayList<>();
+        List<Integer> filas = new ArrayList<>();
     }
 
     // ==================== ACTUALIZAR STOCK ====================

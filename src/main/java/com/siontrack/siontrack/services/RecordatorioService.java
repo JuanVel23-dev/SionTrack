@@ -2,6 +2,7 @@ package com.siontrack.siontrack.services;
 
 import java.sql.Timestamp;
 import java.time.LocalDate;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,6 +41,20 @@ public class RecordatorioService {
         if (notificacionesRepository.existsByServicio(servicio)) {
             log.info("Ya existen recordatorios para este servicio");
             return;
+        }
+
+        Integer clienteId = servicio.getClientes().getCliente_id();
+        Integer vehiculoId = servicio.getVehiculos() != null ? servicio.getVehiculos().getVehiculo_id() : null;
+
+        // Verificar si ya existen recordatorios pendientes para este cliente+vehículo
+        List<Notificaciones> pendientesExistentes = notificacionesRepository
+                .findRecordatoriosPendientesByClienteVehiculo(clienteId, vehiculoId);
+
+        if (!pendientesExistentes.isEmpty()) {
+            // Eliminar los recordatorios desactualizados y recrearlos con el nuevo servicio
+            log.info("🔄 Se encontraron {} recordatorio(s) pendiente(s) para cliente {} / vehículo {}. Reemplazando...",
+                    pendientesExistentes.size(), clienteId, vehiculoId);
+            notificacionesRepository.deleteAll(pendientesExistentes);
         }
 
         crearNotificaciones(servicio);

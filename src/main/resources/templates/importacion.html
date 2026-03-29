@@ -212,6 +212,32 @@
                     <span class="importacion-stat-label">Fallidos</span>
                 </div>
             </div>
+            <div class="importacion-stat-box importacion-stat-warning">
+                <div class="importacion-stat-icono">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                        <line x1="12" y1="9" x2="12" y2="13"></line>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
+                </div>
+                <div class="importacion-stat-contenido">
+                    <span class="importacion-stat-valor" id="statOmitidos">0</span>
+                    <span class="importacion-stat-label">Omitidos</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lista de advertencias -->
+        <div class="importacion-errores importacion-advertencias" id="advertenciasContainer" style="display: none;">
+            <h4 class="importacion-errores-titulo">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                    <line x1="12" y1="9" x2="12" y2="13"></line>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+                Registros omitidos
+            </h4>
+            <ul class="importacion-errores-lista" id="advertenciasLista"></ul>
         </div>
 
         <!-- Lista de errores -->
