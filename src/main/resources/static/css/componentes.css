@@ -1733,6 +1733,42 @@ input[type="number"] {
   border-bottom: none;
 }
 
+/* Ordenamiento de columnas */
+.th-sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: color var(--duration-fast) ease;
+}
+
+.th-sortable:hover {
+  color: var(--fg-muted);
+}
+
+.th-sortable.sort-active {
+  color: var(--accent-primary);
+}
+
+.sort-icon-wrap {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 3px;
+  vertical-align: middle;
+  opacity: 0.35;
+  transition: opacity var(--duration-fast) ease;
+}
+
+.th-sortable:hover .sort-icon-wrap {
+  opacity: 0.6;
+}
+
+.th-sortable.sort-active .sort-icon-wrap {
+  opacity: 1;
+}
+
+.sort-icon-active {
+  stroke: var(--accent-primary);
+}
+
 .table-striped tbody tr:nth-child(even) {
   background: var(--bg-overlay);
 }

@@ -57,14 +57,13 @@
         <table class="table" th:if="${productos != null and not productos.empty}">
             <thead>
                 <tr>
-                    <th class="text-left">Código</th>
-                    <th class="text-left">Nombre</th>
-                    <th class="text-left">Categoría</th>
-                    <th class="text-left">Marca</th>
-                    <th class="text-left">Proveedor</th>
-                    <th class="text-right">Precio Venta</th>
-                    <th class="text-center">Stock</th>
-                    <th class="text-center">Fecha Compra</th>
+                    <th class="text-left" data-sort="text">Código</th>
+                    <th class="text-left" data-sort="text">Nombre</th>
+                    <th class="text-left" data-sort="text">Categoría</th>
+                    <th class="text-left" data-sort="text">Proveedor</th>
+                    <th class="text-right" data-sort="currency">Precio Venta</th>
+                    <th class="text-center" data-sort="number">Stock</th>
+                    <th class="text-center" data-sort="date">Fecha Compra</th>
                     <th>Acciones</th>
                 </tr>
             </thead>
@@ -79,7 +78,6 @@
                         <span th:text="${prod.nombre}">Producto</span>
                     </td>
                     <td th:text="${prod.categoria}" data-label="Categoría" class="text-left">Categoría</td>
-                    <td th:text="${prod.marca}" data-label="Marca" class="text-left">Marca</td>
                     <td data-label="Proveedor" class="text-left"
                         th:text="${prod.proveedor != null ? prod.proveedor.nombre : '—'}">—</td>
                     <td data-label="Precio" class="text-right">

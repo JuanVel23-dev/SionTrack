@@ -56,11 +56,11 @@
                     <table class="table" th:if="${promociones != null and !promociones.isEmpty()}">
                         <thead>
                             <tr>
-                                <th class="text-left">Cliente</th>
-                                <th class="text-left">Vehículo</th>
-                                <th class="text-left">Promoción</th>
-                                <th>Estado</th>
-                                <th class="text-left">Fecha</th>
+                                <th class="text-left" data-sort="text">Cliente</th>
+                                <th class="text-left" data-sort="text">Vehículo</th>
+                                <th class="text-left" data-sort="text">Promoción</th>
+                                <th data-sort="text">Estado</th>
+                                <th class="text-left" data-sort="date">Fecha</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -132,12 +132,12 @@
                     <table class="table" th:if="${recordatorios != null and !recordatorios.isEmpty()}">
                         <thead>
                             <tr>
-                                <th class="text-left">Cliente</th>
-                                <th class="text-left">Vehículo</th>
-                                <th class="text-left">Servicio</th>
-                                <th>Km</th>
-                                <th>Estado</th>
-                                <th class="text-left">Programado</th>
+                                <th class="text-left" data-sort="text">Cliente</th>
+                                <th class="text-left" data-sort="text">Vehículo</th>
+                                <th class="text-left" data-sort="text">Servicio</th>
+                                <th data-sort="number">Km</th>
+                                <th data-sort="text">Estado</th>
+                                <th class="text-left" data-sort="date">Programado</th>
                             </tr>
                         </thead>
                         <tbody>

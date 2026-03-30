@@ -57,12 +57,12 @@
         <table class="table" th:if="${servicios != null and not servicios.empty}">
             <thead>
                 <tr>
-                    <th class="text-left">Fecha</th>
-                    <th class="text-left">Cliente</th>
-                    <th class="text-left">Vehículo</th>
-                    <th>Kilometraje</th>
-                    <th class="text-right">Total</th>
-                    <th>Tipo</th>
+                    <th class="text-left" data-sort="date">Fecha</th>
+                    <th class="text-left" data-sort="text">Cliente</th>
+                    <th class="text-left" data-sort="text">Vehículo</th>
+                    <th data-sort="number">Kilometraje</th>
+                    <th class="text-right" data-sort="currency">Total</th>
+                    <th data-sort="text">Tipo</th>
                     <th>Acciones</th>
                 </tr>
             </thead>
