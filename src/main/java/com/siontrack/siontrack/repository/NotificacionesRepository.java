@@ -53,4 +53,14 @@ public interface NotificacionesRepository extends JpaRepository<Notificaciones, 
            "WHERE n.tipoNotificacion = 'RECORDATORIO_SERVICIO' " +
            "ORDER BY n.creado_en DESC")
     List<Notificaciones> findRecordatoriosOrdenados();
+
+    // Busca recordatorios pendientes para un cliente+vehículo específico
+    @Query("SELECT n FROM Notificaciones n " +
+           "WHERE n.clientes.cliente_id = :clienteId " +
+           "AND (:vehiculoId IS NULL OR n.vehiculo.vehiculo_id = :vehiculoId) " +
+           "AND n.tipoNotificacion = 'RECORDATORIO_SERVICIO' " +
+           "AND n.estado = 'pendiente'")
+    List<Notificaciones> findRecordatoriosPendientesByClienteVehiculo(
+            @Param("clienteId") Integer clienteId,
+            @Param("vehiculoId") Integer vehiculoId);
 }

@@ -236,4 +236,19 @@ public class NotificacionesService {
                 .sorted((a, b) -> a.getNombre().compareToIgnoreCase(b.getNombre()))
                 .collect(Collectors.toList());
     }
+
+    // Actualiza únicamente la fecha de envío de un recordatorio pendiente
+    @Transactional
+    public void actualizarFechaProgramada(Integer id, java.time.LocalDate nuevaFecha) {
+        Notificaciones notificacion = notificacionesRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Recordatorio no encontrado"));
+
+        if (!"pendiente".equals(notificacion.getEstado())) {
+            throw new RuntimeException("Solo se puede modificar la fecha de recordatorios pendientes");
+        }
+
+        notificacion.setFecha_programada(Timestamp.valueOf(nuevaFecha.atTime(12, 0)));
+        notificacionesRepository.save(notificacion);
+        log.info("📅 Fecha de recordatorio {} actualizada a {}", id, nuevaFecha);
+    }
 }

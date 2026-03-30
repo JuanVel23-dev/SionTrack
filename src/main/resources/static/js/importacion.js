@@ -19,6 +19,9 @@
     var statProcesados = document.getElementById('statProcesados');
     var statExitosos = document.getElementById('statExitosos');
     var statFallidos = document.getElementById('statFallidos');
+    var statOmitidos = document.getElementById('statOmitidos');
+    var advertenciasContainer = document.getElementById('advertenciasContainer');
+    var advertenciasLista = document.getElementById('advertenciasLista');
     var erroresContainer = document.getElementById('erroresContainer');
     var erroresLista = document.getElementById('erroresLista');
     var btnNueva = document.getElementById('btnNueva');
@@ -242,6 +245,24 @@
         setTimeout(function () {
             animarContador(statFallidos, data.registrosFallidos || 0);
         }, 500);
+        setTimeout(function () {
+            animarContador(statOmitidos, data.registrosOmitidos || 0);
+        }, 650);
+
+        // Advertencias (registros omitidos) con animacion escalonada
+        advertenciasLista.innerHTML = '';
+        if (data.advertencias && data.advertencias.length > 0) {
+            advertenciasContainer.style.display = '';
+            data.advertencias.forEach(function (adv, index) {
+                var li = document.createElement('li');
+                li.className = 'importacion-error-item';
+                li.style.animationDelay = (index * 50) + 'ms';
+                li.textContent = SionUtils.esc(adv);
+                advertenciasLista.appendChild(li);
+            });
+        } else {
+            advertenciasContainer.style.display = 'none';
+        }
 
         // Errores con animacion escalonada
         erroresLista.innerHTML = '';
@@ -261,8 +282,14 @@
         // Toast de resumen
         if (data.registrosFallidos > 0) {
             showToast(
-                data.registrosExitosos + ' registros importados, ' + data.registrosFallidos + ' con errores',
+                data.registrosExitosos + ' importados, ' + data.registrosFallidos + ' con errores' +
+                (data.registrosOmitidos > 0 ? ', ' + data.registrosOmitidos + ' omitidos' : ''),
                 'error'
+            );
+        } else if (data.registrosOmitidos > 0) {
+            showToast(
+                data.registrosExitosos + ' importados, ' + data.registrosOmitidos + ' ya existían y fueron omitidos',
+                'warning'
             );
         } else {
             showToast(
@@ -300,6 +327,7 @@
         statProcesados.textContent = '0';
         statExitosos.textContent = '0';
         statFallidos.textContent = '0';
+        statOmitidos.textContent = '0';
 
         // Scroll arriba
         window.scrollTo({ top: 0, behavior: 'smooth' });
