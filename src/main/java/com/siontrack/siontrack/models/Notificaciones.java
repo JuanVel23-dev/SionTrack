@@ -106,7 +106,7 @@ public class Notificaciones {
     protected void asignarFecha() {
         creado_en = LocalDateTime.now();
         if (estado == null) {
-            estado = "PENDIENTE";
+            estado = "pendiente";
         }
     }
 }
