@@ -346,10 +346,12 @@
 .quick-action-btn[data-color="blue"] .quick-action-icon  { background: rgba(59,130,246,.08); color: var(--info); }
 .quick-action-btn[data-color="green"] .quick-action-icon { background: rgba(16,185,129,.08); color: var(--success); }
 .quick-action-btn[data-color="muted"] .quick-action-icon { background: var(--bg-muted); color: var(--fg-subtle); }
+.quick-action-btn[data-color="purple"] .quick-action-icon { background: rgba(139,92,246,.08); color: #8b5cf6; }
 
 .quick-action-btn[data-color="gold"]:hover  { background: var(--accent-subtle); border-color: var(--accent-muted); color: var(--accent-primary); }
 .quick-action-btn[data-color="blue"]:hover  { background: rgba(59,130,246,.04); border-color: rgba(59,130,246,.2); color: var(--info); }
 .quick-action-btn[data-color="green"]:hover { background: rgba(16,185,129,.04); border-color: rgba(16,185,129,.2); color: var(--success); }
+.quick-action-btn[data-color="purple"]:hover { background: rgba(139,92,246,.04); border-color: rgba(139,92,246,.2); color: #8b5cf6; }
 
 .quick-action-btn:hover .quick-action-icon { transform: scale(1.08); }
 

@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+
+<th:block layout:fragment="customCSS">
+    <style>
+        /* ============================================
+           REPORTES — Diseño elegante y tecnológico
+           ============================================ */
+
+        /* Grilla principal */
+        .rpt-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--space-4);
+            margin-top: var(--space-5);
+        }
+
+        /* Tarjeta de reporte */
+        .rpt-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-xl);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: border-color var(--duration-normal) ease,
+                        box-shadow var(--duration-normal) ease,
+                        transform var(--duration-fast) ease;
+        }
+        .rpt-card:hover {
+            transform: translateY(-3px);
+        }
+
+        /* Línea de acento superior por color */
+        .rpt-accent {
+            height: 3px;
+            width: 100%;
+        }
+        .rpt-card[data-accent="gold"] .rpt-accent { background: var(--accent-primary); }
+        .rpt-card[data-accent="blue"] .rpt-accent { background: var(--info); }
+        .rpt-card[data-accent="green"] .rpt-accent { background: var(--success); }
+        .rpt-card[data-accent="red"] .rpt-accent { background: var(--error); }
+        .rpt-card[data-accent="purple"] .rpt-accent { background: #8b5cf6; }
+        .rpt-card[data-accent="orange"] .rpt-accent { background: #f97316; }
+
+        /* Hover con glow por color */
+        .rpt-card[data-accent="gold"]:hover   { border-color: var(--accent-primary); box-shadow: 0 8px 24px hsla(45, 93%, 58%, 0.1); }
+        .rpt-card[data-accent="blue"]:hover    { border-color: var(--info); box-shadow: 0 8px 24px rgba(59, 130, 246, 0.1); }
+        .rpt-card[data-accent="green"]:hover   { border-color: var(--success); box-shadow: 0 8px 24px rgba(34, 197, 94, 0.1); }
+        .rpt-card[data-accent="red"]:hover     { border-color: var(--error); box-shadow: 0 8px 24px rgba(239, 68, 68, 0.1); }
+        .rpt-card[data-accent="purple"]:hover  { border-color: #8b5cf6; box-shadow: 0 8px 24px rgba(139, 92, 246, 0.1); }
+        .rpt-card[data-accent="orange"]:hover  { border-color: #f97316; box-shadow: 0 8px 24px rgba(249, 115, 22, 0.1); }
+
+        /* Contenido */
+        .rpt-body {
+            padding: var(--space-5) var(--space-5) var(--space-4);
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-3);
+            flex: 1;
+        }
+
+        /* Header: ícono + texto */
+        .rpt-header {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+        }
+
+        .rpt-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .rpt-icon svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* Colores de ícono */
+        .rpt-card[data-accent="gold"] .rpt-icon   { background: var(--accent-subtle); color: var(--accent-primary); }
+        .rpt-card[data-accent="blue"] .rpt-icon    { background: var(--info-subtle); color: var(--info); }
+        .rpt-card[data-accent="green"] .rpt-icon   { background: var(--success-subtle); color: var(--success); }
+        .rpt-card[data-accent="red"] .rpt-icon     { background: var(--error-subtle); color: var(--error); }
+        .rpt-card[data-accent="purple"] .rpt-icon  { background: rgba(139, 92, 246, 0.1); color: #8b5cf6; }
+        .rpt-card[data-accent="orange"] .rpt-icon  { background: rgba(249, 115, 22, 0.1); color: #f97316; }
+
+        .rpt-title {
+            font-size: var(--text-base);
+            font-weight: var(--weight-semibold);
+            color: var(--fg-default);
+            line-height: 1.2;
+        }
+
+        .rpt-desc {
+            font-size: var(--text-sm);
+            color: var(--fg-subtle);
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        /* Columnas de datos que incluye el reporte */
+        .rpt-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: auto;
+        }
+        .rpt-tag {
+            font-size: 10px;
+            font-weight: var(--weight-medium);
+            color: var(--fg-subtle);
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-muted);
+            padding: 2px 8px;
+            border-radius: var(--radius-full);
+            letter-spacing: 0.2px;
+        }
+
+        /* Pie con botón */
+        .rpt-footer {
+            padding: 0 var(--space-5) var(--space-5);
+        }
+
+        .btn-descargar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-2);
+            width: 100%;
+            padding: var(--space-2) var(--space-4);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-default);
+            background: var(--bg-elevated);
+            color: var(--fg-muted);
+            font-size: var(--text-sm);
+            font-weight: var(--weight-medium);
+            font-family: var(--font-sans);
+            cursor: pointer;
+            transition: all var(--duration-fast) ease;
+        }
+        .btn-descargar svg {
+            width: 15px;
+            height: 15px;
+            flex-shrink: 0;
+            opacity: 0.7;
+            transition: opacity var(--duration-fast) ease;
+        }
+        .btn-descargar:hover {
+            color: var(--fg-default);
+            border-color: var(--fg-subtle);
+            background: var(--bg-overlay);
+        }
+        .btn-descargar:hover svg {
+            opacity: 1;
+        }
+
+        /* Hover del botón hereda color de acento */
+        .rpt-card[data-accent="gold"] .btn-descargar:hover   { border-color: var(--accent-primary); color: var(--accent-primary); }
+        .rpt-card[data-accent="blue"] .btn-descargar:hover    { border-color: var(--info); color: var(--info); }
+        .rpt-card[data-accent="green"] .btn-descargar:hover   { border-color: var(--success); color: var(--success); }
+        .rpt-card[data-accent="red"] .btn-descargar:hover     { border-color: var(--error); color: var(--error); }
+        .rpt-card[data-accent="purple"] .btn-descargar:hover  { border-color: #8b5cf6; color: #8b5cf6; }
+        .rpt-card[data-accent="orange"] .btn-descargar:hover  { border-color: #f97316; color: #f97316; }
+
+        /* Estado de descarga */
+        .btn-descargar.descargando {
+            pointer-events: none;
+            opacity: 0.6;
+        }
+        .btn-descargar.descargando svg {
+            animation: spin 1s linear infinite;
+            opacity: 1;
+        }
+
+        /* ============================================
+           SECCIÓN ESPECIAL — Productos Populares
+           ============================================ */
+        .rpt-populares {
+            grid-column: 1 / -1;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-xl);
+            overflow: hidden;
+            transition: border-color var(--duration-normal) ease,
+                        box-shadow var(--duration-normal) ease;
+        }
+        .rpt-populares:hover {
+            border-color: #f97316;
+            box-shadow: 0 8px 24px rgba(249, 115, 22, 0.08);
+        }
+
+        .rpt-populares-accent {
+            height: 3px;
+            background: linear-gradient(90deg, #f97316, var(--accent-primary));
+        }
+
+        .rpt-populares-body {
+            padding: var(--space-5) var(--space-6);
+            display: flex;
+            align-items: center;
+            gap: var(--space-6);
+        }
+
+        .rpt-populares-info {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: var(--space-4);
+        }
+
+        .rpt-populares-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-lg);
+            background: rgba(249, 115, 22, 0.1);
+            color: #f97316;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .rpt-populares-icon svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .rpt-populares-text {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .rpt-populares-title {
+            font-size: var(--text-base);
+            font-weight: var(--weight-semibold);
+            color: var(--fg-default);
+        }
+        .rpt-populares-desc {
+            font-size: var(--text-sm);
+            color: var(--fg-subtle);
+            margin: 0;
+        }
+
+        /* Selector de período */
+        .rpt-periodo {
+            display: flex;
+            gap: 3px;
+            background: var(--bg-elevated);
+            border-radius: var(--radius-md);
+            padding: 3px;
+            border: 1px solid var(--border-muted);
+        }
+        .rpt-periodo-btn {
+            padding: var(--space-1) var(--space-3);
+            border-radius: var(--radius-sm);
+            border: none;
+            background: transparent;
+            color: var(--fg-subtle);
+            font-size: var(--text-xs);
+            font-weight: var(--weight-medium);
+            font-family: var(--font-sans);
+            cursor: pointer;
+            transition: all var(--duration-fast) ease;
+            white-space: nowrap;
+        }
+        .rpt-periodo-btn:hover {
+            color: var(--fg-default);
+            background: var(--bg-overlay);
+        }
+        .rpt-periodo-btn.active {
+            background: #f97316;
+            color: #fff;
+            box-shadow: 0 1px 3px rgba(249, 115, 22, 0.3);
+        }
+
+        .rpt-populares-actions {
+            flex-shrink: 0;
+        }
+        .rpt-populares-actions .btn-descargar {
+            width: auto;
+            padding: var(--space-2) var(--space-5);
+        }
+        .rpt-populares-actions .btn-descargar:hover {
+            border-color: #f97316;
+            color: #f97316;
+        }
+
+        /* ============================================
+           RESPONSIVE
+           ============================================ */
+        @media (max-width: 1024px) {
+            .rpt-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .rpt-grid {
+                grid-template-columns: 1fr;
+            }
+            .rpt-populares-body {
+                flex-direction: column;
+                align-items: stretch;
+                gap: var(--space-4);
+            }
+            .rpt-populares-info {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .rpt-periodo {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</th:block>
+
+<th:block layout:fragment="content">
+    <!-- Encabezado -->
+    <div class="page-header animate-in">
+        <div class="page-header-content">
+            <h1 class="page-header-title">Reportes</h1>
+            <p class="page-header-description">Genera y descarga reportes de tu negocio en PDF</p>
+        </div>
+    </div>
+
+    <!-- Grilla de reportes -->
+    <div class="rpt-grid">
+
+        <!-- Clientes -->
+        <div class="rpt-card animate-in delay-1" data-accent="gold">
+            <div class="rpt-accent"></div>
+            <div class="rpt-body">
+                <div class="rpt-header">
+                    <div class="rpt-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="rpt-title">Clientes</div>
+                    </div>
+                </div>
+                <p class="rpt-desc">Listado completo de clientes registrados con información de contacto.</p>
+                <div class="rpt-tags">
+                    <span class="rpt-tag">Nombre</span>
+                    <span class="rpt-tag">Cédula</span>
+                    <span class="rpt-tag">Tipo</span>
+                    <span class="rpt-tag">Teléfono</span>
+                    <span class="rpt-tag">Email</span>
+                </div>
+            </div>
+            <div class="rpt-footer">
+                <button class="btn-descargar" data-reporte="clientes">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    Descargar PDF
+                </button>
+            </div>
+        </div>
+
+        <!-- Productos -->
+        <div class="rpt-card animate-in delay-1" data-accent="blue">
+            <div class="rpt-accent"></div>
+            <div class="rpt-body">
+                <div class="rpt-header">
+                    <div class="rpt-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="16.5" y1="9.4" x2="7.5" y2="4.21"></line>
+                            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                            <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                            <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="rpt-title">Productos</div>
+                    </div>
+                </div>
+                <p class="rpt-desc">Inventario completo con precios, categorías y niveles de stock.</p>
+                <div class="rpt-tags">
+                    <span class="rpt-tag">Código</span>
+                    <span class="rpt-tag">Nombre</span>
+                    <span class="rpt-tag">Categoría</span>
+                    <span class="rpt-tag">Precio</span>
+                    <span class="rpt-tag">Stock</span>
+                </div>
+            </div>
+            <div class="rpt-footer">
+                <button class="btn-descargar" data-reporte="productos">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    Descargar PDF
+                </button>
+            </div>
+        </div>
+
+        <!-- Proveedores -->
+        <div class="rpt-card animate-in delay-1" data-accent="green">
+            <div class="rpt-accent"></div>
+            <div class="rpt-body">
+                <div class="rpt-header">
+                    <div class="rpt-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="1" y="3" width="15" height="13"></rect>
+                            <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+                            <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                            <circle cx="18.5" cy="18.5" r="2.5"></circle>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="rpt-title">Proveedores</div>
+                    </div>
+                </div>
+                <p class="rpt-desc">Directorio de proveedores con datos de contacto y referencia.</p>
+                <div class="rpt-tags">
+                    <span class="rpt-tag">Nombre</span>
+                    <span class="rpt-tag">Teléfono</span>
+                    <span class="rpt-tag">Email</span>
+                    <span class="rpt-tag">Contacto</span>
+                </div>
+            </div>
+            <div class="rpt-footer">
+                <button class="btn-descargar" data-reporte="proveedores">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    Descargar PDF
+                </button>
+            </div>
+        </div>
+
+        <!-- Servicios -->
+        <div class="rpt-card animate-in delay-2" data-accent="red">
+            <div class="rpt-accent"></div>
+            <div class="rpt-body">
+                <div class="rpt-header">
+                    <div class="rpt-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="rpt-title">Servicios</div>
+                    </div>
+                </div>
+                <p class="rpt-desc">Historial de servicios con datos de cliente, vehículo y totales.</p>
+                <div class="rpt-tags">
+                    <span class="rpt-tag">Fecha</span>
+                    <span class="rpt-tag">Cliente</span>
+                    <span class="rpt-tag">Vehículo</span>
+                    <span class="rpt-tag">Km</span>
+                    <span class="rpt-tag">Total</span>
+                </div>
+            </div>
+            <div class="rpt-footer">
+                <button class="btn-descargar" data-reporte="servicios">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    Descargar PDF
+                </button>
+            </div>
+        </div>
+
+        <!-- Notificaciones -->
+        <div class="rpt-card animate-in delay-2" data-accent="purple">
+            <div class="rpt-accent"></div>
+            <div class="rpt-body">
+                <div class="rpt-header">
+                    <div class="rpt-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 2L11 13"></path>
+                            <path d="M22 2L15 22L11 13L2 9L22 2Z"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="rpt-title">Notificaciones</div>
+                    </div>
+                </div>
+                <p class="rpt-desc">Promociones enviadas y recordatorios programados con estados.</p>
+                <div class="rpt-tags">
+                    <span class="rpt-tag">Cliente</span>
+                    <span class="rpt-tag">Estado</span>
+                    <span class="rpt-tag">Resultado</span>
+                    <span class="rpt-tag">Fecha</span>
+                </div>
+            </div>
+            <div class="rpt-footer">
+                <button class="btn-descargar" data-reporte="notificaciones">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    Descargar PDF
+                </button>
+            </div>
+        </div>
+
+        <!-- Productos Populares — Tarjeta especial full-width -->
+        <div class="rpt-populares animate-in delay-2">
+            <div class="rpt-populares-accent"></div>
+            <div class="rpt-populares-body">
+                <div class="rpt-populares-info">
+                    <div class="rpt-populares-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                        </svg>
+                    </div>
+                    <div class="rpt-populares-text">
+                        <span class="rpt-populares-title">Productos Populares</span>
+                        <p class="rpt-populares-desc">Ranking de los productos más vendidos con categoría y unidades totales</p>
+                    </div>
+                </div>
+                <div class="rpt-periodo" id="periodoSelector">
+                    <button class="rpt-periodo-btn active" data-periodo="general">Todos</button>
+                    <button class="rpt-periodo-btn" data-periodo="semana">Semana</button>
+                    <button class="rpt-periodo-btn" data-periodo="mes">Mes</button>
+                    <button class="rpt-periodo-btn" data-periodo="trimestre">Trimestre</button>
+                    <button class="rpt-periodo-btn" data-periodo="anio">Año</button>
+                </div>
+                <div class="rpt-populares-actions">
+                    <button class="btn-descargar" data-reporte="productos-populares">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        Descargar PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</th:block>
+
+<th:block layout:fragment="customJS">
+    <script th:src="@{/js/reportes.js}"></script>
+</th:block>
+
+</html>
