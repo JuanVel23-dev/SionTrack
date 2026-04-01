@@ -31,32 +31,119 @@
         var previewContainer = document.getElementById('promo-preview-content');
         var hoy = new Date();
 
-        // ===== CUSTOM SELECT =====
+        // ===== CUSTOM SELECT CON BÚSQUEDA =====
         var selectWrap = document.getElementById('producto-select');
         if (selectWrap) {
             var selectBtn = selectWrap.querySelector('.promo-select-btn');
             var selectTexto = selectWrap.querySelector('.promo-select-texto');
+            var searchInput = document.getElementById('promo-search-input');
+            var emptyMsg = document.getElementById('promo-select-empty');
             var opciones = selectWrap.querySelectorAll('.promo-select-option:not(.disabled)');
+            var highlightIndex = -1;
 
+            // Abre/cierra el dropdown
             selectBtn.addEventListener('click', function(e) {
                 e.preventDefault(); e.stopPropagation();
+                var abriendo = !selectWrap.classList.contains('open');
                 selectWrap.classList.toggle('open');
+                if (abriendo && searchInput) {
+                    // Limpiar búsqueda anterior y enfocar
+                    searchInput.value = '';
+                    filtrarProductos('');
+                    highlightIndex = -1;
+                    setTimeout(function() { searchInput.focus(); }, 60);
+                }
             });
+
+            // Seleccionar una opción
             opciones.forEach(function(op) {
                 op.addEventListener('click', function() {
-                    opciones.forEach(function(o) { o.classList.remove('selected'); });
-                    this.classList.add('selected');
-                    selectTexto.textContent = this.textContent.trim();
-                    selectTexto.classList.remove('placeholder');
-                    productoHidden.value = this.dataset.value;
-                    state.productoId = parseInt(this.dataset.value);
-                    state.productoNombre = this.textContent.trim();
-                    selectWrap.classList.remove('open');
-                    actualizarPreview();
-                    // Carga la lista de clientes del producto seleccionado
-                    cargarClientesPreview(state.productoId);
+                    seleccionarProducto(this);
                 });
             });
+
+            function seleccionarProducto(opcion) {
+                opciones.forEach(function(o) { o.classList.remove('selected'); });
+                opcion.classList.add('selected');
+                selectTexto.textContent = opcion.textContent.trim();
+                selectTexto.classList.remove('placeholder');
+                productoHidden.value = opcion.dataset.value;
+                state.productoId = parseInt(opcion.dataset.value);
+                state.productoNombre = opcion.textContent.trim();
+                selectWrap.classList.remove('open');
+                actualizarPreview();
+                cargarClientesPreview(state.productoId);
+            }
+
+            // Filtrado de productos en tiempo real
+            function filtrarProductos(termino) {
+                var term = termino.toLowerCase().trim();
+                var hayVisibles = false;
+
+                opciones.forEach(function(op) {
+                    var texto = op.textContent.toLowerCase();
+                    var visible = !term || texto.indexOf(term) !== -1;
+                    op.style.display = visible ? '' : 'none';
+                    op.classList.remove('highlighted');
+                    if (visible) hayVisibles = true;
+                });
+
+                // Ocultar/mostrar la opción disabled de placeholder al buscar
+                var placeholderOp = selectWrap.querySelector('.promo-select-option.disabled');
+                if (placeholderOp) placeholderOp.style.display = term ? 'none' : '';
+
+                // Estado vacío
+                if (emptyMsg) emptyMsg.style.display = (!term || hayVisibles) ? 'none' : 'flex';
+
+                highlightIndex = -1;
+            }
+
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    filtrarProductos(this.value);
+                });
+
+                // Navegación con teclado
+                searchInput.addEventListener('keydown', function(e) {
+                    var visibles = [];
+                    opciones.forEach(function(op) {
+                        if (op.style.display !== 'none') visibles.push(op);
+                    });
+
+                    if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        highlightIndex = Math.min(highlightIndex + 1, visibles.length - 1);
+                        actualizarHighlight(visibles);
+                    } else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        highlightIndex = Math.max(highlightIndex - 1, 0);
+                        actualizarHighlight(visibles);
+                    } else if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (highlightIndex >= 0 && visibles[highlightIndex]) {
+                            seleccionarProducto(visibles[highlightIndex]);
+                        }
+                    } else if (e.key === 'Escape') {
+                        selectWrap.classList.remove('open');
+                    }
+                });
+
+                // Evitar que el click en el input cierre el dropdown
+                searchInput.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                });
+            }
+
+            function actualizarHighlight(visibles) {
+                opciones.forEach(function(op) { op.classList.remove('highlighted'); });
+                if (highlightIndex >= 0 && visibles[highlightIndex]) {
+                    visibles[highlightIndex].classList.add('highlighted');
+                    // Scroll al elemento visible
+                    visibles[highlightIndex].scrollIntoView({ block: 'nearest' });
+                }
+            }
+
+            // Cerrar al hacer click fuera
             document.addEventListener('click', function(e) {
                 if (!selectWrap.contains(e.target)) selectWrap.classList.remove('open');
             });
@@ -372,19 +459,36 @@
             }
         });
 
-        // Botones de selección rápida
+        // Botones de selección rápida con animación en cascada
         var btnTodos = document.getElementById('btn-seleccionar-todos');
         var btnNinguno = document.getElementById('btn-deseleccionar-todos');
+
+        function animarCheckboxes(checks, marcar) {
+            checks.forEach(function(c, i) {
+                setTimeout(function() {
+                    c.checked = marcar;
+                    // Efecto de escala breve al marcar
+                    c.style.transform = 'scale(1.25)';
+                    setTimeout(function() { c.style.transform = ''; }, 150);
+                }, i * 20);
+            });
+            // Actualizar contador al final de la animación
+            setTimeout(function() {
+                actualizarContador();
+                sincronizarCheckMaestro();
+            }, checks.length * 20 + 50);
+        }
+
         if (btnTodos) {
             btnTodos.addEventListener('click', function() {
-                document.querySelectorAll('#clientes-tbody .cliente-check:not(:disabled)').forEach(function(c) { c.checked = true; });
-                actualizarContador(); sincronizarCheckMaestro();
+                var checks = document.querySelectorAll('#clientes-tbody .cliente-check:not(:disabled)');
+                animarCheckboxes(checks, true);
             });
         }
         if (btnNinguno) {
             btnNinguno.addEventListener('click', function() {
-                document.querySelectorAll('#clientes-tbody .cliente-check:not(:disabled)').forEach(function(c) { c.checked = false; });
-                actualizarContador(); sincronizarCheckMaestro();
+                var checks = document.querySelectorAll('#clientes-tbody .cliente-check:not(:disabled)');
+                animarCheckboxes(checks, false);
             });
         }
 

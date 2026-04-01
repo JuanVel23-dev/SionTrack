@@ -37,10 +37,27 @@
                             <svg class="promo-select-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
                         </button>
                         <div class="promo-select-dropdown">
-                            <div class="promo-select-option disabled">Seleccione un producto</div>
-                            <div th:each="producto : ${productosDisponibles}" class="promo-select-option"
-                                 th:data-value="${producto.producto_id}"
-                                 th:text="${producto.nombre}">Producto</div>
+                            <div class="promo-select-search">
+                                <svg class="promo-select-search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                </svg>
+                                <input type="text" class="promo-select-search-input" id="promo-search-input" placeholder="Buscar producto..." autocomplete="off">
+                            </div>
+                            <div class="promo-select-options">
+                                <div class="promo-select-option disabled">Seleccione un producto</div>
+                                <div th:each="producto : ${productosDisponibles}" class="promo-select-option"
+                                     th:data-value="${producto.producto_id}"
+                                     th:text="${producto.nombre}">Producto</div>
+                            </div>
+                            <div class="promo-select-empty" id="promo-select-empty" style="display:none;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                    <line x1="8" y1="11" x2="14" y2="11"></line>
+                                </svg>
+                                <span>Sin resultados</span>
+                            </div>
                         </div>
                     </div>
                     <input type="hidden" id="productoId" th:field="*{productoId}" />
@@ -62,8 +79,19 @@
                                 <span id="contador-texto">0 mensajes a enviar</span>
                             </span>
                             <div class="clientes-preview-acciones">
-                                <button type="button" class="clientes-accion-btn" id="btn-seleccionar-todos">Seleccionar todos</button>
-                                <button type="button" class="clientes-accion-btn" id="btn-deseleccionar-todos">Ninguno</button>
+                                <button type="button" class="clientes-accion-btn clientes-accion-todos" id="btn-seleccionar-todos">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="9 11 12 14 22 4"></polyline>
+                                        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                                    </svg>
+                                    Todos
+                                </button>
+                                <button type="button" class="clientes-accion-btn clientes-accion-ninguno" id="btn-deseleccionar-todos">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                    </svg>
+                                    Ninguno
+                                </button>
                             </div>
                         </div>
                     </div>
