@@ -210,7 +210,8 @@
     <!-- Modal: cambiar fecha de envío de recordatorio -->
     <div class="srv-modal-overlay" id="modalFechaOverlay" role="dialog" aria-modal="true" aria-labelledby="modalFechaTitulo">
         <div class="srv-modal mfecha-modal">
-            <div class="srv-modal-header">
+            <!-- Header con icono y título alineados a la izquierda -->
+            <div class="srv-modal-header mfecha-header">
                 <div class="srv-modal-header-left">
                     <div class="srv-modal-icon">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -220,10 +221,7 @@
                             <line x1="3" y1="10" x2="21" y2="10"></line>
                         </svg>
                     </div>
-                    <div>
-                        <h3 class="srv-modal-title" id="modalFechaTitulo">Cambiar fecha de envío</h3>
-                        <p class="srv-modal-subtitle">Solo se modifica la fecha de este recordatorio</p>
-                    </div>
+                    <h3 class="srv-modal-title" id="modalFechaTitulo">Cambiar fecha de envío</h3>
                 </div>
                 <button type="button" class="srv-modal-close" id="btnCerrarModalFecha" aria-label="Cerrar">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -238,7 +236,15 @@
                 <!-- Panel izquierdo: campo de fecha -->
                 <div class="mfecha-panel-izq">
                     <div class="mfecha-campo">
-                        <label class="form-label" for="inputNuevaFecha">Nueva fecha de envío</label>
+                        <label class="form-label" for="inputNuevaFecha">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                <line x1="16" y1="2" x2="16" y2="6"></line>
+                                <line x1="8" y1="2" x2="8" y2="6"></line>
+                                <line x1="3" y1="10" x2="21" y2="10"></line>
+                            </svg>
+                            Nueva fecha de envío
+                        </label>
                         <div class="mfecha-input-wrap">
                             <input type="text"
                                    id="inputNuevaFecha"
@@ -255,6 +261,7 @@
                                 </svg>
                             </button>
                         </div>
+                        <span class="mfecha-hint">Formato: día/mes/año o usa el calendario</span>
                     </div>
                 </div>
 
@@ -284,7 +291,8 @@
                 </div>
             </div>
 
-            <div class="srv-modal-footer">
+            <!-- Footer con botones centrados -->
+            <div class="srv-modal-footer mfecha-footer">
                 <div class="srv-modal-footer-info">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
                     Cambio seguro y reversible
@@ -293,9 +301,7 @@
                     <button type="button" class="btn btn-secondary" id="btnCancelarFecha">Cancelar</button>
                     <button type="button" class="btn btn-primary" id="btnGuardarFecha">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1-2 2h11l4 4v9a2 2 0 0 1-2 2z"></path>
-                            <polyline points="17 21 17 13 7 13 7 21"></polyline>
-                            <polyline points="7 3 7 8 15 8"></polyline>
+                            <polyline points="20 6 9 17 4 12"></polyline>
                         </svg>
                         Guardar
                     </button>
