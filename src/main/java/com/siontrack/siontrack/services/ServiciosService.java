@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import com.siontrack.siontrack.DTO.Request.DetalleServicioRequestDTO;
 import com.siontrack.siontrack.DTO.Request.ServicioRequestDTO;
 import com.siontrack.siontrack.DTO.Response.ClienteResponseDTO;
+import com.siontrack.siontrack.DTO.Response.DetalleServicioResponseDTO;
 import com.siontrack.siontrack.DTO.Response.ServicioResponseDTO;
 import com.siontrack.siontrack.DTO.Response.VehiculosResponseDTO;
 import com.siontrack.siontrack.models.Clientes;
@@ -59,6 +60,26 @@ public class ServiciosService {
         // Mapeo manual: entity.getClientes() → dto.setCliente()
         if (servicio.getClientes() != null) {
             dto.setCliente(modelMapper.map(servicio.getClientes(), ClienteResponseDTO.class));
+        }
+
+        // Mapeo manual de detalles: ModelMapper no resuelve nombre_producto
+        // porque viene de la relación detalle → producto → nombre
+        if (servicio.getDetalles() != null) {
+            List<DetalleServicioResponseDTO> detallesDTO = servicio.getDetalles().stream()
+                    .map(detalle -> {
+                        DetalleServicioResponseDTO d = new DetalleServicioResponseDTO();
+                        d.setDetalle_id(detalle.getDetalle_id());
+                        d.setCantidad(detalle.getCantidad());
+                        d.setPrecio_unitario_congelado(detalle.getPrecio_unitario_congelado());
+                        d.setTipoItem(detalle.getTipo() != null ? detalle.getTipo().name() : "PRODUCTO");
+                        // Nombre del producto desde la relación
+                        if (detalle.getProducto() != null) {
+                            d.setNombre_producto(detalle.getProducto().getNombre());
+                        }
+                        return d;
+                    })
+                    .collect(Collectors.toList());
+            dto.setDetalles(detallesDTO);
         }
 
         return dto;
@@ -125,9 +146,11 @@ public class ServiciosService {
                 detalle.setTipo(Detalle_Servicio.tipoItem.valueOf(detalleDto.getTipoItem()));
 
                 // Lógica de Stock (Descontar inventario)
+                // Se usa ceiling para cantidades decimales: 1.5 unidades descuenta 2 del stock entero
                 if (producto.getInventario() != null) {
-                    int nuevaCantidad = producto.getInventario().getCantidad_disponible()
-                            - detalleDto.getCantidad().intValue();
+                    int cantidadADescontar = detalleDto.getCantidad()
+                            .setScale(0, java.math.RoundingMode.CEILING).intValue();
+                    int nuevaCantidad = producto.getInventario().getCantidad_disponible() - cantidadADescontar;
                     if (nuevaCantidad < 0)
                         throw new RuntimeException("Stock insuficiente para: " + producto.getNombre());
                     producto.getInventario().setCantidad_disponible(nuevaCantidad);

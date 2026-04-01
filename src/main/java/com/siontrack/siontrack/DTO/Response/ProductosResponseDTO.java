@@ -43,10 +43,6 @@ public class ProductosResponseDTO {
 
     @Getter
     @Setter
-    private String estado;
-
-    @Getter
-    @Setter
     private LocalDate fecha_compra;
 
     @Getter

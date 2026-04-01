@@ -140,9 +140,9 @@ public class ProductosServicios {
 
             if (dto.getPrecio_compra() != null) producto.setPrecio_compra(dto.getPrecio_compra());
             if (dto.getPrecio_venta() != null) producto.setPrecio_venta(dto.getPrecio_venta());
-            if (dto.getEstado() != null) producto.setEstado(dto.getEstado());
             if (dto.getMarca() != null) producto.setMarca(dto.getMarca());
             if (dto.getUnidad_medida() != null) producto.setUnidad_medida(dto.getUnidad_medida());
+            if (dto.getFecha_compra() != null) producto.setFecha_compra(dto.getFecha_compra());
 
             // Actualizar inventario si se proporcionan datos de stock
             if (dto.getCantidad_disponible() != null || dto.getStock_minimo() != null || dto.getUbicacion() != null) {
@@ -153,8 +153,7 @@ public class ProductosServicios {
                     producto.setInventario(inventario);
                 }
                 if (dto.getCantidad_disponible() != null) {
-                    // Sumar al stock existente en lugar de reemplazarlo
-                    inventario.setCantidad_disponible(inventario.getCantidad_disponible() + dto.getCantidad_disponible());
+                    inventario.setCantidad_disponible(dto.getCantidad_disponible());
                 }
                 if (dto.getStock_minimo() != null) inventario.setStock_minimo(dto.getStock_minimo());
                 if (dto.getUbicacion() != null) inventario.setUbicacion(dto.getUbicacion());

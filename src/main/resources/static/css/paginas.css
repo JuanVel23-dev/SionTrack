@@ -1214,6 +1214,25 @@
     padding: 8px 0;
 }
 
+/* Estado de carga del modal de detalle */
+.srv-detail-loading {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-6);
+    color: var(--fg-subtle);
+    font-size: var(--text-sm);
+}
+.srv-detail-spinner {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    border: 2px solid var(--border-muted);
+    border-top-color: var(--accent-primary);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+}
+
 
 /* ████████████████████████████████████████████
    CLIENTES — Modal de detalle
@@ -2603,6 +2622,170 @@
 .promo-preview-body .promo-highlight { color: var(--accent-primary); font-weight: var(--weight-semibold); }
 .promo-preview-empty { text-align: center; padding: var(--space-6) 0; color: var(--fg-subtle); font-size: var(--text-sm); }
 .promo-preview-empty svg { width: 32px; height: 32px; margin: 0 auto var(--space-2); display: block; opacity: 0.4; }
+
+/* ████████████████████████████████████████████
+   PROMOCIONES — Selección de clientes
+   ████████████████████████████████████████████ */
+
+/* Contenedor principal — animación de aparición */
+.clientes-preview-section {
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 0.3s var(--ease-out), transform 0.3s var(--ease-out);
+    margin-top: var(--space-5);
+}
+.clientes-preview-section.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Cabecera con título y contador */
+.clientes-preview-header {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: var(--space-3);
+    margin-bottom: var(--space-4);
+}
+
+.clientes-preview-titulo {
+    display: flex; align-items: center; gap: var(--space-2);
+    font-size: var(--text-sm); font-weight: var(--weight-semibold);
+    color: var(--fg-muted); text-transform: uppercase; letter-spacing: 0.05em;
+}
+.clientes-preview-titulo svg { color: var(--accent-primary); flex-shrink: 0; }
+
+.clientes-preview-contador-wrap {
+    display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap;
+}
+
+/* Badge del contador — cambia de color según estado */
+.clientes-contador-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 12px; border-radius: var(--radius-full);
+    font-size: var(--text-xs); font-weight: var(--weight-semibold);
+    transition: all 0.25s ease;
+}
+.clientes-contador-badge.badge-cero {
+    background: var(--bg-muted); color: var(--fg-subtle);
+    border: 1px solid var(--border-muted);
+}
+.clientes-contador-badge.badge-normal {
+    background: rgba(37,211,102,0.1); color: #25d366;
+    border: 1px solid rgba(37,211,102,0.25);
+}
+.clientes-contador-badge svg { flex-shrink: 0; }
+
+/* Botones de selección rápida */
+.clientes-preview-acciones {
+    display: flex; align-items: center; gap: var(--space-2);
+}
+.clientes-accion-btn {
+    font-size: var(--text-xs); font-weight: var(--weight-medium);
+    color: var(--fg-subtle); background: transparent;
+    border: 1px solid var(--border-muted); border-radius: var(--radius-md);
+    padding: 4px 10px; cursor: pointer; font-family: inherit;
+    transition: all 0.15s ease;
+}
+.clientes-accion-btn:hover {
+    color: var(--accent-primary); border-color: var(--accent-muted);
+    background: var(--accent-subtle);
+}
+
+/* Estado de carga */
+.clientes-loading {
+    display: flex; align-items: center; gap: var(--space-3);
+    padding: var(--space-5); color: var(--fg-subtle); font-size: var(--text-sm);
+    border: 1px solid var(--border-muted); border-radius: var(--radius-xl);
+    background: var(--bg-elevated);
+}
+.clientes-loading-spinner {
+    width: 18px; height: 18px; flex-shrink: 0;
+    border: 2px solid var(--border-muted);
+    border-top-color: var(--accent-primary);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Tabla de clientes */
+.clientes-tabla-wrap {
+    border: 1px solid var(--border-default); border-radius: var(--radius-xl);
+    overflow: hidden; overflow-x: auto;
+}
+.clientes-tabla {
+    width: 100%; border-collapse: collapse; font-size: var(--text-sm);
+}
+.clientes-tabla thead tr {
+    background: var(--bg-elevated);
+    border-bottom: 1px solid var(--border-default);
+}
+.clientes-tabla th {
+    padding: 10px 14px; text-align: left;
+    font-size: var(--text-xs); font-weight: var(--weight-semibold);
+    color: var(--fg-subtle); text-transform: uppercase; letter-spacing: 0.05em;
+    white-space: nowrap;
+}
+.clientes-tabla .col-check { width: 44px; text-align: center; }
+
+.clientes-tabla tbody tr {
+    border-bottom: 1px solid var(--border-muted);
+    transition: background 0.12s ease;
+}
+.clientes-tabla tbody tr:last-child { border-bottom: none; }
+.clientes-tabla tbody tr:hover { background: var(--bg-muted); }
+.clientes-tabla tbody tr.fila-reciente { opacity: 0.75; }
+.clientes-tabla tbody tr.fila-reciente:hover { opacity: 1; }
+
+.clientes-tabla td {
+    padding: 11px 14px; color: var(--fg-default); vertical-align: middle;
+}
+.clientes-tabla td.col-check { text-align: center; }
+.clientes-tabla td.col-nombre { font-weight: var(--weight-medium); }
+.clientes-tabla td.col-telefono { color: var(--fg-muted); font-size: var(--text-xs); font-variant-numeric: tabular-nums; }
+.clientes-tabla td.col-estado { white-space: nowrap; }
+
+/* Checkbox personalizado */
+.cliente-check, .cliente-check-maestro {
+    width: 16px; height: 16px; cursor: pointer; accent-color: var(--accent-primary);
+}
+.cliente-check:disabled { cursor: not-allowed; opacity: 0.35; }
+
+/* Badges de estado del cliente */
+.cliente-badge {
+    display: inline-flex; align-items: center;
+    padding: 3px 9px; border-radius: var(--radius-full);
+    font-size: 11px; font-weight: var(--weight-semibold); white-space: nowrap;
+}
+.badge-reciente {
+    background: rgba(251,191,36,0.12); color: #f59e0b;
+    border: 1px solid rgba(251,191,36,0.25);
+}
+.badge-sin-consentimiento {
+    background: rgba(239,68,68,0.1); color: #ef4444;
+    border: 1px solid rgba(239,68,68,0.2);
+}
+.badge-sin-telefono {
+    background: var(--bg-muted); color: var(--fg-subtle);
+    border: 1px solid var(--border-muted);
+}
+.badge-ok {
+    background: var(--bg-muted); color: var(--fg-subtle);
+    border: 1px solid var(--border-muted);
+}
+.badge-nuevo {
+    background: rgba(37,211,102,0.1); color: #25d366;
+    border: 1px solid rgba(37,211,102,0.2);
+}
+
+/* Estado vacío */
+.clientes-vacio {
+    display: flex; flex-direction: column; align-items: center;
+    padding: var(--space-8) var(--space-5); gap: var(--space-3);
+    color: var(--fg-subtle); font-size: var(--text-sm); text-align: center;
+    border: 1px solid var(--border-muted); border-radius: var(--radius-xl);
+    background: var(--bg-elevated);
+}
+.clientes-vacio svg { opacity: 0.35; }
+.clientes-vacio p { margin: 0; }
 
 
 /* ████████████████████████████████████████████

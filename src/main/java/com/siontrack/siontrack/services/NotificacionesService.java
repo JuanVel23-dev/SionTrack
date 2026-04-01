@@ -1,6 +1,7 @@
 package com.siontrack.siontrack.services;
 
 import com.siontrack.siontrack.DTO.Request.PromocionesRequestDTO;
+import com.siontrack.siontrack.DTO.Response.ClientePreviewDTO;
 import com.siontrack.siontrack.models.Clientes;
 import com.siontrack.siontrack.models.Detalle_Servicio;
 import com.siontrack.siontrack.models.Notificaciones;
@@ -19,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -117,6 +119,59 @@ public class NotificacionesService {
     // PROMOCIONES
     // =============================================
 
+    /**
+     * Retorna la lista de clientes elegibles para una promoción de un producto dado,
+     * incluyendo el estado de contacto reciente para mostrar advertencias en el frontend.
+     */
+    @Transactional(readOnly = true)
+    public List<ClientePreviewDTO> obtenerPreviewClientes(Integer productoId) {
+        List<Detalle_Servicio> detalles = detalleServicioRepository.findByProductoId(productoId);
+
+        Set<Integer> vistos = new HashSet<>();
+        List<Clientes> clientesUnicos = new ArrayList<>();
+        for (Detalle_Servicio detalle : detalles) {
+            if (detalle.getServicio() == null) continue;
+            Clientes c = detalle.getServicio().getClientes();
+            if (c == null) continue;
+            if (vistos.add(c.getCliente_id())) clientesUnicos.add(c);
+        }
+
+        // Obtiene la fecha de la última promoción enviada exitosamente por cliente
+        List<Integer> ids = clientesUnicos.stream()
+                .map(Clientes::getCliente_id).collect(Collectors.toList());
+
+        Map<Integer, Timestamp> ultimaPromocion = new HashMap<>();
+        if (!ids.isEmpty()) {
+            notificacionesRepository.findUltimaPromocionEnviadaPorClientes(ids)
+                    .forEach(row -> ultimaPromocion.put((Integer) row[0], (Timestamp) row[1]));
+        }
+
+        Timestamp ahora = Timestamp.valueOf(LocalDateTime.now());
+
+        return clientesUnicos.stream().map(c -> {
+            String telefono = (c.getTelefonos() != null && !c.getTelefonos().isEmpty())
+                    ? c.getTelefonos().get(0).getTelefono() : null;
+
+            Timestamp ultima = ultimaPromocion.get(c.getCliente_id());
+            Integer dias = null;
+            boolean reciente = false;
+            if (ultima != null) {
+                dias = (int) ChronoUnit.DAYS.between(ultima.toLocalDateTime(), ahora.toLocalDateTime());
+                reciente = dias <= 30;
+            }
+
+            return new ClientePreviewDTO(
+                    c.getCliente_id(),
+                    c.getNombre(),
+                    telefono,
+                    Boolean.TRUE.equals(c.getRecibeNotificaciones()),
+                    telefono != null,
+                    reciente,
+                    dias
+            );
+        }).collect(Collectors.toList());
+    }
+
     @Transactional
     public Map<String, Object> enviarPromocion(PromocionesRequestDTO dto) {
         Optional<Productos> productoOpt = productosRepository.findById(dto.getProductoId());
@@ -149,6 +204,16 @@ public class NotificacionesService {
             if (clientesVistos.add(cliente.getCliente_id())) {
                 clientesUnicos.add(cliente);
             }
+        }
+
+        // Filtra por selección manual si el usuario eligió clientes específicos
+        List<Integer> seleccionados = dto.getClientesSeleccionados();
+        if (seleccionados != null && !seleccionados.isEmpty()) {
+            Set<Integer> idsSeleccionados = new HashSet<>(seleccionados);
+            clientesUnicos = clientesUnicos.stream()
+                    .filter(c -> idsSeleccionados.contains(c.getCliente_id()))
+                    .collect(Collectors.toList());
+            log.info("🎯 Clientes filtrados por selección manual: {}", clientesUnicos.size());
         }
 
         log.info("👥 Clientes únicos encontrados: {}", clientesUnicos.size());

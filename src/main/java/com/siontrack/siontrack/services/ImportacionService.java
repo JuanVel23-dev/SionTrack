@@ -3,6 +3,7 @@ package com.siontrack.siontrack.services;
 import com.siontrack.siontrack.DTO.Request.*;
 import com.siontrack.siontrack.DTO.Response.ImportacionResponseDTO;
 import com.siontrack.siontrack.models.Clientes;
+import com.siontrack.siontrack.models.Productos;
 import com.siontrack.siontrack.models.Vehiculos;
 import com.siontrack.siontrack.repository.ClienteRepository;
 import com.siontrack.siontrack.repository.ProductosRepository;
@@ -199,7 +200,7 @@ public class ImportacionService {
                 dto.setUnidad_medida(get(fila, "unidad_medida"));
                 dto.setPrecio_compra(getBigDecimal(fila, "precio_compra"));
                 dto.setPrecio_venta(getBigDecimal(fila, "precio_venta"));
-                dto.setEstado(get(fila, "estado"));
+                dto.setFecha_compra(getLocalDate(fila, "fecha_compra"));
                 dto.setCantidad_disponible(getInteger(fila, "cantidad_disponible"));
                 dto.setStock_minimo(getInteger(fila, "stock_minimo"));
                 dto.setUbicacion(get(fila, "ubicacion"));
@@ -351,7 +352,7 @@ public class ImportacionService {
                 }
 
                 LocalDate fechaServicio = getLocalDate(fila, "fecha_servicio");
-                String tipoServicio = get(fila, "tipo_servicio");
+                String tipoServicio = normalizarTipoServicio(get(fila, "tipo_servicio"));
 
                 // Clave de agrupación: mismo cliente + vehículo + fecha + tipo = un único servicio
                 final Integer vehiculoIdFinal = vehiculoId;
@@ -370,20 +371,59 @@ public class ImportacionService {
                 });
                 grupo.filas.add(numeroFila);
 
-                // Agregar detalle de producto si está presente en la fila
+                // Agregar detalle de producto si está presente en la fila.
+                // La resolución del producto tiene su propio try-catch para que un fallo
+                // aquí no descarte el grupo completo del servicio.
                 String codigoProducto = get(fila, "codigo_producto");
+                // Fallback: algunos Excel usan "nombre_producto" o "producto" en lugar de código
+                String nombreProducto = get(fila, "nombre_producto");
+                if (nombreProducto == null) nombreProducto = get(fila, "producto");
+
+                // Cantidad: acepta decimales (ej: 0.5, 1.5 litros)
                 BigDecimal cantidad = getBigDecimal(fila, "cantidad");
+
+                // Precio unitario desde el Excel — se prueban varios nombres de columna posibles
+                BigDecimal precioUnitario = getBigDecimal(fila, "precio_unitario");
+                if (precioUnitario == null) precioUnitario = getBigDecimal(fila, "precio");
+                if (precioUnitario == null) precioUnitario = getBigDecimal(fila, "precio_unitario_congelado");
+                if (precioUnitario == null) precioUnitario = getBigDecimal(fila, "precio_venta");
+
                 String tipoItem = get(fila, "tipo_item");
 
-                if (codigoProducto != null && cantidad != null) {
-                    Integer productoId = productosRepository.findByCodigoProducto(codigoProducto)
-                            .map(p -> p.getProducto_id())
-                            .orElseThrow(() -> new RuntimeException("Producto no encontrado con código: " + codigoProducto));
-                    DetalleServicioRequestDTO detalle = new DetalleServicioRequestDTO();
-                    detalle.setProducto_id(productoId);
-                    detalle.setCantidad(cantidad);
-                    detalle.setTipoItem(tipoItem != null ? tipoItem : "PRODUCTO");
-                    grupo.detalles.add(detalle);
+                boolean tieneIdentificador = codigoProducto != null || nombreProducto != null;
+
+                if (tieneIdentificador && cantidad != null) {
+                    final String codigoFinal = codigoProducto;
+                    final String nombreFinal = nombreProducto;
+                    final BigDecimal precioFinal = precioUnitario;
+                    try {
+                        // Busca primero por código, luego por nombre como alternativa
+                        Productos producto = null;
+                        if (codigoFinal != null) {
+                            producto = productosRepository.findByCodigoProducto(codigoFinal).orElse(null);
+                        }
+                        if (producto == null && nombreFinal != null) {
+                            producto = productosRepository.findByNombreIgnoreCase(nombreFinal).orElse(null);
+                        }
+                        if (producto == null) {
+                            throw new RuntimeException("Producto no encontrado — código: '"
+                                    + codigoFinal + "', nombre: '" + nombreFinal + "'");
+                        }
+
+                        DetalleServicioRequestDTO detalle = new DetalleServicioRequestDTO();
+                        detalle.setProducto_id(producto.getProducto_id());
+                        detalle.setCantidad(cantidad);
+                        // Si el Excel trae precio, se usa ese; si no, crearServicio usará el de BD
+                        detalle.setPrecio_unitario_congelado(precioFinal);
+                        detalle.setTipoItem(tipoItem != null ? tipoItem : "PRODUCTO");
+                        grupo.detalles.add(detalle);
+
+                    } catch (Exception e) {
+                        // El producto no se pudo resolver: se advierte en el reporte
+                        // pero no se interrumpe el procesamiento del resto del grupo
+                        resultado.agregarAdvertencia(numeroFila,
+                                "Producto no agregado al servicio: " + e.getMessage());
+                    }
                 }
 
             } catch (Exception e) {
@@ -660,6 +700,17 @@ public class ImportacionService {
         DateTimeFormatter.ofPattern("dd-MM-yyyy"),           // 26-03-2026
         DateTimeFormatter.ofPattern("yyyy/MM/dd")            // 2026/03/26
     );
+
+    /**
+     * Normaliza el tipo de servicio leído del Excel al valor exacto esperado.
+     * Acepta variantes como "Producto", "producto", "Mano de Obra", "mano_de_obra", etc.
+     */
+    private String normalizarTipoServicio(String valor) {
+        if (valor == null) return "PRODUCTO";
+        String v = valor.trim().toUpperCase().replace(" ", "_").replace("-", "_");
+        if (v.contains("MANO") || v.equals("MANO_DE_OBRA")) return "MANO_DE_OBRA";
+        return "PRODUCTO";
+    }
 
     private LocalDate getLocalDate(Map<String, String> fila, String cabecera) {
         String val = get(fila, cabecera);

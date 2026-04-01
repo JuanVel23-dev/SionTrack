@@ -32,6 +32,12 @@ public class ServiciosController {
         return ResponseEntity.ok(serviciosService.obtenerTodos());
     }
 
+    // GET: Obtener un servicio por ID con sus detalles completos
+    @GetMapping("/{id}")
+    public ResponseEntity<ServicioResponseDTO> obtenerServicio(@PathVariable Integer id) {
+        return ResponseEntity.ok(serviciosService.obtenerServicioPorId(id));
+    }
+
     // POST: Crear un nuevo servicio
     @PostMapping("/crear")
     public ResponseEntity<ServicioResponseDTO> crearServicio(@RequestBody ServicioRequestDTO dto) {

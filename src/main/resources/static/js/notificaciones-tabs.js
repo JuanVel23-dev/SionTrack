@@ -54,7 +54,7 @@
             }, 200));
         });
 
-        /* ── Mensajes flash (success/error) ── */
+        /* ── Mensajes flash del servidor (success/error) ── */
         var flash = document.getElementById('flashMessages');
         if (flash) {
             var sMsg = flash.getAttribute('data-success');
@@ -62,6 +62,18 @@
             if (sMsg && typeof showToast === 'function') showToast(sMsg, 'success');
             if (eMsg && typeof showToast === 'function') showToast(eMsg, 'error');
         }
+
+        /* ── Toast desde envío AJAX de promoción (sessionStorage) ── */
+        try {
+            var toastData = sessionStorage.getItem('promoToast');
+            if (toastData) {
+                sessionStorage.removeItem('promoToast');
+                var parsed = JSON.parse(toastData);
+                if (parsed && parsed.msg && typeof showToast === 'function') {
+                    showToast(parsed.msg, parsed.tipo || 'success');
+                }
+            }
+        } catch(e) {}
 
         /* ── Modal: cambiar fecha de envío de recordatorio ── */
         var overlay     = document.getElementById('modalFechaOverlay');
