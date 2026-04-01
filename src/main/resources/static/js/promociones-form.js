@@ -1,6 +1,7 @@
 /**
  * SionTrack - Promociones Form
- * Custom select, custom calendar, precio formateado, preview, validación
+ * Custom select, custom calendar, precio formateado, preview de mensaje,
+ * selección de clientes con carga AJAX y contador en tiempo real.
  */
 (function() {
     'use strict';
@@ -9,8 +10,16 @@
                  'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
     var DIAS_SEMANA = ['Do','Lu','Ma','Mi','Ju','Vi','Sa'];
 
-    var state = { productoNombre: '', fechaInicio: null, fechaFin: null,
-        calInicioMes: null, calInicioAnio: null, calFinMes: null, calFinAnio: null };
+    var state = {
+        productoNombre: '',
+        productoId: null,
+        fechaInicio: null,
+        fechaFin: null,
+        calInicioMes: null, calInicioAnio: null,
+        calFinMes: null, calFinAnio: null,
+        // Lista de clientes cargados desde la API
+        clientes: []
+    };
 
     document.addEventListener('DOMContentLoaded', function() {
         var form = document.getElementById('promocionForm');
@@ -40,9 +49,12 @@
                     selectTexto.textContent = this.textContent.trim();
                     selectTexto.classList.remove('placeholder');
                     productoHidden.value = this.dataset.value;
+                    state.productoId = parseInt(this.dataset.value);
                     state.productoNombre = this.textContent.trim();
                     selectWrap.classList.remove('open');
                     actualizarPreview();
+                    // Carga la lista de clientes del producto seleccionado
+                    cargarClientesPreview(state.productoId);
                 });
             });
             document.addEventListener('click', function(e) {
@@ -197,7 +209,7 @@
                 : fi.day+' de '+MESES[fi.month]+' al '+ff.day+' de '+MESES[ff.month];
         }
 
-        // ===== PREVIEW =====
+        // ===== PREVIEW DEL MENSAJE =====
         function actualizarPreview() {
             if (!previewContainer) return;
             var producto = state.productoNombre||'', promo = promocionInput?promocionInput.value.trim():'',
@@ -213,31 +225,271 @@
         if (promocionInput) promocionInput.addEventListener('input', actualizarPreview);
         actualizarPreview();
 
-        // ===== SUBMIT =====
+        // ===== CARGA DE CLIENTES VÍA AJAX =====
+        function cargarClientesPreview(productoId) {
+            var seccion     = document.getElementById('clientes-preview-section');
+            var loading     = document.getElementById('clientes-loading');
+            var tablaWrap   = document.getElementById('clientes-tabla-wrap');
+            var vacio       = document.getElementById('clientes-vacio');
+            var divider     = document.getElementById('divider-clientes');
+
+            // Muestra la sección y el spinner
+            seccion.style.display = 'block';
+            loading.style.display = 'flex';
+            tablaWrap.style.display = 'none';
+            vacio.style.display = 'none';
+            divider.style.display = 'block';
+
+            // Anima la aparición de la sección
+            requestAnimationFrame(function() { seccion.classList.add('visible'); });
+
+            fetch('/api/promociones/preview?productoId=' + productoId)
+                .then(function(res) {
+                    if (!res.ok) throw new Error('Error al cargar clientes');
+                    return res.json();
+                })
+                .then(function(clientes) {
+                    state.clientes = clientes;
+                    loading.style.display = 'none';
+                    if (!clientes || clientes.length === 0) {
+                        vacio.style.display = 'flex';
+                    } else {
+                        renderizarTablaClientes(clientes);
+                        tablaWrap.style.display = 'block';
+                    }
+                    actualizarContador();
+                })
+                .catch(function() {
+                    loading.style.display = 'none';
+                    vacio.style.display = 'flex';
+                    if (typeof showToast === 'function') showToast('No se pudo cargar la lista de clientes', 'error');
+                });
+        }
+
+        // Construye las filas de la tabla de clientes
+        function renderizarTablaClientes(clientes) {
+            var tbody = document.getElementById('clientes-tbody');
+            var html = '';
+
+            clientes.forEach(function(c) {
+                var elegible = c.tieneConsentimiento && c.tieneTelefono;
+                var checked = elegible && !c.contactadoRecientemente;
+                var rowClass = c.contactadoRecientemente ? 'fila-reciente' : '';
+
+                // Badge de estado
+                var badge = '';
+                if (!c.tieneConsentimiento) {
+                    badge = '<span class="cliente-badge badge-sin-consentimiento">Sin consentimiento</span>';
+                } else if (!c.tieneTelefono) {
+                    badge = '<span class="cliente-badge badge-sin-telefono">Sin teléfono</span>';
+                } else if (c.contactadoRecientemente) {
+                    var texto = c.diasDesdeUltimaPromocion === 0
+                        ? 'Contactado hoy'
+                        : 'Contactado hace ' + c.diasDesdeUltimaPromocion + (c.diasDesdeUltimaPromocion === 1 ? ' día' : ' días');
+                    badge = '<span class="cliente-badge badge-reciente">' + esc(texto) + '</span>';
+                } else if (c.diasDesdeUltimaPromocion !== null && c.diasDesdeUltimaPromocion !== undefined) {
+                    badge = '<span class="cliente-badge badge-ok">Último contacto: ' + c.diasDesdeUltimaPromocion + 'd</span>';
+                } else {
+                    badge = '<span class="cliente-badge badge-nuevo">Nuevo</span>';
+                }
+
+                html += '<tr class="' + rowClass + '">';
+                html += '<td class="col-check">';
+                if (elegible) {
+                    html += '<input type="checkbox" class="cliente-check" data-id="' + c.clienteId + '"' + (checked ? ' checked' : '') + '>';
+                } else {
+                    html += '<input type="checkbox" class="cliente-check" data-id="' + c.clienteId + '" disabled>';
+                }
+                html += '</td>';
+                html += '<td class="col-nombre">' + esc(c.nombre) + '</td>';
+                html += '<td class="col-telefono">' + esc(c.telefono || '—') + '</td>';
+                html += '<td class="col-estado">' + badge + '</td>';
+                html += '</tr>';
+            });
+
+            tbody.innerHTML = html;
+
+            // Eventos de los checkboxes individuales
+            tbody.querySelectorAll('.cliente-check').forEach(function(chk) {
+                chk.addEventListener('change', function() {
+                    actualizarContador();
+                    sincronizarCheckMaestro();
+                });
+            });
+
+            sincronizarCheckMaestro();
+        }
+
+        // ===== CONTADOR EN TIEMPO REAL =====
+        function actualizarContador() {
+            var checks = document.querySelectorAll('#clientes-tbody .cliente-check:checked');
+            var total = checks.length;
+
+            var textoContador = document.getElementById('contador-texto');
+            var badge = document.getElementById('contador-badge');
+            var btnTexto = document.getElementById('btn-enviar-texto');
+
+            if (textoContador) {
+                textoContador.textContent = total === 0
+                    ? 'Sin destinatarios seleccionados'
+                    : total === 1
+                    ? '1 mensaje a enviar'
+                    : total + ' mensajes a enviar';
+            }
+
+            // Cambia el color del badge según la cantidad
+            if (badge) {
+                badge.classList.remove('badge-cero', 'badge-normal');
+                badge.classList.add(total === 0 ? 'badge-cero' : 'badge-normal');
+            }
+
+            // Actualiza el texto del botón de envío
+            if (btnTexto) {
+                btnTexto.textContent = total === 0
+                    ? 'Enviar Promoción'
+                    : 'Enviar a ' + total + (total === 1 ? ' cliente' : ' clientes');
+            }
+        }
+
+        // Sincroniza el checkbox maestro del thead con el estado de los individuales
+        function sincronizarCheckMaestro() {
+            var checkMaestro = document.getElementById('check-maestro');
+            if (!checkMaestro) return;
+            var todos = document.querySelectorAll('#clientes-tbody .cliente-check:not(:disabled)');
+            var marcados = document.querySelectorAll('#clientes-tbody .cliente-check:not(:disabled):checked');
+            checkMaestro.checked = todos.length > 0 && marcados.length === todos.length;
+            checkMaestro.indeterminate = marcados.length > 0 && marcados.length < todos.length;
+        }
+
+        // Checkbox maestro — selecciona o deselecciona todos los habilitados
+        document.addEventListener('change', function(e) {
+            if (e.target && e.target.id === 'check-maestro') {
+                var marcado = e.target.checked;
+                document.querySelectorAll('#clientes-tbody .cliente-check:not(:disabled)').forEach(function(c) {
+                    c.checked = marcado;
+                });
+                actualizarContador();
+            }
+        });
+
+        // Botones de selección rápida
+        var btnTodos = document.getElementById('btn-seleccionar-todos');
+        var btnNinguno = document.getElementById('btn-deseleccionar-todos');
+        if (btnTodos) {
+            btnTodos.addEventListener('click', function() {
+                document.querySelectorAll('#clientes-tbody .cliente-check:not(:disabled)').forEach(function(c) { c.checked = true; });
+                actualizarContador(); sincronizarCheckMaestro();
+            });
+        }
+        if (btnNinguno) {
+            btnNinguno.addEventListener('click', function() {
+                document.querySelectorAll('#clientes-tbody .cliente-check:not(:disabled)').forEach(function(c) { c.checked = false; });
+                actualizarContador(); sincronizarCheckMaestro();
+            });
+        }
+
+        // ===== SUBMIT VÍA API REST =====
         var btnEnviar = document.getElementById('btn-enviar-promo');
-        if (btnEnviar && form) {
+        if (btnEnviar) {
             btnEnviar.addEventListener('click', function(e) {
                 e.preventDefault();
+
+                // Validaciones del formulario
                 var err = [];
                 if (!productoHidden.value) err.push('Selecciona un producto');
-                if (!promocionInput||!promocionInput.value.trim()) err.push('Describe la promoción');
-                if (!precioDisplay||!precioDisplay.value.trim()) err.push('Ingresa el precio');
+                if (!promocionInput || !promocionInput.value.trim()) err.push('Describe la promoción');
+                if (!precioDisplay || !precioDisplay.value.trim()) err.push('Ingresa el precio');
                 if (!state.fechaInicio) err.push('Selecciona fecha de inicio');
                 if (!state.fechaFin) err.push('Selecciona fecha de fin');
-                if (err.length) { if(typeof showToast==='function') showToast(err[0],'error'); return; }
+
+                // Valida que haya al menos un cliente seleccionado
+                var checksSeleccionados = document.querySelectorAll('#clientes-tbody .cliente-check:checked');
+                if (checksSeleccionados.length === 0 && state.clientes.length > 0) {
+                    err.push('Selecciona al menos un destinatario');
+                }
+
+                if (err.length) {
+                    if (typeof showToast === 'function') showToast(err[0], 'error');
+                    return;
+                }
+
                 updRango();
-                var p = state.productoNombre;
-                if (typeof confirmAction==='function') {
-                    confirmAction('Se enviará esta promoción a todos los clientes que han utilizado <strong>'+esc(p)+'</strong> y aceptaron notificaciones. ¿Continuar?',
-                        function(){form.submit();}, {title:'Confirmar Envío',confirmText:'Enviar',type:'primary'});
-                } else { if(confirm('¿Enviar promoción a clientes que usaron '+p+'?')) form.submit(); }
+
+                // Recopila los IDs seleccionados
+                var idsSeleccionados = [];
+                checksSeleccionados.forEach(function(c) {
+                    idsSeleccionados.push(parseInt(c.dataset.id));
+                });
+
+                var total = idsSeleccionados.length;
+                var textoConfirm = 'Se enviará esta promoción de <strong>' + esc(state.productoNombre) + '</strong> a <strong>' + total + (total === 1 ? ' cliente' : ' clientes') + '</strong>. ¿Continuar?';
+
+                function ejecutarEnvio() {
+                    var payload = {
+                        productoId: state.productoId,
+                        promocion: promocionInput.value.trim(),
+                        precioOferta: precioHidden.value,
+                        rangoFechas: rangoHidden.value,
+                        clientesSeleccionados: idsSeleccionados
+                    };
+
+                    // Estado de carga en el botón
+                    btnEnviar.disabled = true;
+                    var btnTexto = document.getElementById('btn-enviar-texto');
+                    if (btnTexto) btnTexto.textContent = 'Enviando...';
+
+                    fetch('/api/promociones/enviar', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    })
+                    .then(function(res) {
+                        if (!res.ok) throw new Error('Error al enviar');
+                        return res.json();
+                    })
+                    .then(function(resultado) {
+                        // Redirige con mensaje flash construido en el frontend como parámetro de URL
+                        var enviados = resultado.enviados || 0;
+                        var clientes = resultado.clientesEncontrados || 0;
+                        var fallidos = resultado.fallidos || 0;
+                        var sinTel = resultado.sinTelefono || 0;
+                        var sinCons = resultado.sinConsentimiento || 0;
+                        var prod = resultado.producto || '';
+
+                        var tipo = enviados > 0 ? 'success' : 'error';
+                        var msg;
+                        if (clientes === 0) {
+                            msg = 'No se encontraron clientes para "' + prod + '"';
+                        } else {
+                            msg = 'Promoción enviada — ' + enviados + ' de ' + clientes + ' clientes notificados.';
+                            if (fallidos > 0) msg += ' Fallidos: ' + fallidos + '.';
+                            if (sinTel > 0) msg += ' Sin teléfono: ' + sinTel + '.';
+                            if (sinCons > 0) msg += ' Sin consentimiento: ' + sinCons + '.';
+                        }
+
+                        // Guarda el mensaje en sessionStorage para mostrarlo al llegar al listado
+                        try { sessionStorage.setItem('promoToast', JSON.stringify({ tipo: tipo, msg: msg })); } catch(e) {}
+                        window.location.href = '/web/notificaciones';
+                    })
+                    .catch(function() {
+                        btnEnviar.disabled = false;
+                        if (btnTexto) btnTexto.textContent = 'Enviar a ' + total + (total === 1 ? ' cliente' : ' clientes');
+                        if (typeof showToast === 'function') showToast('Ocurrió un error al enviar la promoción. Intenta nuevamente.', 'error');
+                    });
+                }
+
+                if (typeof confirmAction === 'function') {
+                    confirmAction(textoConfirm, ejecutarEnvio, { title: 'Confirmar Envío', confirmText: 'Enviar', type: 'primary' });
+                } else {
+                    if (confirm('¿Enviar promoción a ' + total + ' clientes?')) ejecutarEnvio();
+                }
             });
         }
 
         document.addEventListener('keydown', function(e) {
-            if (e.key==='Escape') {
-                document.querySelectorAll('.fecha-campo.active').forEach(function(f){f.classList.remove('active');});
-                document.querySelectorAll('.promo-select.open').forEach(function(s){s.classList.remove('open');});
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.fecha-campo.active').forEach(function(f) { f.classList.remove('active'); });
+                document.querySelectorAll('.promo-select.open').forEach(function(s) { s.classList.remove('open'); });
             }
         });
     });

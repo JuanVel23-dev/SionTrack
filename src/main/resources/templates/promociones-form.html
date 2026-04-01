@@ -44,10 +44,61 @@
                         </div>
                     </div>
                     <input type="hidden" id="productoId" th:field="*{productoId}" />
-                    <span class="form-help">Se enviará a clientes que han utilizado este producto en sus servicios y aceptaron notificaciones</span>
+                    <span class="form-help">Selecciona los clientes a quienes deseas enviar la promoción</span>
                 </div>
 
-                <div class="divider"></div>
+                <!-- Sección de selección de clientes — se muestra tras elegir un producto -->
+                <div id="clientes-preview-section" class="clientes-preview-section" style="display:none;">
+
+                    <!-- Cabecera con contador en tiempo real -->
+                    <div class="clientes-preview-header">
+                        <div class="clientes-preview-titulo">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                            Destinatarios
+                        </div>
+                        <div class="clientes-preview-contador-wrap">
+                            <span class="clientes-contador-badge" id="contador-badge">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.555 4.126 1.528 5.86L.06 23.487a.5.5 0 0 0 .613.613l5.627-1.468A11.943 11.943 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22a9.94 9.94 0 0 1-5.332-1.544l-.382-.228-3.332.869.886-3.236-.25-.396A9.935 9.935 0 0 1 2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>
+                                <span id="contador-texto">0 mensajes a enviar</span>
+                            </span>
+                            <div class="clientes-preview-acciones">
+                                <button type="button" class="clientes-accion-btn" id="btn-seleccionar-todos">Seleccionar todos</button>
+                                <button type="button" class="clientes-accion-btn" id="btn-deseleccionar-todos">Ninguno</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Estado de carga -->
+                    <div id="clientes-loading" class="clientes-loading" style="display:none;">
+                        <div class="clientes-loading-spinner"></div>
+                        <span>Cargando clientes...</span>
+                    </div>
+
+                    <!-- Tabla de clientes -->
+                    <div id="clientes-tabla-wrap" class="clientes-tabla-wrap" style="display:none;">
+                        <table class="clientes-tabla">
+                            <thead>
+                                <tr>
+                                    <th class="col-check">
+                                        <input type="checkbox" id="check-maestro" class="cliente-check-maestro" title="Seleccionar/deseleccionar todos">
+                                    </th>
+                                    <th>Cliente</th>
+                                    <th>Teléfono</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody id="clientes-tbody"></tbody>
+                        </table>
+                    </div>
+
+                    <!-- Sin clientes -->
+                    <div id="clientes-vacio" class="clientes-vacio" style="display:none;">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
+                        <p>No se encontraron clientes asociados a este producto</p>
+                    </div>
+                </div>
+
+                <div class="divider" id="divider-clientes" style="display:none;"></div>
 
                 <!-- Contenido -->
                 <h3 class="form-section-title">
@@ -114,7 +165,7 @@
                 </a>
                 <button type="button" class="btn btn-success" id="btn-enviar-promo">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.555 4.126 1.528 5.86L.06 23.487a.5.5 0 0 0 .613.613l5.627-1.468A11.943 11.943 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22a9.94 9.94 0 0 1-5.332-1.544l-.382-.228-3.332.869.886-3.236-.25-.396A9.935 9.935 0 0 1 2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>
-                    Enviar Promoción
+                    <span id="btn-enviar-texto">Enviar Promoción</span>
                 </button>
             </div>
         </form>

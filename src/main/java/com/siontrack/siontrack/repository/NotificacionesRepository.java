@@ -63,4 +63,17 @@ public interface NotificacionesRepository extends JpaRepository<Notificaciones, 
     List<Notificaciones> findRecordatoriosPendientesByClienteVehiculo(
             @Param("clienteId") Integer clienteId,
             @Param("vehiculoId") Integer vehiculoId);
+
+    /**
+     * Retorna el cliente_id y la fecha del último envío exitoso de promoción
+     * para cada cliente de la lista proporcionada.
+     * Se usa para detectar quiénes fueron contactados recientemente.
+     */
+    @Query("SELECT n.clientes.cliente_id, MAX(n.fecha_envio) " +
+           "FROM Notificaciones n " +
+           "WHERE n.tipoNotificacion = 'PROMOCION' " +
+           "AND n.estado = 'enviado' " +
+           "AND n.clientes.cliente_id IN :clienteIds " +
+           "GROUP BY n.clientes.cliente_id")
+    List<Object[]> findUltimaPromocionEnviadaPorClientes(@Param("clienteIds") List<Integer> clienteIds);
 }

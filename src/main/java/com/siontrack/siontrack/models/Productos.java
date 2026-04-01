@@ -60,10 +60,6 @@ public class Productos {
     @Setter
     private BigDecimal precio_venta;
 
-    @Getter
-    @Setter
-    private String estado;
-
     @Column(name = "fecha_compra")
     @Getter
     @Setter
