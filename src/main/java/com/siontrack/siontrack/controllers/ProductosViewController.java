@@ -14,6 +14,9 @@ import com.siontrack.siontrack.DTO.Response.ProductosResponseDTO;
 import com.siontrack.siontrack.services.ProductosServicios;
 import com.siontrack.siontrack.services.ProveedoresService;
 
+import jakarta.validation.Valid;
+import org.springframework.validation.BindingResult;
+
 @Controller
 @RequestMapping("/web")
 public class ProductosViewController {
@@ -65,22 +68,47 @@ public class ProductosViewController {
 
     @PostMapping("/productos/guardar")
     public String guardarProducto(
-            @RequestParam(value = "productoId", required = false) Integer productoId, 
-            @ModelAttribute("producto") ProductosRequestDTO productoDtoDelFormulario,
+            @RequestParam(value = "productoId", required = false) Integer productoId,
+            @Valid @ModelAttribute("producto") ProductosRequestDTO productoDtoDelFormulario,
+            BindingResult bindingResult,
+            Model model,
             RedirectAttributes redirectAttributes) {
 
-        if (productoId == null) {
-            productosServicios.crearProducto(productoDtoDelFormulario);
-            redirectAttributes.addFlashAttribute("successMessage", "Producto agregado exitosamente");
-        } else {
-            productosServicios.actualizarProducto(productoId, productoDtoDelFormulario);
-            redirectAttributes.addFlashAttribute("successMessage", "Producto actualizado exitosamente");
+        if (bindingResult.hasErrors()) {
+            if (productoId != null) {
+                model.addAttribute("productoId", productoId);
+            }
+            cargarProveedores(model);
+            StringBuilder errores = new StringBuilder();
+            bindingResult.getFieldErrors().forEach(error -> {
+                if (errores.length() > 0) errores.append(". ");
+                errores.append(error.getDefaultMessage());
+            });
+            model.addAttribute("errorMessage", errores.length() > 0 ? errores.toString() : "Por favor corrige los errores en el formulario");
+            return "productos-form";
         }
 
-        return "redirect:/web/productos"; 
+        try {
+            if (productoId == null) {
+                productosServicios.crearProducto(productoDtoDelFormulario);
+                redirectAttributes.addFlashAttribute("successMessage", "Producto agregado exitosamente");
+            } else {
+                productosServicios.actualizarProducto(productoId, productoDtoDelFormulario);
+                redirectAttributes.addFlashAttribute("successMessage", "Producto actualizado exitosamente");
+            }
+        } catch (Exception e) {
+            if (productoId != null) {
+                model.addAttribute("productoId", productoId);
+            }
+            cargarProveedores(model);
+            model.addAttribute("errorMessage", e.getMessage());
+            return "productos-form";
+        }
+
+        return "redirect:/web/productos";
     }
 
-    @GetMapping("/productos/eliminar/{id}")
+    @PostMapping("/productos/eliminar/{id}")
     public String eliminarProducto(@PathVariable Integer id, RedirectAttributes redirectAttributes) {
         productosServicios.borrarProducto(id);
         redirectAttributes.addFlashAttribute("deleteMessage", "Producto eliminado exitosamente");

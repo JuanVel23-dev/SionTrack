@@ -90,12 +90,17 @@ public class ServiciosService {
 
         // 1. Validar y Buscar Entidades Padre
         Clientes cliente = clienteRepository.findById(dto.getCliente_id())
-                .orElseThrow(() -> new RuntimeException("Cliente no encontrado: " + dto.getCliente_id()));
+                .orElseThrow(() -> new RuntimeException("Cliente no encontrado con ID: " + dto.getCliente_id()));
+
+        // Vehiculo obligatorio solo para MANO_DE_OBRA
+        if ("MANO_DE_OBRA".equals(dto.getTipo_servicio()) && dto.getVehiculo_id() == null) {
+            throw new RuntimeException("El vehiculo es obligatorio para servicios de mano de obra");
+        }
 
         Vehiculos vehiculo = null;
         if (dto.getVehiculo_id() != null) {
             vehiculo = vehiculoRepository.findById(dto.getVehiculo_id())
-                    .orElseThrow(() -> new RuntimeException("Vehículo no encontrado: " + dto.getVehiculo_id()));
+                    .orElseThrow(() -> new RuntimeException("Vehiculo no encontrado con ID: " + dto.getVehiculo_id()));
         }
 
         // 2. Crear Entidad Servicio Base

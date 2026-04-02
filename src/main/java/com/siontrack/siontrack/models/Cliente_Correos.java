@@ -23,8 +23,9 @@ public class Cliente_Correos {
     @Getter @Setter
     private int correo_id;
 
+    @jakarta.persistence.Column(nullable = false, length = 100)
     @Getter @Setter
-    private String correo; 
+    private String correo;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cliente_id" , nullable = false)

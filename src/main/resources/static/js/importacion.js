@@ -187,7 +187,7 @@
         var formData = new FormData();
         formData.append('archivo', archivoSeleccionado);
 
-        fetch(endpointSeleccionado, {
+        SionUtils.fetchSeguro(endpointSeleccionado, {
             method: 'POST',
             body: formData
         })

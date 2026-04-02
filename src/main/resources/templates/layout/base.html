@@ -7,6 +7,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="SionTrack - Sistema de Gestión Empresarial">
+    <!-- CSRF token para requests AJAX -->
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
 
     <title th:text="${pageTitle != null ? pageTitle + ' - SionTrack' : 'SionTrack'}">SionTrack</title>
 

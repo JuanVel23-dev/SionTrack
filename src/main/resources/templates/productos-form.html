@@ -41,8 +41,11 @@
                                id="nombre"
                                th:field="*{nombre}"
                                class="form-input"
+                               th:errorclass="'error'"
                                required
+                               maxlength="100"
                                placeholder="Ej: Aceite 5W-30">
+                        <span th:if="${#fields.hasErrors('nombre')}" th:errors="*{nombre}" class="form-error"></span>
                     </div>
                     <div class="form-group">
                         <label for="codigo_producto" class="form-label">Código del Producto</label>
@@ -50,6 +53,7 @@
                                id="codigo_producto"
                                th:field="*{codigo_producto}"
                                class="form-input"
+                               maxlength="50"
                                placeholder="Ej: ACE-5W30-001">
                         <span class="form-help">Código interno o de proveedor para identificar el producto.</span>
                     </div>
@@ -62,13 +66,15 @@
                                id="categoria"
                                th:field="*{categoria}"
                                class="form-input"
+                               maxlength="50"
                                placeholder="Ej: Lubricantes">
                     </div>
                     <div class="form-group">
                         <label for="proveedor_id" class="form-label">Proveedor</label>
                         <select id="proveedor_id"
                                 th:field="*{proveedor_id}"
-                                class="form-select">
+                                class="form-select"
+                                data-searchable>
                             <option value="">Seleccione un proveedor</option>
                             <option th:each="prov : ${listaProveedores}"
                                     th:value="${prov.proveedor_id}"
@@ -86,6 +92,7 @@
                                id="unidad_medida"
                                th:field="*{unidad_medida}"
                                class="form-input"
+                               maxlength="30"
                                placeholder="Ej: Unidad, Litro, Kg">
                     </div>
                 </div>
@@ -108,9 +115,11 @@
                                id="precio_compra"
                                th:field="*{precio_compra}"
                                class="form-input"
+                               th:errorclass="'error'"
                                step="0.01"
                                min="0"
                                placeholder="0.00">
+                        <span th:if="${#fields.hasErrors('precio_compra')}" th:errors="*{precio_compra}" class="form-error"></span>
                     </div>
                     <div class="form-group">
                         <label for="precio_venta" class="form-label required">Precio de Venta</label>
@@ -118,10 +127,12 @@
                                id="precio_venta"
                                th:field="*{precio_venta}"
                                class="form-input"
+                               th:errorclass="'error'"
                                step="0.01"
                                min="0"
                                required
                                placeholder="0.00">
+                        <span th:if="${#fields.hasErrors('precio_venta')}" th:errors="*{precio_venta}" class="form-error"></span>
                     </div>
                 </div>
 
@@ -165,33 +176,38 @@
                 <div class="form-grid">
                     <div class="form-group">
                         <label for="cantidad_disponible" class="form-label required">Cantidad Disponible</label>
-                        <input type="number" 
-                               id="cantidad_disponible" 
-                               th:field="*{cantidad_disponible}" 
-                               class="form-input" 
+                        <input type="number"
+                               id="cantidad_disponible"
+                               th:field="*{cantidad_disponible}"
+                               class="form-input"
+                               th:errorclass="'error'"
                                min="0"
                                required
                                placeholder="0">
+                        <span th:if="${#fields.hasErrors('cantidad_disponible')}" th:errors="*{cantidad_disponible}" class="form-error"></span>
                     </div>
                     <div class="form-group">
                         <label for="stock_minimo" class="form-label required">Stock Mínimo</label>
-                        <input type="number" 
-                               id="stock_minimo" 
-                               th:field="*{stock_minimo}" 
-                               class="form-input" 
+                        <input type="number"
+                               id="stock_minimo"
+                               th:field="*{stock_minimo}"
+                               class="form-input"
+                               th:errorclass="'error'"
                                min="0"
                                required
                                placeholder="10">
+                        <span th:if="${#fields.hasErrors('stock_minimo')}" th:errors="*{stock_minimo}" class="form-error"></span>
                         <span class="form-help">Se mostrará alerta cuando el stock sea menor a este valor.</span>
                     </div>
                 </div>
 
                 <div class="form-group">
                     <label for="ubicacion" class="form-label">Ubicación en Almacén</label>
-                    <input type="text" 
-                           id="ubicacion" 
-                           th:field="*{ubicacion}" 
+                    <input type="text"
+                           id="ubicacion"
+                           th:field="*{ubicacion}"
                            class="form-input"
+                           maxlength="100"
                            placeholder="Ej: Estante A-3">
                 </div>
             </div>

@@ -31,9 +31,11 @@ public class Vehiculos {
     @Getter @Setter
     private int vehiculo_id;
 
+    @Column(nullable = false, length = 10)
     @Getter @Setter
     private String placa;
 
+    @Column(length = 20)
     @Getter @Setter
     private String kilometraje_actual;
 
@@ -52,7 +54,7 @@ public class Vehiculos {
     @Getter @Setter
     private Clientes clientes;
 
-    @OneToMany(mappedBy = "vehiculos", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "vehiculos", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.LAZY)
     @Getter @Setter
     private List<Servicios> servicios = new ArrayList<>();
 }

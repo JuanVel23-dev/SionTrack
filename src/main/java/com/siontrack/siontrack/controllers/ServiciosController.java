@@ -19,6 +19,8 @@ import com.siontrack.siontrack.DTO.Request.ServicioRequestDTO;
 import com.siontrack.siontrack.DTO.Response.ServicioResponseDTO;
 import com.siontrack.siontrack.services.ServiciosService;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/api/servicios")
 public class ServiciosController {
@@ -40,7 +42,7 @@ public class ServiciosController {
 
     // POST: Crear un nuevo servicio
     @PostMapping("/crear")
-    public ResponseEntity<ServicioResponseDTO> crearServicio(@RequestBody ServicioRequestDTO dto) {
+    public ResponseEntity<ServicioResponseDTO> crearServicio(@Valid @RequestBody ServicioRequestDTO dto) {
         ServicioResponseDTO nuevoServicio = serviciosService.crearServicio(dto);
         return new ResponseEntity<>(nuevoServicio, HttpStatus.CREATED);
     }

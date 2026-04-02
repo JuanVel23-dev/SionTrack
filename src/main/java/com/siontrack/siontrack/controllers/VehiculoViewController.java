@@ -10,6 +10,10 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.siontrack.siontrack.DTO.Request.VehiculosRequestDTO;
 import com.siontrack.siontrack.services.ClienteServicios;
 
+import jakarta.validation.Valid;
+import org.springframework.validation.BindingResult;
+import org.springframework.ui.Model;
+
 @Controller
 @RequestMapping("/web/vehiculos") // Define el prefijo para este controlador
 public class VehiculoViewController {
@@ -25,9 +29,22 @@ public class VehiculoViewController {
      * Este método recibe el POST del formulario 'vehiculo-form.html'
      */
     @PostMapping("/guardar")
-    public String guardarVehiculo(@ModelAttribute("vehiculo") VehiculosRequestDTO vehiculoDto,
+    public String guardarVehiculo(@Valid @ModelAttribute("vehiculo") VehiculosRequestDTO vehiculoDto,
+                                  BindingResult bindingResult,
                                   @RequestParam("clienteId") Integer clienteId,
+                                  Model model,
                                   RedirectAttributes redirectAttributes) {
+
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("clienteId", clienteId);
+            StringBuilder errores = new StringBuilder();
+            bindingResult.getFieldErrors().forEach(error -> {
+                if (errores.length() > 0) errores.append(". ");
+                errores.append(error.getDefaultMessage());
+            });
+            model.addAttribute("errorMessage", errores.length() > 0 ? errores.toString() : "Por favor corrige los errores en el formulario");
+            return "vehiculo-form";
+        }
         
         try {
             // Llama al nuevo método de servicio que creamos

@@ -43,8 +43,11 @@
                            id="nombre"
                            th:field="*{nombre}"
                            class="form-input"
+                           th:errorclass="'error'"
                            required
+                           maxlength="100"
                            placeholder="Ej: Proveedor S.A.">
+                    <span th:if="${#fields.hasErrors('nombre')}" th:errors="*{nombre}" class="form-error"></span>
                     <span class="form-help">Nombre legal o comercial del proveedor.</span>
                 </div>
 
@@ -85,10 +88,12 @@
                                    id="telefono"
                                    th:field="*{telefono}"
                                    class="form-input numero-input"
+                                   th:errorclass="'error'"
                                    required
                                    maxlength="10"
                                    placeholder="3001234567">
                         </div>
+                        <span th:if="${#fields.hasErrors('telefono')}" th:errors="*{telefono}" class="form-error"></span>
                     </div>
                 </div>
 
@@ -109,8 +114,11 @@
                            id="email"
                            th:field="*{email}"
                            class="form-input input-correo"
+                           th:errorclass="'error'"
                            required
+                           maxlength="100"
                            placeholder="Ej: contacto@proveedor.com">
+                    <span th:if="${#fields.hasErrors('email')}" th:errors="*{email}" class="form-error"></span>
                 </div>
 
                 <div class="divider"></div>
@@ -130,8 +138,11 @@
                            id="direccion"
                            th:field="*{direccion}"
                            class="form-input"
+                           th:errorclass="'error'"
                            required
+                           maxlength="200"
                            placeholder="Ej: Av. Principal 123, Ciudad">
+                    <span th:if="${#fields.hasErrors('direccion')}" th:errors="*{direccion}" class="form-error"></span>
                 </div>
 
                 <div class="form-group">
@@ -140,8 +151,11 @@
                            id="nombre_contacto"
                            th:field="*{nombre_contacto}"
                            class="form-input"
+                           th:errorclass="'error'"
                            required
+                           maxlength="100"
                            placeholder="Ej: Ana López">
+                    <span th:if="${#fields.hasErrors('nombre_contacto')}" th:errors="*{nombre_contacto}" class="form-error"></span>
                     <span class="form-help">Persona de contacto dentro de la empresa proveedora.</span>
                 </div>
             </div>

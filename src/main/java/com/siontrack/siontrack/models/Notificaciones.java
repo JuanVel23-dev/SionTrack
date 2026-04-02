@@ -32,6 +32,7 @@ public class Notificaciones {
     @Setter
     private String mensaje_enviado;
 
+    @Column(nullable = false, length = 25)
     @Getter
     @Setter
     private String canal;
@@ -44,6 +45,7 @@ public class Notificaciones {
     @Setter
     private Timestamp fecha_envio;
 
+    @Column(nullable = false, length = 25)
     @Getter
     @Setter
     private String estado;

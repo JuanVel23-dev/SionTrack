@@ -16,6 +16,9 @@ import com.siontrack.siontrack.services.ClienteServicios;
 import com.siontrack.siontrack.services.ProductosServicios;
 import com.siontrack.siontrack.services.ServiciosService;
 
+import jakarta.validation.Valid;
+import org.springframework.validation.BindingResult;
+
 @Controller
 @RequestMapping("/web")
 public class ServiciosViewController {
@@ -55,18 +58,35 @@ public class ServiciosViewController {
 
     @PostMapping("/servicios/guardar")
     public String guardarServicio(
-            @ModelAttribute("servicio") ServicioRequestDTO servicioDtoDelFormulario,
+            @Valid @ModelAttribute("servicio") ServicioRequestDTO servicioDtoDelFormulario,
+            BindingResult bindingResult,
+            Model model,
             RedirectAttributes redirectAttributes) {
+
+        if (bindingResult.hasErrors()) {
+            cargarDatosFormulario(model);
+            // Construir mensaje legible con los errores de validacion
+            StringBuilder errores = new StringBuilder();
+            bindingResult.getFieldErrors().forEach(error -> {
+                if (errores.length() > 0) errores.append(". ");
+                errores.append(error.getDefaultMessage());
+            });
+            model.addAttribute("errorMessage", errores.length() > 0 ? errores.toString() : "Por favor corrige los errores en el formulario");
+            return "servicios-form";
+        }
+
         try {
             serviciosService.crearServicio(servicioDtoDelFormulario);
             redirectAttributes.addFlashAttribute("successMessage", "Servicio creado exitosamente");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Error al crear el servicio: " + e.getMessage());
+            cargarDatosFormulario(model);
+            model.addAttribute("errorMessage", e.getMessage());
+            return "servicios-form";
         }
         return "redirect:/web/servicios";
     }
 
-    @GetMapping("/servicios/eliminar/{id}")
+    @PostMapping("/servicios/eliminar/{id}")
     public String eliminarServicio(@PathVariable Integer id, RedirectAttributes redirectAttributes) {
         try {
             serviciosService.eliminarServicio(id);

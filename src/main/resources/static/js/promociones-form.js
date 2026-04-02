@@ -542,7 +542,7 @@
                     var btnTexto = document.getElementById('btn-enviar-texto');
                     if (btnTexto) btnTexto.textContent = 'Enviando...';
 
-                    fetch('/api/promociones/enviar', {
+                    SionUtils.fetchSeguro('/api/promociones/enviar', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)

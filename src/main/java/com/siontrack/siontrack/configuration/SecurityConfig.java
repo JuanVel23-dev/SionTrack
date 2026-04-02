@@ -3,13 +3,14 @@ package com.siontrack.siontrack.configuration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.session.HttpSessionEventPublisher;
 
 import com.siontrack.siontrack.services.UsuariosService;
@@ -28,7 +29,6 @@ public class SecurityConfig {
     public PasswordEncoder passwordEncoder(){
         return new BCryptPasswordEncoder();
     }
-       
 
     @Bean
     public AuthenticationManager authenticationManager(HttpSecurity http)throws Exception{
@@ -46,15 +46,25 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        // Necesario para que Spring Security no bloquee el token CSRF en el cookie
+        CsrfTokenRequestAttributeHandler requestHandler = new CsrfTokenRequestAttributeHandler();
+        requestHandler.setCsrfRequestAttributeName(null);
+
         http
                 .csrf(csrf -> csrf
-                        .ignoringRequestMatchers("/api/**")
-                        .ignoringRequestMatchers("/api/webhook/**"))
+                        // Solo deshabilitar CSRF para el webhook externo de WhatsApp
+                        .ignoringRequestMatchers("/api/webhook", "/api/webhook/**")
+                        // Usar cookie para que JS pueda leer el token CSRF
+                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                        .csrfTokenRequestHandler(requestHandler))
 
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**", "/login", "/api/webhook").permitAll()
+                        .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**", "/login", "/error").permitAll()
+                        .requestMatchers("/api/webhook", "/api/webhook/**").permitAll()
+                        // Restringir endpoints de Actuator
+                        .requestMatchers("/actuator/health").authenticated()
+                        .requestMatchers("/actuator/**").denyAll()
                         .requestMatchers("/api/**").authenticated()
-                        .requestMatchers("/api/webhook/**").permitAll()
                         .anyRequest().authenticated())
 
                 .formLogin(form -> form
@@ -68,14 +78,11 @@ public class SecurityConfig {
                         .logoutSuccessUrl("/login?logout")
                         .permitAll())
 
-                // 5. HTTP Basic (Para Postman)
-                .httpBasic(Customizer.withDefaults())
-
-                // ⬅️ Control de sesiones
+                // Control de sesiones
                 .sessionManagement(session -> session
-                        .maximumSessions(1)                          
-                        .maxSessionsPreventsLogin(true)              
-                        .expiredUrl("/login?expired"))  
+                        .maximumSessions(1)
+                        .maxSessionsPreventsLogin(true)
+                        .expiredUrl("/login?expired"))
 
                 .headers(headers -> headers
                         .contentSecurityPolicy(csp -> csp

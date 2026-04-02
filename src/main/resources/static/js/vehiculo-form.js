@@ -155,15 +155,9 @@
         inputKm.setAttribute('pattern', '[0-9]*');
 
         inputKm.addEventListener('input', function() {
-            // Eliminar todo lo que no sea dígito
+            // Eliminar todo lo que no sea digito
             var limpio = this.value.replace(/\D/g, '');
-            // Formatear con separador de miles
-            if (limpio) {
-                var num = parseInt(limpio, 10);
-                this.value = num.toLocaleString('es-CO');
-            } else {
-                this.value = '';
-            }
+            this.value = limpio;
         });
 
         inputKm.addEventListener('keydown', function(e) {

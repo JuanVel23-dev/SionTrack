@@ -18,6 +18,8 @@ import com.siontrack.siontrack.DTO.Request.PromocionesRequestDTO;
 import com.siontrack.siontrack.DTO.Response.ClientePreviewDTO;
 import com.siontrack.siontrack.services.NotificacionesService;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/api/promociones")
 public class PromocionesControlller {
@@ -37,7 +39,7 @@ public class PromocionesControlller {
     }
 
     @PostMapping("/enviar")
-    public ResponseEntity<Map<String, Object>> enviarPromocion(@RequestBody PromocionesRequestDTO dto) {
+    public ResponseEntity<Map<String, Object>> enviarPromocion(@Valid @RequestBody PromocionesRequestDTO dto) {
         Map<String, Object> resultado = notificacionesService.enviarPromocion(dto);
         return ResponseEntity.ok(resultado);
     }
@@ -47,8 +49,16 @@ public class PromocionesControlller {
     public ResponseEntity<?> actualizarFechaRecordatorio(
             @PathVariable Integer id,
             @RequestBody Map<String, String> body) {
-        LocalDate nuevaFecha = LocalDate.parse(body.get("fecha"));
-        notificacionesService.actualizarFechaProgramada(id, nuevaFecha);
-        return ResponseEntity.ok(Map.of("mensaje", "Fecha actualizada correctamente"));
+        String fechaStr = body.get("fecha");
+        if (fechaStr == null || fechaStr.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "La fecha es obligatoria"));
+        }
+        try {
+            LocalDate nuevaFecha = LocalDate.parse(fechaStr);
+            notificacionesService.actualizarFechaProgramada(id, nuevaFecha);
+            return ResponseEntity.ok(Map.of("mensaje", "Fecha actualizada correctamente"));
+        } catch (java.time.format.DateTimeParseException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Formato de fecha invalido"));
+        }
     }
 }

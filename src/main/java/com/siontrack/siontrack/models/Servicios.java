@@ -36,10 +36,12 @@ public class Servicios {
     @Setter
     private int servicio_id;
 
+    @Column(nullable = false)
     @Getter
     @Setter
     private LocalDate fecha_servicio;
 
+    @Column(length = 20)
     @Getter
     @Setter
     private String kilometraje_servicio;
@@ -48,11 +50,12 @@ public class Servicios {
     @Setter
     private BigDecimal total;
 
-    @Column(name = "tipo_servicio")
+    @Column(name = "tipo_servicio", nullable = false, length = 50)
     @Getter
     @Setter
     private String tipo_servicio;
 
+    @Column(length = 1000)
     @Getter
     @Setter
     private String observaciones;

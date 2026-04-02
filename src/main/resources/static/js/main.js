@@ -28,8 +28,15 @@ function showToast(message, type, duration) {
     error: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>'
   };
 
-  // Sanitizar mensaje para prevenir XSS
-  var msgSeguro = typeof SionUtils !== 'undefined' ? SionUtils.esc(message, message) : message;
+  // Sanitizar mensaje para prevenir XSS (fallback seguro si SionUtils no esta disponible)
+  var msgSeguro;
+  if (typeof SionUtils !== 'undefined') {
+    msgSeguro = SionUtils.esc(message, message);
+  } else {
+    var tmpDiv = document.createElement('div');
+    tmpDiv.textContent = message || '';
+    msgSeguro = tmpDiv.innerHTML;
+  }
 
   var toast = document.createElement('div');
   toast.className = 'toast toast-' + type;
@@ -235,11 +242,16 @@ function setupDeleteConfirmations() {
   btns.forEach(function(btn) {
     btn.addEventListener('click', function(e) {
       e.preventDefault();
-      var href = this.getAttribute('href');
       var msg = this.dataset.confirm || '¿Estás seguro de eliminar este elemento?';
-      
+      var form = this.closest('form');
+      var href = this.getAttribute('href');
+
       confirmAction(msg, function() {
-        if (href) window.location.href = href;
+        if (form) {
+          form.submit();
+        } else if (href) {
+          window.location.href = href;
+        }
       }, { title: 'Confirmar Eliminación', confirmText: 'Eliminar', type: 'danger' });
     });
   });

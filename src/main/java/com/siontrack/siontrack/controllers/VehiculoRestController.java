@@ -30,7 +30,15 @@ public class VehiculoRestController {
      */
     @GetMapping("/buscar")
     public ResponseEntity<List<Map<String, Object>>> buscarPorPlaca(@RequestParam String placa) {
-        List<Vehiculos> vehiculos = vehiculosRepository.buscarPorPlacaContiene(placa);
+        // Evitar busquedas vacias que retornan toda la tabla
+        if (placa == null || placa.trim().isEmpty()) {
+            return ResponseEntity.ok(new ArrayList<>());
+        }
+        // Limitar longitud de busqueda
+        if (placa.length() > 10) {
+            return ResponseEntity.badRequest().build();
+        }
+        List<Vehiculos> vehiculos = vehiculosRepository.buscarPorPlacaContiene(placa.trim());
         List<Map<String, Object>> resultado = new ArrayList<>();
 
         for (Vehiculos v : vehiculos) {

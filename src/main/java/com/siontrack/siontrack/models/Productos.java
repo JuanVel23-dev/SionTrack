@@ -31,31 +31,37 @@ public class Productos {
     @Setter
     private int producto_id;
 
+    @Column(nullable = false, length = 100)
     @Getter
     @Setter
     private String nombre;
 
-    @Column(name = "codigo_producto", unique = true)
+    @Column(name = "codigo_producto", unique = true, length = 50)
     @Getter
     @Setter
     private String codigoProducto;
 
+    @Column(length = 50)
     @Getter
     @Setter
     private String categoria;
 
+    @Column(length = 50)
     @Getter
     @Setter
     private String marca;
 
+    @Column(length = 30)
     @Getter
     @Setter
     private String unidad_medida;
 
+    @Column(nullable = false)
     @Getter
     @Setter
     private BigDecimal precio_compra;
 
+    @Column(nullable = false)
     @Getter
     @Setter
     private BigDecimal precio_venta;

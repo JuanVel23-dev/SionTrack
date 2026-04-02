@@ -183,6 +183,49 @@ var SionUtils = (function() {
     }
 
     // ============================================
+    // CSRF - Token para requests AJAX
+    // ============================================
+
+    /**
+     * Obtiene los headers CSRF necesarios para requests POST/PUT/PATCH/DELETE.
+     * Lee el token del meta tag inyectado por Thymeleaf en base.html.
+     * @returns {Object} Headers con el token CSRF
+     */
+    function csrfHeaders() {
+        var token = document.querySelector('meta[name="_csrf"]');
+        var header = document.querySelector('meta[name="_csrf_header"]');
+        var headers = {};
+        if (token && header) {
+            headers[header.getAttribute('content')] = token.getAttribute('content');
+        }
+        return headers;
+    }
+
+    /**
+     * Wrapper de fetch que incluye automaticamente el token CSRF
+     * para metodos que lo requieren (POST, PUT, PATCH, DELETE).
+     * @param {string} url - URL del recurso
+     * @param {Object} [opciones={}] - Opciones de fetch
+     * @returns {Promise<Response>}
+     */
+    function fetchSeguro(url, opciones) {
+        opciones = opciones || {};
+        var metodo = (opciones.method || 'GET').toUpperCase();
+
+        if (metodo !== 'GET' && metodo !== 'HEAD') {
+            var csrfH = csrfHeaders();
+            opciones.headers = opciones.headers || {};
+            // Combinar headers CSRF con los existentes
+            for (var key in csrfH) {
+                if (csrfH.hasOwnProperty(key)) {
+                    opciones.headers[key] = csrfH[key];
+                }
+            }
+        }
+        return fetch(url, opciones);
+    }
+
+    // ============================================
     // API PÚBLICA
     // ============================================
     return {
@@ -194,6 +237,8 @@ var SionUtils = (function() {
         formatearFechaHora: formatearFechaHora,
         debounce: debounce,
         crearModal: crearModal,
+        csrfHeaders: csrfHeaders,
+        fetchSeguro: fetchSeguro,
         CODIGOS_PAIS: CODIGOS_PAIS
     };
 

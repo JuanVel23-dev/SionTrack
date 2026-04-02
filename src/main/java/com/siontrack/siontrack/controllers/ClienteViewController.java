@@ -20,6 +20,9 @@ import com.siontrack.siontrack.DTO.Request.ClienteRequestDTO;
 import com.siontrack.siontrack.DTO.Response.ClienteResponseDTO;
 import com.siontrack.siontrack.services.ClienteServicios;
 
+import jakarta.validation.Valid;
+import org.springframework.validation.BindingResult;
+
 @Controller
 @RequestMapping("/web") 
 public class ClienteViewController {
@@ -61,20 +64,43 @@ public class ClienteViewController {
     @PostMapping("/clientes/guardar")
     public String guardarCliente(
             @RequestParam(value = "clienteId", required = false) Integer clienteId,
-            @ModelAttribute("cliente") ClienteRequestDTO clienteDtoDelFormulario,
+            @Valid @ModelAttribute("cliente") ClienteRequestDTO clienteDtoDelFormulario,
+            BindingResult bindingResult,
+            Model model,
             RedirectAttributes redirectAttributes) {
 
-        if (clienteId == null) {
-            clienteServicios.crearCliente(clienteDtoDelFormulario);
-            redirectAttributes.addFlashAttribute("successMessage", "Cliente agregado exitosamente");
-        } else {
-            clienteServicios.actualizarCliente(clienteId, clienteDtoDelFormulario);
-            redirectAttributes.addFlashAttribute("successMessage", "Cliente actualizado exitosamente");
+        if (bindingResult.hasErrors()) {
+            if (clienteId != null) {
+                model.addAttribute("clienteId", clienteId);
+            }
+            StringBuilder errores = new StringBuilder();
+            bindingResult.getFieldErrors().forEach(error -> {
+                if (errores.length() > 0) errores.append(". ");
+                errores.append(error.getDefaultMessage());
+            });
+            model.addAttribute("errorMessage", errores.length() > 0 ? errores.toString() : "Por favor corrige los errores en el formulario");
+            return "clientes-form";
+        }
+
+        try {
+            if (clienteId == null) {
+                clienteServicios.crearCliente(clienteDtoDelFormulario);
+                redirectAttributes.addFlashAttribute("successMessage", "Cliente agregado exitosamente");
+            } else {
+                clienteServicios.actualizarCliente(clienteId, clienteDtoDelFormulario);
+                redirectAttributes.addFlashAttribute("successMessage", "Cliente actualizado exitosamente");
+            }
+        } catch (Exception e) {
+            if (clienteId != null) {
+                model.addAttribute("clienteId", clienteId);
+            }
+            model.addAttribute("errorMessage", e.getMessage());
+            return "clientes-form";
         }
         return "redirect:/web/clientes";
     }
 
-    @GetMapping("/clientes/eliminar/{id}")
+    @PostMapping("/clientes/eliminar/{id}")
     public String eliminarCliente(@PathVariable Integer id, RedirectAttributes redirectAttributes) {
         clienteServicios.deleteCliente(id);
         redirectAttributes.addFlashAttribute("deleteMessage", "Cliente eliminado exitosamente");

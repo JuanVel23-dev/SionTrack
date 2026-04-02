@@ -29,10 +29,11 @@
                     </svg>
                     Información Básica
                 </h3>
-                
+
                 <div class="form-group">
                     <label for="nombre" class="form-label required">Nombre Completo</label>
-                    <input type="text" id="nombre" th:field="*{nombre}" class="form-input" required placeholder="Ej: Juan Pérez Sánchez">
+                    <input type="text" id="nombre" th:field="*{nombre}" class="form-input" th:errorclass="'error'" required maxlength="100" placeholder="Ej: Juan Pérez Sánchez">
+                    <span th:if="${#fields.hasErrors('nombre')}" th:errors="*{nombre}" class="form-error"></span>
                     <span class="form-help">Ingresa el nombre completo del cliente</span>
                 </div>
 
@@ -50,6 +51,7 @@
                                 <div class="custom-select-option" data-value="Empresa">Empresa</div>
                             </div>
                             <input type="hidden" id="tipo_cliente" th:field="*{tipo_cliente}" required />
+                            <span th:if="${#fields.hasErrors('tipo_cliente')}" th:errors="*{tipo_cliente}" class="form-error"></span>
                         </div>
                     </div>
 
@@ -77,6 +79,7 @@
 
                         <!-- Campo hidden que se envía al servidor -->
                         <input type="hidden" id="cedula_ruc" th:field="*{cedula_ruc}" />
+                        <span th:if="${#fields.hasErrors('cedula_ruc')}" th:errors="*{cedula_ruc}" class="form-error"></span>
                     </div>
                 </div>
 
@@ -173,7 +176,7 @@
                     <label class="form-label">Direcciones</label>
                     <div id="direcciones-container">
                         <div th:each="dir, iterStat : *{direcciones}" class="dynamic-field">
-                            <input type="text" th:field="*{direcciones[__${iterStat.index}__].direccion}" class="form-input" placeholder="Ej: Av. Principal 123" />
+                            <input type="text" th:field="*{direcciones[__${iterStat.index}__].direccion}" class="form-input" maxlength="300" placeholder="Ej: Av. Principal 123" />
                             <button type="button" class="btn btn-danger btn-sm btn-remove">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                             </button>
@@ -196,7 +199,7 @@
                     <label class="form-label">Correos</label>
                     <div id="correos-container">
                         <div th:each="correo, iterStat : *{correos}" class="dynamic-field">
-                            <input type="email" th:field="*{correos[__${iterStat.index}__].correo}" class="form-input input-correo" placeholder="Ej: cliente@ejemplo.com" />
+                            <input type="email" th:field="*{correos[__${iterStat.index}__].correo}" class="form-input input-correo" maxlength="100" placeholder="Ej: cliente@ejemplo.com" />
                             <button type="button" class="btn btn-danger btn-sm btn-remove">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                             </button>

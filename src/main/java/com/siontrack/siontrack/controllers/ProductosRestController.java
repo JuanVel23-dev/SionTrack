@@ -24,7 +24,11 @@ public class ProductosRestController {
    public ResponseEntity<List<ProductoPopularDTO>> getPopulares(
             @RequestParam(defaultValue = "10") int limite,
             @RequestParam(defaultValue = "general") String periodo) {
-        
+
+        // Limitar el parametro para prevenir consumo excesivo de memoria
+        if (limite < 1) limite = 1;
+        if (limite > 100) limite = 100;
+
         return ResponseEntity.ok(productosServicios.obtenerListaPopulares(limite, periodo));
     }
     

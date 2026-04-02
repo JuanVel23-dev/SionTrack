@@ -201,7 +201,7 @@
 
         // Eliminar vehículo: cierra todo y recarga
         function eliminarVehiculo(vehiculoId) {
-            fetch('/api/vehiculos/' + vehiculoId, { method: 'DELETE' })
+            SionUtils.fetchSeguro('/api/vehiculos/' + vehiculoId, { method: 'DELETE' })
                 .then(function(res) {
                     if (res.ok) {
                         overlay.classList.remove('open');

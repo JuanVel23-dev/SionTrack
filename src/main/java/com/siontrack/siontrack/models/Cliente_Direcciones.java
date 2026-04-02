@@ -23,6 +23,7 @@ public class Cliente_Direcciones {
     @Getter @Setter
     private int direccion_id;
     
+    @jakarta.persistence.Column(nullable = false, length = 300)
     @Getter @Setter
     private String direccion;
 

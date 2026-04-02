@@ -11,6 +11,9 @@ import com.siontrack.siontrack.DTO.Request.ProveedoresRequestDTO;
 import com.siontrack.siontrack.DTO.Response.ProveedoresResponseDTO;
 import com.siontrack.siontrack.services.ProveedoresService;
 
+import jakarta.validation.Valid;
+import org.springframework.validation.BindingResult;
+
 @Controller
 @RequestMapping("/web") 
 public class ProveedoresViewController {
@@ -48,22 +51,45 @@ public class ProveedoresViewController {
 
     @PostMapping("/proveedores/guardar")
     public String guardarProveedor(
-            @RequestParam(value = "proveedorId", required = false) Integer proveedorId, 
-            @ModelAttribute("proveedor") ProveedoresRequestDTO proveedorDtoDelFormulario,
+            @RequestParam(value = "proveedorId", required = false) Integer proveedorId,
+            @Valid @ModelAttribute("proveedor") ProveedoresRequestDTO proveedorDtoDelFormulario,
+            BindingResult bindingResult,
+            Model model,
             RedirectAttributes redirectAttributes) {
-        
-        if (proveedorId == null) {
-            proveedoresService.crearProveedor(proveedorDtoDelFormulario);
-            redirectAttributes.addFlashAttribute("successMessage", "Proveedor agregado exitosamente");
-        } else {
-            proveedoresService.actualizarProveedor(proveedorId, proveedorDtoDelFormulario);
-            redirectAttributes.addFlashAttribute("successMessage", "Proveedor actualizado exitosamente");
+
+        if (bindingResult.hasErrors()) {
+            if (proveedorId != null) {
+                model.addAttribute("proveedorId", proveedorId);
+            }
+            StringBuilder errores = new StringBuilder();
+            bindingResult.getFieldErrors().forEach(error -> {
+                if (errores.length() > 0) errores.append(". ");
+                errores.append(error.getDefaultMessage());
+            });
+            model.addAttribute("errorMessage", errores.length() > 0 ? errores.toString() : "Por favor corrige los errores en el formulario");
+            return "proveedores-form";
         }
-        return "redirect:/web/proveedores"; 
+
+        try {
+            if (proveedorId == null) {
+                proveedoresService.crearProveedor(proveedorDtoDelFormulario);
+                redirectAttributes.addFlashAttribute("successMessage", "Proveedor agregado exitosamente");
+            } else {
+                proveedoresService.actualizarProveedor(proveedorId, proveedorDtoDelFormulario);
+                redirectAttributes.addFlashAttribute("successMessage", "Proveedor actualizado exitosamente");
+            }
+        } catch (Exception e) {
+            if (proveedorId != null) {
+                model.addAttribute("proveedorId", proveedorId);
+            }
+            model.addAttribute("errorMessage", e.getMessage());
+            return "proveedores-form";
+        }
+        return "redirect:/web/proveedores";
     }
 
-    @GetMapping("/proveedores/eliminar/{id}")
-    public String eliminarProveedor(@PathVariable Integer id, RedirectAttributes redirectAttributes) { 
+    @PostMapping("/proveedores/eliminar/{id}")
+    public String eliminarProveedor(@PathVariable Integer id, RedirectAttributes redirectAttributes) {
         proveedoresService.borrarProveedor(id);
         redirectAttributes.addFlashAttribute("deleteMessage", "Proveedor eliminado exitosamente");
         return "redirect:/web/proveedores"; 

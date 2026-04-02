@@ -55,10 +55,12 @@
                                id="placa"
                                th:field="*{placa}"
                                class="form-input"
+                               th:errorclass="'error'"
                                required
-                               maxlength="7"
+                               maxlength="10"
                                placeholder="Ej: ABC-123"
                                autocomplete="off">
+                        <span th:if="${#fields.hasErrors('placa')}" th:errors="*{placa}" class="form-error"></span>
                         <span class="form-help-placa">Formato: ABC-123 o ABC-12D</span>
                     </div>
                     <div class="form-group">
@@ -67,10 +69,12 @@
                                id="kilometraje_actual"
                                th:field="*{kilometraje_actual}"
                                class="form-input"
+                               th:errorclass="'error'"
                                required
                                inputmode="numeric"
-                               placeholder="Ej: 50.000"
+                               placeholder="Ej: 50000"
                                autocomplete="off">
+                        <span th:if="${#fields.hasErrors('kilometraje_actual')}" th:errors="*{kilometraje_actual}" class="form-error"></span>
                         <span class="form-help">Solo números enteros</span>
                     </div>
                 </div>

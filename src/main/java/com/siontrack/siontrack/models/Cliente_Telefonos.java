@@ -22,6 +22,7 @@ public class Cliente_Telefonos {
     @Getter @Setter 
     private int telefono_id;
     
+    @jakarta.persistence.Column(nullable = false, length = 20)
     @Getter @Setter
     private String telefono;
 

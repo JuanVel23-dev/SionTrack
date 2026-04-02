@@ -6,6 +6,7 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -26,27 +27,32 @@ public class Proveedores {
     @Setter
     private int proveedor_id;
 
+    @Column(nullable = false, length = 100)
     @Getter
     @Setter
     private String nombre;
 
+    @Column(length = 20)
     @Getter
     @Setter
     private String telefono;
 
+    @Column(length = 100)
     @Getter
     @Setter
     private String email;
 
+    @Column(length = 200)
     @Getter
     @Setter
     private String direccion;
 
+    @Column(length = 100)
     @Getter
     @Setter
     private String nombre_contacto;
 
-    @OneToMany(mappedBy = "proveedor",cascade = CascadeType.ALL,  fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "proveedor", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.LAZY)
     @JsonManagedReference("productos")
     @Getter 
     @Setter

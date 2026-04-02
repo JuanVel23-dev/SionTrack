@@ -239,9 +239,10 @@
             dropdown.insertBefore(div, emptyMsg);
         });
 
-        // Mostrar/ocultar búsqueda según cantidad de opciones
+        // Mostrar/ocultar búsqueda según cantidad de opciones o atributo data-searchable
         if (searchWrap) {
-            searchWrap.style.display = conteoReales >= MIN_OPCIONES_BUSQUEDA ? '' : 'none';
+            var forzarBusqueda = select.hasAttribute('data-searchable');
+            searchWrap.style.display = (forzarBusqueda || conteoReales >= MIN_OPCIONES_BUSQUEDA) ? '' : 'none';
         }
     }
 

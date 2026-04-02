@@ -30,15 +30,17 @@ public class Clientes {
     @Setter
     private int cliente_id;
 
+    @Column(nullable = false, length = 100)
     @Getter
     @Setter
     private String nombre;
 
-    @Column(name = "cedula_ruc", updatable = true)
+    @Column(name = "cedula_ruc", nullable = false, length = 20, unique = true)
     @Getter
     @Setter
     private String cedula_ruc;
 
+    @Column(nullable = false, length = 25)
     @Getter
     @Setter
     private String tipo_cliente;
@@ -84,7 +86,7 @@ public class Clientes {
     @Setter
     private List<Vehiculos> vehiculos = new ArrayList<>();
 
-    @OneToMany(mappedBy = "clientes", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "clientes", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.LAZY)
     @JsonManagedReference("servicios")
     @Getter
     @Setter
