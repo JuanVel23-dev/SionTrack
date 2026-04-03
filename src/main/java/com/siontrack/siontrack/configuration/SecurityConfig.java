@@ -59,7 +59,7 @@ public class SecurityConfig {
                         .csrfTokenRequestHandler(requestHandler))
 
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**", "/login", "/error").permitAll()
+                        .requestMatchers("/css/**", "/js/**", "/images/**", "/img/**", "/webjars/**", "/login", "/error").permitAll()
                         .requestMatchers("/api/webhook", "/api/webhook/**").permitAll()
                         // Restringir endpoints de Actuator
                         .requestMatchers("/actuator/health").authenticated()

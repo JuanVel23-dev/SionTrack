@@ -40,20 +40,26 @@
 .sidebar-logo {
   width: 36px;
   height: 36px;
-  background: var(--accent-primary);
+  background: #0a0a0f;
+  border: 1.5px solid rgba(212, 175, 55, 0.35);
   border-radius: var(--radius-lg);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--fg-on-accent);
-  font-weight: var(--weight-bold);
-  font-size: var(--text-lg);
-  transition: transform var(--duration-fast) var(--ease-bounce);
+  overflow: hidden;
+  transition: all var(--duration-fast) var(--ease-bounce);
   flex-shrink: 0;
 }
 
 .sidebar-logo:hover {
-  transform: scale(1.05);
+  border-color: rgba(212, 175, 55, 0.6);
+  box-shadow: 0 0 12px rgba(212, 175, 55, 0.15);
+}
+
+.sidebar-logo-img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
 }
 
 .sidebar-title {
@@ -274,6 +280,11 @@
 
 [data-theme="light"] .main-header {
   background: rgba(255, 255, 255, 0.9);
+}
+
+[data-theme="light"] .sidebar-logo {
+  border-color: rgba(161, 128, 22, 0.4);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 [data-theme="dark"] .main-header {

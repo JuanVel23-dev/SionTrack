@@ -3733,16 +3733,15 @@ body.login-page {
     width: 60px;
     height: 60px;
     border-radius: 18px;
-    background: linear-gradient(135deg, #d4af37 0%, #f4d03f 50%, #d4af37 100%);
-    background-size: 200% 200%;
+    background: #0a0a0f;
+    border: 1.5px solid rgba(212, 175, 55, 0.3);
     display: flex;
     align-items: center;
     justify-content: center;
     box-shadow:
-        0 8px 30px rgba(212, 175, 55, 0.35),
-        0 0 0 1px rgba(255, 255, 255, 0.1) inset;
-    animation: login-logo-float 4s ease-in-out infinite,
-               login-logo-shimmer 3s ease-in-out infinite;
+        0 8px 30px rgba(212, 175, 55, 0.2),
+        0 0 0 1px rgba(212, 175, 55, 0.08) inset;
+    animation: login-logo-float 4s ease-in-out infinite;
 }
 
 .logo-letter {
@@ -3751,6 +3750,14 @@ body.login-page {
     color: #0a0a0b;
     line-height: 1;
     user-select: none;
+}
+
+.logo-img {
+    width: 90%;
+    height: 90%;
+    object-fit: contain;
+    user-select: none;
+    pointer-events: none;
 }
 
 @keyframes login-logo-float {
@@ -4627,6 +4634,14 @@ body.login-page {
 
 [data-theme="light"] .login-version {
     color: #a1a1aa;
+}
+
+/* Logo — fondo oscuro se mantiene, borde mas visible */
+[data-theme="light"] .logo-core {
+    border-color: rgba(161, 128, 22, 0.4);
+    box-shadow:
+        0 8px 30px rgba(0, 0, 0, 0.1),
+        0 0 0 1px rgba(161, 128, 22, 0.12) inset;
 }
 
 /* ============================================
