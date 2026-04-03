@@ -332,6 +332,12 @@
             var cantidadInput = fila.querySelector('.detalle-cantidad');
             var precioInput = fila.querySelector('.detalle-precio');
 
+            // Aplicar filtro numerico a inputs dinamicos
+            if (window.SionNumericFilter) {
+                SionNumericFilter(cantidadInput);
+                SionNumericFilter(precioInput);
+            }
+
             // Al seleccionar producto → auto-precio
             productoSelect.addEventListener('change', function() {
                 var selected = this.options[this.selectedIndex];
