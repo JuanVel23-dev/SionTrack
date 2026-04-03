@@ -4471,6 +4471,193 @@ body.login-page {
 }
 
 
+/* ============================================
+   LOGIN — TEMA CLARO
+   ============================================ */
+[data-theme="light"] body.login-page {
+    background: #f5f3ee;
+}
+
+[data-theme="light"] .login-bg-vignette {
+    background: radial-gradient(ellipse at center, transparent 40%, #f5f3ee 100%);
+}
+
+[data-theme="light"] .login-bg-gradient {
+    background:
+        radial-gradient(ellipse at 20% 20%, rgba(161, 128, 22, 0.06) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 80%, rgba(161, 128, 22, 0.04) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 50%, rgba(161, 128, 22, 0.02) 0%, transparent 70%);
+}
+
+[data-theme="light"] .login-bg-grid {
+    background-image:
+        linear-gradient(rgba(161, 128, 22, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(161, 128, 22, 0.05) 1px, transparent 1px);
+}
+
+[data-theme="light"] .login-card {
+    background: rgba(255, 255, 255, 0.85);
+    border-color: rgba(161, 128, 22, 0.12);
+    box-shadow:
+        0 0 0 1px rgba(0, 0, 0, 0.04) inset,
+        0 30px 60px -15px rgba(0, 0, 0, 0.1),
+        0 0 80px -20px rgba(161, 128, 22, 0.08);
+}
+
+[data-theme="light"] .login-scanline {
+    background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(161, 128, 22, 0.0) 15%,
+        rgba(161, 128, 22, 0.25) 50%,
+        rgba(161, 128, 22, 0.0) 85%,
+        transparent 100%);
+}
+
+[data-theme="light"] .login-card-glow {
+    background: linear-gradient(135deg,
+        rgba(161, 128, 22, 0.1) 0%,
+        transparent 40%,
+        transparent 60%,
+        rgba(161, 128, 22, 0.06) 100%);
+}
+
+/* Orbitas del logo */
+[data-theme="light"] .logo-orbit-1 {
+    border-color: rgba(161, 128, 22, 0.2);
+}
+
+[data-theme="light"] .logo-orbit-2 {
+    border-color: rgba(161, 128, 22, 0.12);
+}
+
+[data-theme="light"] .logo-orbit-3 {
+    border-color: rgba(161, 128, 22, 0.08);
+}
+
+/* Pulso del logo */
+[data-theme="light"] .logo-pulse {
+    border-color: rgba(161, 128, 22, 0.25);
+}
+
+/* Textos */
+[data-theme="light"] .login-title {
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .login-subtitle {
+    color: #71717a;
+}
+
+/* Inputs del login */
+[data-theme="light"] .input-icon {
+    color: rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="light"] .input-field {
+    background: rgba(0, 0, 0, 0.02);
+    border-color: rgba(0, 0, 0, 0.1);
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .input-label {
+    color: rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="light"] .input-field:focus ~ .input-label,
+[data-theme="light"] .input-field:not(:placeholder-shown) ~ .input-label {
+    color: hsl(43, 96%, 32%);
+    background: rgba(255, 255, 255, 0.95);
+}
+
+[data-theme="light"] .input-field:focus {
+    border-color: rgba(161, 128, 22, 0.4);
+    background: rgba(161, 128, 22, 0.03);
+    box-shadow: 0 0 20px -8px rgba(161, 128, 22, 0.12);
+}
+
+[data-theme="light"] .input-wrapper.focused .input-icon,
+[data-theme="light"] .input-field:focus ~ .input-icon {
+    color: hsl(43, 96%, 32%);
+}
+
+/* Linea de enfoque */
+[data-theme="light"] .input-focus-line {
+    background: linear-gradient(90deg, transparent, hsl(43, 96%, 35%), hsl(43, 96%, 50%), hsl(43, 96%, 35%), transparent);
+}
+
+/* Toggle de contrasena */
+[data-theme="light"] .toggle-password {
+    color: rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="light"] .toggle-password:hover {
+    color: hsl(43, 96%, 32%);
+    background: rgba(161, 128, 22, 0.08);
+}
+
+/* Alertas del login */
+[data-theme="light"] .login-alert-error {
+    background: rgba(220, 38, 38, 0.06);
+    border-color: rgba(220, 38, 38, 0.15);
+    color: #b91c1c;
+}
+
+[data-theme="light"] .login-alert-error .login-alert-icon {
+    background: rgba(220, 38, 38, 0.1);
+}
+
+[data-theme="light"] .login-alert-success {
+    background: rgba(22, 163, 74, 0.06);
+    border-color: rgba(22, 163, 74, 0.15);
+    color: #15803d;
+}
+
+[data-theme="light"] .login-alert-success .login-alert-icon {
+    background: rgba(22, 163, 74, 0.1);
+}
+
+/* Footer y version */
+[data-theme="light"] .login-footer-line {
+    background: linear-gradient(90deg, transparent, rgba(161, 128, 22, 0.2), transparent);
+}
+
+[data-theme="light"] .login-footer p {
+    color: #a1a1aa;
+}
+
+[data-theme="light"] .login-version {
+    color: #a1a1aa;
+}
+
+/* ============================================
+   PAGINAS INTERNAS — TEMA CLARO
+   ============================================ */
+
+/* Productos populares card */
+[data-theme="light"] .popular-card {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(0, 0, 0, 0.03);
+}
+
+/* Calendar dropdown (servicios) */
+[data-theme="light"] .cal-dropdown {
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.05);
+}
+
+/* Pais selector dropdown */
+[data-theme="light"] .pais-dropdown {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Placa overlay y panel */
+[data-theme="light"] .placa-overlay.open {
+    background: rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="light"] .placa-panel {
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.05);
+}
+
+
 /* ████████████████████████████████████████████
    FILTROS CHIPS — Reutilizable
    ████████████████████████████████████████████ */

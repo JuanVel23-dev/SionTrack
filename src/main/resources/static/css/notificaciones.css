@@ -565,6 +565,32 @@
 .restock-btn-secondary:hover { background: var(--bg-overlay); color: var(--fg-default); transform: translateY(-1px); }
 
 /* ============================================
+   TEMA CLARO — NOTIFICACIONES
+   ============================================ */
+
+/* Dropdown de notificaciones */
+[data-theme="light"] .notif-dropdown {
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.05);
+}
+
+/* Stock card del dashboard */
+[data-theme="light"] .stock-card {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(0, 0, 0, 0.03);
+}
+
+/* Overlay del modal de reabastecimiento */
+[data-theme="light"] .restock-overlay.open {
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+
+/* Modal de reabastecimiento */
+[data-theme="light"] .restock-modal {
+    box-shadow: 0 32px 80px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
+}
+
+/* ============================================
    RESPONSIVE
    ============================================ */
 /* Tablets y pantallas medianas */

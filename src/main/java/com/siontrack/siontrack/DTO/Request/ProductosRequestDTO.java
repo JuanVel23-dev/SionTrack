@@ -40,13 +40,13 @@ public class ProductosRequestDTO {
     private String unidad_medida;
 
     @NotNull(message = "El precio de compra es obligatorio")
-    @DecimalMin(value = "0.00", message = "El precio de compra no puede ser negativo")
+    @DecimalMin(value = "0.01", inclusive = true, message = "El precio de compra debe ser mayor a cero")
     @Getter
     @Setter
     private BigDecimal precio_compra;
 
     @NotNull(message = "El precio de venta es obligatorio")
-    @DecimalMin(value = "0.00", message = "El precio de venta no puede ser negativo")
+    @DecimalMin(value = "0.01", inclusive = true, message = "El precio de venta debe ser mayor a cero")
     @Getter
     @Setter
     private BigDecimal precio_venta;
@@ -59,12 +59,14 @@ public class ProductosRequestDTO {
     @Setter
     private Integer proveedor_id;
 
-    @Min(value = 0, message = "La cantidad disponible no puede ser negativa")
+    @NotNull(message = "La cantidad disponible es obligatoria")
+    @Min(value = 1, message = "La cantidad disponible debe ser al menos 1")
     @Getter
     @Setter
     private Integer cantidad_disponible;
 
-    @Min(value = 0, message = "El stock minimo no puede ser negativo")
+    @NotNull(message = "El stock minimo es obligatorio")
+    @Min(value = 1, message = "El stock minimo debe ser al menos 1")
     @Getter
     @Setter
     private Integer stock_minimo;

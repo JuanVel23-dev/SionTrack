@@ -2280,6 +2280,112 @@ a.table-action-btn {
 }
 
 /* ============================================
+   TEMA CLARO — COMPONENTES
+   ============================================ */
+
+/* Dropdowns y selects personalizados */
+[data-theme="light"] .custom-select-dropdown {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .custom-select-search {
+  background: var(--bg-overlay);
+}
+
+/* Datepicker */
+[data-theme="light"] .sdp-dropdown {
+  box-shadow:
+    0 24px 80px rgba(0, 0, 0, 0.12),
+    0 8px 24px rgba(0, 0, 0, 0.08),
+    0 0 0 1px rgba(0, 0, 0, 0.04);
+}
+
+/* Sion datepicker button */
+[data-theme="light"] .sion-datepicker-btn {
+  background: var(--bg-surface);
+}
+
+/* Loading overlay */
+[data-theme="light"] .loading-overlay {
+  background: rgba(255, 255, 255, 0.7);
+}
+
+/* Filter dropdown */
+[data-theme="light"] .filter-menu {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Confirm modal */
+[data-theme="light"] .confirm-backdrop {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="light"] .confirm-dialog {
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+/* Toast */
+[data-theme="light"] .toast {
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+/* Badges — colores mas saturados en fondo claro */
+[data-theme="light"] .badge-success {
+  background-color: rgba(22, 163, 74, 0.1);
+  color: #15803d;
+  border-color: rgba(22, 163, 74, 0.25);
+}
+
+[data-theme="light"] .badge-info {
+  background-color: rgba(37, 99, 235, 0.1);
+  color: #1d4ed8;
+  border-color: rgba(37, 99, 235, 0.25);
+}
+
+[data-theme="light"] .badge-warning {
+  background-color: rgba(202, 138, 4, 0.1);
+  color: #a16207;
+  border-color: rgba(202, 138, 4, 0.25);
+}
+
+[data-theme="light"] .badge-error {
+  background-color: rgba(220, 38, 38, 0.1);
+  color: #b91c1c;
+  border-color: rgba(220, 38, 38, 0.25);
+}
+
+[data-theme="light"] .badge-neutral {
+  background-color: rgba(113, 113, 122, 0.1);
+  color: #52525b;
+  border-color: rgba(113, 113, 122, 0.2);
+}
+
+[data-theme="light"] .badge-primary {
+  background-color: rgba(161, 128, 22, 0.1);
+  color: hsl(43, 96%, 30%);
+  border-color: rgba(161, 128, 22, 0.25);
+}
+
+/* Botones — sombras mas suaves */
+[data-theme="light"] .btn-primary:hover {
+  box-shadow: 0 4px 15px rgba(161, 128, 22, 0.25);
+}
+
+[data-theme="light"] .btn-danger:hover {
+  box-shadow: 0 4px 15px rgba(220, 38, 38, 0.2);
+}
+
+[data-theme="light"] .btn-success:hover {
+  box-shadow: 0 4px 15px rgba(22, 163, 74, 0.2);
+}
+
+/* Stat cards — sombras mas suaves en hover */
+[data-theme="light"] .stat-card[data-accent="gold"]:hover  { box-shadow: 0 8px 25px rgba(161, 128, 22, 0.08); }
+[data-theme="light"] .stat-card[data-accent="blue"]:hover  { box-shadow: 0 8px 25px rgba(37, 99, 235, 0.08); }
+[data-theme="light"] .stat-card[data-accent="green"]:hover { box-shadow: 0 8px 25px rgba(16, 185, 129, 0.08); }
+[data-theme="light"] .stat-card[data-accent="amber"]:hover { box-shadow: 0 8px 25px rgba(202, 138, 4, 0.08); }
+
+/* ============================================
    RESPONSIVE COMPONENTES
    ============================================ */
 @media (max-width: 1024px) {

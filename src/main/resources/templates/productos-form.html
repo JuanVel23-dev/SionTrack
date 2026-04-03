@@ -117,8 +117,9 @@
                                class="form-input"
                                th:errorclass="'error'"
                                step="0.01"
-                               min="0"
-                               placeholder="0.00">
+                               min="0.01"
+                               required
+                               placeholder="1.00">
                         <span th:if="${#fields.hasErrors('precio_compra')}" th:errors="*{precio_compra}" class="form-error"></span>
                     </div>
                     <div class="form-group">
@@ -129,9 +130,9 @@
                                class="form-input"
                                th:errorclass="'error'"
                                step="0.01"
-                               min="0"
+                               min="0.01"
                                required
-                               placeholder="0.00">
+                               placeholder="1.00">
                         <span th:if="${#fields.hasErrors('precio_venta')}" th:errors="*{precio_venta}" class="form-error"></span>
                     </div>
                 </div>
@@ -181,9 +182,9 @@
                                th:field="*{cantidad_disponible}"
                                class="form-input"
                                th:errorclass="'error'"
-                               min="0"
+                               min="1"
                                required
-                               placeholder="0">
+                               placeholder="1">
                         <span th:if="${#fields.hasErrors('cantidad_disponible')}" th:errors="*{cantidad_disponible}" class="form-error"></span>
                     </div>
                     <div class="form-group">
@@ -193,7 +194,7 @@
                                th:field="*{stock_minimo}"
                                class="form-input"
                                th:errorclass="'error'"
-                               min="0"
+                               min="1"
                                required
                                placeholder="10">
                         <span th:if="${#fields.hasErrors('stock_minimo')}" th:errors="*{stock_minimo}" class="form-error"></span>
