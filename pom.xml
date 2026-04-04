@@ -31,7 +31,6 @@
 		<java.version>21</java.version>
 	</properties>
 	<dependencies>
-
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-actuator</artifactId>
@@ -94,8 +93,7 @@
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
-			<version>2.17.2</version>
-		</dependency>
+		</dependency>	
 		<dependency>
 			<groupId>org.modelmapper</groupId>
 			<artifactId>modelmapper</artifactId>
@@ -117,7 +115,6 @@
 			<version>8.0.5</version>
 			<type>pom</type>
 		</dependency>
-
 	</dependencies>
 
 	<build>
