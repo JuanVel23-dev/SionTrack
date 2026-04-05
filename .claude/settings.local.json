@@ -4,7 +4,8 @@
       "Bash(for sel:*)",
       "Bash(do echo:*)",
       "Bash(grep -c \"$sel\" componentes.css)",
-      "Bash(done)"
+      "Bash(done)",
+      "Bash(./mvnw compile:*)"
     ]
   }
 }

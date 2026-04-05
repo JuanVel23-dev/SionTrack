@@ -126,9 +126,13 @@ public class NotificacionesService {
                     Map<String, Object> map = new HashMap<>();
                     map.put("id", c.getCliente_id());
                     map.put("nombre", c.getNombre());
+                    map.put("cedula", c.getCedula_ruc());
                     map.put("telefono", c.getTelefonos() != null && !c.getTelefonos().isEmpty()
                             ? c.getTelefonos().get(0).getTelefono()
                             : "Sin teléfono");
+                    map.put("fechaCreacion", c.getFecha_registro() != null
+                            ? c.getFecha_registro().toString()
+                            : null);
                     return map;
                 })
                 .collect(Collectors.toList());

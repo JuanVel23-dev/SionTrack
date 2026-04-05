@@ -36,6 +36,11 @@
                 Recordatorios
                 <span class="ntab-count" th:text="${recordatorios != null ? #lists.size(recordatorios) : 0}">0</span>
             </button>
+            <button type="button" class="ntab-btn" data-tab="pendientes">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                Usuarios Pendientes
+                <span class="ntab-count" id="pendientes-count" th:text="${pendientesCount != null ? pendientesCount : 0}">0</span>
+            </button>
         </div>
 
         <!-- Sliding Panels -->
@@ -53,7 +58,7 @@
                         </div>
                     </div>
 
-                    <table class="table" th:if="${promociones != null and !promociones.isEmpty()}">
+                    <table class="table ntab-table" th:if="${promociones != null and !promociones.isEmpty()}">
                         <thead>
                             <tr>
                                 <th class="text-left" data-sort="text">Cliente</th>
@@ -129,7 +134,7 @@
                         </div>
                     </div>
 
-                    <table class="table" th:if="${recordatorios != null and !recordatorios.isEmpty()}">
+                    <table class="table ntab-table" th:if="${recordatorios != null and !recordatorios.isEmpty()}">
                         <thead>
                             <tr>
                                 <th class="text-left" data-sort="text">Cliente</th>
@@ -203,6 +208,155 @@
                     </div>
                 </div>
 
+                <!-- ===== PANEL: USUARIOS PENDIENTES ===== -->
+                <div class="ntab-panel" id="panel-pendientes">
+                    <div class="table-toolbar">
+                        <div class="table-toolbar-left">
+                            <div class="table-search">
+                                <svg class="table-search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                                <input type="text" class="ntab-search" data-target="pendientes" id="pendientes-search" placeholder="Buscar usuarios pendientes...">
+                            </div>
+                        </div>
+                        <div class="table-toolbar-right">
+                            <div class="pendientes-acciones">
+                                <button type="button" class="clientes-accion-btn clientes-accion-todos" id="btn-seleccionar-todos-pend">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="9 11 12 14 22 4"></polyline>
+                                        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                                    </svg>
+                                    Todos
+                                </button>
+                                <button type="button" class="clientes-accion-btn clientes-accion-ninguno" id="btn-deseleccionar-todos-pend">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                    </svg>
+                                    Ninguno
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Barra superior con contador y botón confirmar -->
+                    <div id="pendientes-footer" class="pendientes-footer" style="display:none;">
+                        <div class="pendientes-footer-info">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
+                            <span id="pendientes-seleccion-texto">0 usuarios seleccionados</span>
+                        </div>
+                        <button type="button" class="btn btn-primary" id="btn-confirmar-envio-pend" disabled>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.555 4.126 1.528 5.86L.06 23.487a.5.5 0 0 0 .613.613l5.627-1.468A11.943 11.943 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22a9.94 9.94 0 0 1-5.332-1.544l-.382-.228-3.332.869.886-3.236-.25-.396A9.935 9.935 0 0 1 2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>
+                            <span>Enviar Consentimiento</span>
+                        </button>
+                    </div>
+
+                    <!-- Estado de carga -->
+                    <div id="pendientes-loading" class="clientes-loading" style="display:none;">
+                        <div class="clientes-loading-spinner"></div>
+                        <span>Cargando usuarios pendientes...</span>
+                    </div>
+
+                    <!-- Tabla de pendientes (llenada por JS) -->
+                    <div id="pendientes-tabla-wrap" style="display:none;">
+                        <table class="table pend-table">
+                            <thead>
+                                <tr>
+                                    <th>
+                                        <input type="checkbox" id="check-maestro-pend" class="cliente-check-maestro" title="Seleccionar/deseleccionar todos">
+                                    </th>
+                                    <th class="text-left">Nombre</th>
+                                    <th class="text-left">Cédula</th>
+                                    <th class="text-left">Teléfono</th>
+                                    <th class="text-left">Fecha de Creación</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pendientes-tbody"></tbody>
+                        </table>
+                    </div>
+
+                    <!-- Sin usuarios pendientes -->
+                    <div id="pendientes-vacio" class="table-empty" style="display:none;">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">
+                                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                            </div>
+                            <h3 class="empty-state-title">Sin usuarios pendientes</h3>
+                            <p class="empty-state-description">Todos los usuarios ya tienen su consentimiento procesado</p>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: confirmación de envío masivo de consentimiento -->
+    <div class="cli-modal-overlay" id="modalConsentimientoOverlay">
+        <div class="cli-modal" style="max-width:480px;">
+            <!-- Header -->
+            <div class="cli-modal-header">
+                <div class="cli-modal-header-left">
+                    <div class="cli-modal-icon" style="background:rgba(59,130,246,.12); border-color:rgba(59,130,246,.2); color:#3b82f6;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 2L11 13"></path>
+                            <path d="M22 2L15 22L11 13L2 9L22 2Z"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="cli-modal-title">Confirmar envío</div>
+                        <div class="cli-modal-subtitle">Solicitud de consentimiento WhatsApp</div>
+                    </div>
+                </div>
+                <div class="cli-modal-header-right">
+                    <button class="cli-modal-close" id="btn-cerrar-modal-consent">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Body -->
+            <div class="cli-modal-body" style="padding:24px;">
+                <div style="display:flex; align-items:flex-start; gap:12px; padding:16px; background:var(--bg-elevated, rgba(255,255,255,.04)); border:1px solid var(--border-default); border-radius:12px; margin-bottom:20px;">
+                    <div style="flex-shrink:0; margin-top:2px;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                    </div>
+                    <p style="margin:0; font-size:14px; color:var(--fg-default); line-height:1.5;">
+                        Se enviará la solicitud de consentimiento por WhatsApp a
+                        <strong id="modal-consent-cantidad" style="color:var(--accent-primary);">0</strong>
+                        usuario(s) seleccionado(s).
+                    </p>
+                </div>
+
+                <div style="padding:12px 16px; background:var(--bg-muted); border-radius:10px; margin-bottom:16px;">
+                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                        <span style="font-size:12px; font-weight:600; color:var(--fg-subtle);">Importante</span>
+                    </div>
+                    <ul style="margin:0; padding-left:18px; font-size:13px; color:var(--fg-subtle); line-height:1.6;">
+                        <li>Cada usuario recibirá un mensaje de WhatsApp solicitando su consentimiento</li>
+                        <li>Esta acción cumple con la <strong>Ley 1581 de 2012</strong> de protección de datos</li>
+                    </ul>
+                </div>
+
+                <p style="margin:0; font-size:14px; color:var(--fg-default); text-align:center; font-weight:500;">
+                    ¿Deseas continuar con el envío?
+                </p>
+            </div>
+
+            <!-- Footer -->
+            <div class="cli-modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" id="btn-cancelar-consent">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    Cancelar
+                </button>
+                <button type="button" class="btn btn-primary btn-sm" id="btn-enviar-consent">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    Confirmar Envío
+                </button>
             </div>
         </div>
     </div>

@@ -25,6 +25,8 @@ public class PromocionesViewController {
     public String mostrarNotificaciones(Model model) {
         model.addAttribute("promociones", notificacionesService.obtenerPromocionesEnviadas());
         model.addAttribute("recordatorios", notificacionesService.obtenerRecordatorios());
+        var pendientes = notificacionesService.obtenerClientesPendientesConsentimiento();
+        model.addAttribute("pendientesCount", pendientes.size());
         return "notificaciones-lista";
     }
 

@@ -1,6 +1,7 @@
 /**
  * SionTrack — Notificaciones Tabs
- * Sliding entre paneles, búsqueda por tab y modal de edición de fecha
+ * Sliding entre paneles, búsqueda por tab, modal de edición de fecha
+ * y gestión de usuarios pendientes de consentimiento
  */
 (function() {
     'use strict';
@@ -10,6 +11,7 @@
         /* ── Tabs: sliding entre paneles ── */
         var tabs = document.querySelectorAll('.ntab-btn');
         var track = document.getElementById('ntab-track');
+        var pendientesCargados = false;
 
         if (tabs.length && track) {
             tabs.forEach(function(tab, index) {
@@ -20,6 +22,11 @@
                     this.classList.add('active');
 
                     track.style.transform = 'translateX(-' + (index * 100) + '%)';
+
+                    // Cargar pendientes la primera vez que se accede al tab
+                    if (tab.dataset.tab === 'pendientes' && !pendientesCargados) {
+                        cargarPendientes();
+                    }
                 });
             });
         }
@@ -29,6 +36,12 @@
             input.addEventListener('input', SionUtils.debounce(function() {
                 var target = input.dataset.target;
                 var term = input.value.toLowerCase().trim();
+
+                if (target === 'pendientes') {
+                    filtrarPendientes(term);
+                    return;
+                }
+
                 var rows = document.querySelectorAll('.data-row-' + target);
 
                 rows.forEach(function(row) {
@@ -75,7 +88,275 @@
             }
         } catch(e) {}
 
-        /* ── Modal: cambiar fecha de envío de recordatorio ── */
+        /* ══════════════════════════════════════════
+           USUARIOS PENDIENTES DE CONSENTIMIENTO
+           ══════════════════════════════════════════ */
+
+        var pendientesData = [];
+        var tbody = document.getElementById('pendientes-tbody');
+        var loading = document.getElementById('pendientes-loading');
+        var tablaWrap = document.getElementById('pendientes-tabla-wrap');
+        var vacio = document.getElementById('pendientes-vacio');
+        var footer = document.getElementById('pendientes-footer');
+        var textoSeleccion = document.getElementById('pendientes-seleccion-texto');
+        var btnConfirmar = document.getElementById('btn-confirmar-envio-pend');
+        var checkMaestro = document.getElementById('check-maestro-pend');
+        var countBadge = document.getElementById('pendientes-count');
+
+        function cargarPendientes() {
+            if (!tbody || !loading) return;
+            pendientesCargados = true;
+
+            loading.style.display = 'flex';
+            tablaWrap.style.display = 'none';
+            vacio.style.display = 'none';
+            footer.style.display = 'none';
+
+            SionUtils.fetchSeguro('/api/notificaciones/pendientes')
+                .then(function(res) { return res.json(); })
+                .then(function(data) {
+                    pendientesData = data || [];
+                    renderizarPendientes(pendientesData);
+                })
+                .catch(function(err) {
+                    if (typeof showToast === 'function') showToast('Error al cargar usuarios pendientes', 'error');
+                    vacio.style.display = 'block';
+                })
+                .finally(function() {
+                    loading.style.display = 'none';
+                });
+        }
+
+        function renderizarPendientes(datos) {
+            tbody.innerHTML = '';
+
+            if (!datos || datos.length === 0) {
+                tablaWrap.style.display = 'none';
+                vacio.style.display = 'block';
+                footer.style.display = 'none';
+                return;
+            }
+
+            datos.forEach(function(cliente) {
+                var tr = document.createElement('tr');
+                tr.className = 'data-row data-row-pendientes';
+                tr.dataset.id = cliente.id;
+
+                // Formatear fecha
+                var fechaTexto = '—';
+                if (cliente.fechaCreacion) {
+                    var partes = cliente.fechaCreacion.split('-');
+                    if (partes.length === 3) {
+                        fechaTexto = partes[2] + '/' + partes[1] + '/' + partes[0];
+                    }
+                }
+
+                tr.innerHTML =
+                    '<td>' +
+                        '<input type="checkbox" class="cliente-check pend-check" data-id="' + cliente.id + '">' +
+                    '</td>' +
+                    '<td class="text-left pend-cell-nombre">' + escapeHtml(cliente.nombre) + '</td>' +
+                    '<td class="text-left pend-cell-cedula">' + escapeHtml(cliente.cedula || '—') + '</td>' +
+                    '<td class="text-left pend-cell-telefono">' + escapeHtml(cliente.telefono || '—') + '</td>' +
+                    '<td class="text-left pend-cell-fecha">' + escapeHtml(fechaTexto) + '</td>';
+
+                tbody.appendChild(tr);
+            });
+
+            tablaWrap.style.display = 'block';
+            vacio.style.display = 'none';
+            footer.style.display = 'flex';
+            actualizarContador();
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            var div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function escapeAttr(text) {
+            if (!text) return '';
+            return text.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        function filtrarPendientes(term) {
+            var rows = document.querySelectorAll('.data-row-pendientes');
+            rows.forEach(function(row) {
+                var visible = row.textContent.toLowerCase().indexOf(term) !== -1;
+                if (visible && row.style.display === 'none') {
+                    row.style.display = '';
+                    row.style.opacity = '0';
+                    requestAnimationFrame(function() {
+                        row.style.transition = 'opacity 0.2s ease';
+                        row.style.opacity = '1';
+                    });
+                } else if (!visible && row.style.display !== 'none') {
+                    row.style.transition = 'opacity 0.15s ease';
+                    row.style.opacity = '0';
+                    (function(r) {
+                        setTimeout(function() {
+                            if (r.style.opacity === '0') r.style.display = 'none';
+                        }, 150);
+                    })(row);
+                }
+            });
+        }
+
+        function obtenerSeleccionados() {
+            var checks = document.querySelectorAll('.pend-check:checked');
+            var ids = [];
+            checks.forEach(function(c) { ids.push(parseInt(c.dataset.id, 10)); });
+            return ids;
+        }
+
+        function actualizarContador() {
+            var total = obtenerSeleccionados().length;
+            if (textoSeleccion) {
+                textoSeleccion.textContent = total + ' usuario' + (total !== 1 ? 's' : '') + ' seleccionado' + (total !== 1 ? 's' : '');
+            }
+            if (btnConfirmar) {
+                btnConfirmar.disabled = total === 0;
+            }
+            // Sincronizar check maestro
+            var allChecks = document.querySelectorAll('.pend-check');
+            if (checkMaestro && allChecks.length > 0) {
+                checkMaestro.checked = total === allChecks.length;
+                checkMaestro.indeterminate = total > 0 && total < allChecks.length;
+            }
+        }
+
+        // Delegación de eventos para checkboxes
+        if (tbody) {
+            tbody.addEventListener('change', function(e) {
+                if (e.target.classList.contains('pend-check')) {
+                    actualizarContador();
+                }
+            });
+        }
+
+        // Check maestro
+        if (checkMaestro) {
+            checkMaestro.addEventListener('change', function() {
+                var checks = document.querySelectorAll('.pend-check');
+                var checked = checkMaestro.checked;
+                checks.forEach(function(c) { c.checked = checked; });
+                actualizarContador();
+            });
+        }
+
+        // Botón Todos
+        var btnTodos = document.getElementById('btn-seleccionar-todos-pend');
+        if (btnTodos) {
+            btnTodos.addEventListener('click', function() {
+                document.querySelectorAll('.pend-check').forEach(function(c) { c.checked = true; });
+                actualizarContador();
+            });
+        }
+
+        // Botón Ninguno
+        var btnNinguno = document.getElementById('btn-deseleccionar-todos-pend');
+        if (btnNinguno) {
+            btnNinguno.addEventListener('click', function() {
+                document.querySelectorAll('.pend-check').forEach(function(c) { c.checked = false; });
+                actualizarContador();
+            });
+        }
+
+        /* ── Modal de confirmación ── */
+        var overlayConsent = document.getElementById('modalConsentimientoOverlay');
+        var modalCantidad = document.getElementById('modal-consent-cantidad');
+        var btnEnviarConsent = document.getElementById('btn-enviar-consent');
+        var btnCancelarConsent = document.getElementById('btn-cancelar-consent');
+        var btnCerrarConsent = document.getElementById('btn-cerrar-modal-consent');
+
+        if (overlayConsent) {
+            document.body.appendChild(overlayConsent);
+        }
+
+        // Abrir modal
+        if (btnConfirmar) {
+            btnConfirmar.addEventListener('click', function() {
+                var seleccionados = obtenerSeleccionados();
+                if (seleccionados.length === 0) return;
+
+                if (modalCantidad) modalCantidad.textContent = seleccionados.length;
+                if (overlayConsent) overlayConsent.classList.add('open');
+            });
+        }
+
+        function cerrarModalConsent() {
+            if (overlayConsent) overlayConsent.classList.remove('open');
+        }
+
+        if (btnCancelarConsent) btnCancelarConsent.addEventListener('click', cerrarModalConsent);
+        if (btnCerrarConsent) btnCerrarConsent.addEventListener('click', cerrarModalConsent);
+        if (overlayConsent) {
+            overlayConsent.addEventListener('click', function(e) {
+                if (e.target === overlayConsent) cerrarModalConsent();
+            });
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && overlayConsent && overlayConsent.classList.contains('open')) {
+                cerrarModalConsent();
+            }
+        });
+
+        // Enviar consentimiento masivo
+        var enviarHTMLOriginal = btnEnviarConsent ? btnEnviarConsent.innerHTML : '';
+
+        if (btnEnviarConsent) {
+            btnEnviarConsent.addEventListener('click', function() {
+                var ids = obtenerSeleccionados();
+                if (ids.length === 0) return;
+
+                btnEnviarConsent.disabled = true;
+                btnEnviarConsent.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation:spin .8s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg> Enviando...';
+
+                SionUtils.fetchSeguro('/api/notificaciones/consentimiento-masivo', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(ids)
+                })
+                .then(function(res) {
+                    if (!res.ok) throw new Error('Error en el servidor');
+                    return res.json();
+                })
+                .then(function(resultado) {
+                    cerrarModalConsent();
+
+                    var enviados = resultado.enviados || 0;
+                    var fallidos = resultado.fallidos || 0;
+                    var sinTelefono = resultado.sinTelefono || 0;
+                    var total = resultado.totalProcesados || 0;
+
+                    var msg = 'Consentimiento enviado — ' + enviados + ' de ' + total + ' procesados.';
+                    if (fallidos > 0) msg += ' Fallidos: ' + fallidos + '.';
+                    if (sinTelefono > 0) msg += ' Sin teléfono: ' + sinTelefono + '.';
+
+                    if (typeof showToast === 'function') {
+                        showToast(msg, enviados > 0 ? 'success' : 'error');
+                    }
+
+                    // Recargar la lista de pendientes
+                    pendientesCargados = false;
+                    cargarPendientes();
+                })
+                .catch(function(err) {
+                    if (typeof showToast === 'function') showToast('Error al enviar consentimientos: ' + err.message, 'error');
+                })
+                .finally(function() {
+                    btnEnviarConsent.disabled = false;
+                    btnEnviarConsent.innerHTML = enviarHTMLOriginal;
+                });
+            });
+        }
+
+        /* ══════════════════════════════════════════
+           MODAL: CAMBIAR FECHA DE ENVÍO DE RECORDATORIO
+           ══════════════════════════════════════════ */
         var overlay     = document.getElementById('modalFechaOverlay');
         var inputFecha  = document.getElementById('inputNuevaFecha');
         var btnGuardar  = document.getElementById('btnGuardarFecha');

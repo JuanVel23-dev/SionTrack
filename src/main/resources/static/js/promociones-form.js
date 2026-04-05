@@ -217,13 +217,18 @@
             for (var i = primerDia - 1; i >= 0; i--)
                 html += '<button type="button" class="cal-day other-month disabled">' + (diasMesAnt - i) + '</button>';
 
+            var hoyInicio = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
             for (var d = 1; d <= diasEnMes; d++) {
                 var cls = 'cal-day';
+                var fechaDia = new Date(anio, mes, d);
                 var isToday = d === hoy.getDate() && mes === hoy.getMonth() && anio === hoy.getFullYear();
                 var isSel = sel && d === sel.day && mes === sel.month && anio === sel.year;
                 var isDis = false;
+                // No permitir fechas pasadas
+                if (fechaDia < hoyInicio) isDis = true;
+                // En fecha fin, no permitir antes de fecha inicio
                 if (tipo === 'fin' && state.fechaInicio) {
-                    if (new Date(anio,mes,d) < new Date(state.fechaInicio.year,state.fechaInicio.month,state.fechaInicio.day)) isDis = true;
+                    if (fechaDia < new Date(state.fechaInicio.year,state.fechaInicio.month,state.fechaInicio.day)) isDis = true;
                 }
                 if (isToday) cls += ' today';
                 if (isSel) cls += ' selected';
@@ -244,6 +249,7 @@
         }
 
         function handleCalClick(e) {
+            e.stopPropagation();
             var btn = e.target.closest('[data-action]');
             var dayBtn = e.target.closest('.cal-day:not(.disabled):not(.other-month)');
             if (btn) {
@@ -307,7 +313,7 @@
             }
             previewContainer.innerHTML =
                 '<div class="promo-preview-bubble"><div class="promo-preview-header"><div class="promo-preview-wa-icon"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.555 4.126 1.528 5.86L.06 23.487a.5.5 0 0 0 .613.613l5.627-1.468A11.943 11.943 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22a9.94 9.94 0 0 1-5.332-1.544l-.382-.228-3.332.869.886-3.236-.25-.396A9.935 9.935 0 0 1 2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg></div><div><div class="promo-preview-wa-title">SionTrack</div><div class="promo-preview-wa-subtitle">Plantilla: promociones</div></div></div>' +
-                '<div class="promo-preview-body">Hola <span class="promo-highlight">{nombre_cliente}</span><br>Te saluda Jenny de Sion Filtros.<br><br>Este mes tenemos una PROMOCIÓN para <span class="promo-highlight">'+esc(producto||'___')+'</span><br><br><strong>'+esc(promo||'___')+'</strong><br><br>Incluye mano de obra y revisión de 10 puntos GRATIS.<br>Todo por solo <span class="promo-highlight">'+esc(precio||'___')+'</span><br><br>Válido del <span class="promo-highlight">'+esc(fechas||'___')+'</span><br><br>Muestra este mensaje y reclama la PROMO.<br>📍 CALLE 170 #17A 77</div></div>';
+                '<div class="promo-preview-body">Hola <span class="promo-highlight">{nombre_cliente}</span><br>Te saluda Jenny de Sion Filtros.<br><br><strong>'+esc(promo||'___')+'</strong><br><br>Incluye mano de obra y revisión de 10 puntos GRATIS.<br>Todo por solo <span class="promo-highlight">'+esc(precio||'___')+'</span><br><br>Válido del <span class="promo-highlight">'+esc(fechas||'___')+'</span><br><br>Muestra este mensaje y reclama la PROMO.<br>📍 CALLE 170 #17A 77</div></div>';
         }
         if (promocionInput) promocionInput.addEventListener('input', actualizarPreview);
         actualizarPreview();

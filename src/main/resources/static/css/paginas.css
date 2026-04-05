@@ -1914,8 +1914,99 @@
     will-change: transform;
 }
 
-.ntab-panel { min-width: 100%; flex-shrink: 0; }
+.ntab-panel { min-width: 100%; max-width: 100%; flex-shrink: 0; overflow: hidden; }
 .ntab-panel .table-toolbar { border-top: none; }
+
+/* ══════════════════════════════════════════════
+   TABLAS DE NOTIFICACIONES
+   Sin table-layout:fixed — el navegador dimensiona
+   las columnas automáticamente según el contenido.
+   ══════════════════════════════════════════════ */
+
+.ntab-table,
+.pend-table {
+    width: 100%;
+}
+
+.ntab-table th,
+.ntab-table td,
+.pend-table th,
+.pend-table td {
+    vertical-align: middle;
+    white-space: normal;
+    word-break: break-word;
+}
+
+/* Sub-texto (teléfono, placa) debajo del dato principal */
+.ntab-table td .contact-info-item-small {
+    margin-top: 2px;
+    font-size: 0.8rem;
+    color: var(--fg-secondary, #a0a0a0);
+}
+
+/* Estado: badges centrados */
+.ntab-table td[data-label="Estado"],
+.ntab-table th:has(+ th):last-of-type {
+    text-align: center;
+}
+
+/* --- Usuarios Pendientes --- */
+.pend-table th:first-child,
+.pend-table td:first-child {
+    width: 44px;
+    text-align: center;
+}
+
+.pend-cell-nombre {
+    font-weight: 500;
+}
+
+.pend-cell-cedula {
+    font-family: var(--font-mono, 'SF Mono', 'Fira Code', monospace);
+    font-size: 0.85rem;
+    letter-spacing: 0.3px;
+    color: var(--fg-secondary, #a0a0a0);
+}
+
+.pend-cell-telefono {
+    font-size: 0.85rem;
+    color: var(--fg-secondary, #a0a0a0);
+}
+
+.pend-cell-fecha {
+    font-size: 0.85rem;
+    color: var(--fg-secondary, #a0a0a0);
+}
+
+/* Barra de acciones de usuarios pendientes */
+.pendientes-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border-muted);
+    background: var(--bg-surface);
+}
+
+.pendientes-footer-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--fg-subtle);
+}
+
+.pendientes-footer-info svg {
+    color: var(--accent-primary);
+    opacity: 0.7;
+}
+
+.pendientes-acciones {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
 
 
 /* ████████████████████████████████████████████

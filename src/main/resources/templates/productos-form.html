@@ -48,32 +48,40 @@
                         <span th:if="${#fields.hasErrors('nombre')}" th:errors="*{nombre}" class="form-error"></span>
                     </div>
                     <div class="form-group">
-                        <label for="codigo_producto" class="form-label">Código del Producto</label>
+                        <label for="codigo_producto" class="form-label required">Código del Producto</label>
                         <input type="text"
                                id="codigo_producto"
                                th:field="*{codigo_producto}"
                                class="form-input"
+                               th:errorclass="'error'"
+                               required
                                maxlength="50"
                                placeholder="Ej: ACE-5W30-001">
+                        <span th:if="${#fields.hasErrors('codigo_producto')}" th:errors="*{codigo_producto}" class="form-error"></span>
                         <span class="form-help">Código interno o de proveedor para identificar el producto.</span>
                     </div>
                 </div>
 
                 <div class="form-grid">
                     <div class="form-group">
-                        <label for="categoria" class="form-label">Categoría</label>
+                        <label for="categoria" class="form-label required">Categoría</label>
                         <input type="text"
                                id="categoria"
                                th:field="*{categoria}"
                                class="form-input"
+                               th:errorclass="'error'"
+                               required
                                maxlength="50"
                                placeholder="Ej: Lubricantes">
+                        <span th:if="${#fields.hasErrors('categoria')}" th:errors="*{categoria}" class="form-error"></span>
                     </div>
                     <div class="form-group">
-                        <label for="proveedor_id" class="form-label">Proveedor</label>
+                        <label for="proveedor_id" class="form-label required">Proveedor</label>
                         <select id="proveedor_id"
                                 th:field="*{proveedor_id}"
                                 class="form-select"
+                                th:errorclass="'error'"
+                                required
                                 data-searchable>
                             <option value="">Seleccione un proveedor</option>
                             <option th:each="prov : ${listaProveedores}"
@@ -82,6 +90,7 @@
                                 Proveedor
                             </option>
                         </select>
+                        <span th:if="${#fields.hasErrors('proveedor_id')}" th:errors="*{proveedor_id}" class="form-error"></span>
                     </div>
                 </div>
 
@@ -98,7 +107,7 @@
 
                 <div class="form-grid">
                     <div class="form-group">
-                        <label for="precio_compra" class="form-label">Precio de Compra</label>
+                        <label for="precio_compra" class="form-label required">Precio de Compra</label>
                         <input type="number"
                                id="precio_compra"
                                th:field="*{precio_compra}"
@@ -127,7 +136,7 @@
 
                 <div class="form-grid">
                     <div class="form-group">
-                        <label for="fecha_compra" class="form-label">Fecha de Compra</label>
+                        <label for="fecha_compra" class="form-label required">Fecha de Compra</label>
                         <div class="sion-datepicker" id="datepicker_fecha_compra">
                             <button type="button" class="sion-datepicker-btn">
                                 <svg class="sion-datepicker-icono" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -142,8 +151,10 @@
                             <input type="date"
                                    id="fecha_compra"
                                    th:field="*{fecha_compra}"
-                                   class="sion-datepicker-hidden">
+                                   class="sion-datepicker-hidden"
+                                   required>
                         </div>
+                        <span th:if="${#fields.hasErrors('fecha_compra')}" th:errors="*{fecha_compra}" class="form-error"></span>
                         <span class="form-help">Fecha en la que fue adquirido el producto.</span>
                     </div>
                 </div>

@@ -19,12 +19,14 @@ public class ProductosRequestDTO {
     @Setter
     private String nombre;
 
-    @Size(max = 50, message = "El codigo de producto no puede exceder 50 caracteres")
+    @NotBlank(message = "El código del producto es obligatorio")
+    @Size(max = 50, message = "El código de producto no puede exceder 50 caracteres")
     @Getter
     @Setter
     private String codigo_producto;
 
-    @Size(max = 50, message = "La categoria no puede exceder 50 caracteres")
+    @NotBlank(message = "La categoría es obligatoria")
+    @Size(max = 50, message = "La categoría no puede exceder 50 caracteres")
     @Getter
     @Setter
     private String categoria;
@@ -41,10 +43,12 @@ public class ProductosRequestDTO {
     @Setter
     private BigDecimal precio_venta;
 
+    @NotNull(message = "La fecha de compra es obligatoria")
     @Getter
     @Setter
     private LocalDate fecha_compra;
 
+    @NotNull(message = "El proveedor es obligatorio")
     @Getter
     @Setter
     private Integer proveedor_id;
@@ -55,11 +59,10 @@ public class ProductosRequestDTO {
     @Setter
     private Integer cantidad_disponible;
 
-    @NotNull(message = "El stock minimo es obligatorio")
-    @Min(value = 1, message = "El stock minimo debe ser al menos 1")
+    @NotNull(message = "El stock mínimo es obligatorio")
+    @Min(value = 1, message = "El stock mínimo debe ser al menos 1")
     @Getter
     @Setter
     private Integer stock_minimo;
-
 
 }
