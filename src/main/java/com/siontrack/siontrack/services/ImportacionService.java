@@ -196,14 +196,11 @@ public class ImportacionService {
                 dto.setNombre(get(fila, "nombre"));
                 dto.setCodigo_producto(get(fila, "codigo_producto"));
                 dto.setCategoria(get(fila, "categoria"));
-                dto.setMarca(get(fila, "marca"));
-                dto.setUnidad_medida(get(fila, "unidad_medida"));
                 dto.setPrecio_compra(getBigDecimal(fila, "precio_compra"));
                 dto.setPrecio_venta(getBigDecimal(fila, "precio_venta"));
                 dto.setFecha_compra(getLocalDate(fila, "fecha_compra"));
                 dto.setCantidad_disponible(getInteger(fila, "cantidad_disponible"));
                 dto.setStock_minimo(getInteger(fila, "stock_minimo"));
-                dto.setUbicacion(get(fila, "ubicacion"));
 
                 if (dto.getNombre() == null || dto.getNombre().trim().isEmpty()) {
                     resultado.agregarError(numeroFila, "Nombre es requerido");

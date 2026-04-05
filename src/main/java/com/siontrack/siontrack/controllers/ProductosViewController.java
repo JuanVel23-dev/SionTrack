@@ -58,7 +58,6 @@ public class ProductosViewController {
         }
          productoParaFormulario.setCantidad_disponible(productoExistenteDto.getCantidad_disponible());
          productoParaFormulario.setStock_minimo(productoExistenteDto.getStock_minimo());
-         productoParaFormulario.setUbicacion(productoExistenteDto.getUbicacion());
 
         model.addAttribute("producto", productoParaFormulario);
         model.addAttribute("productoId", id);

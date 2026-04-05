@@ -46,16 +46,6 @@ public class Productos {
     @Setter
     private String categoria;
 
-    @Column(length = 50)
-    @Getter
-    @Setter
-    private String marca;
-
-    @Column(length = 30)
-    @Getter
-    @Setter
-    private String unidad_medida;
-
     @Column(nullable = false)
     @Getter
     @Setter

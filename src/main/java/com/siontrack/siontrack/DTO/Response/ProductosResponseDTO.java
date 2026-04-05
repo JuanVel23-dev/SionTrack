@@ -27,14 +27,6 @@ public class ProductosResponseDTO {
 
     @Getter
     @Setter
-    private String marca;
-
-    @Getter
-    @Setter
-    private String unidad_medida;
-
-    @Getter
-    @Setter
     private BigDecimal precio_compra;
 
     @Getter
@@ -52,10 +44,6 @@ public class ProductosResponseDTO {
     @Getter
     @Setter
     private Integer stock_minimo;
-
-    @Getter
-    @Setter
-    private String ubicacion;
 
     @Getter
     @Setter

@@ -8,6 +8,7 @@ import com.siontrack.siontrack.models.Notificaciones;
 import com.siontrack.siontrack.models.Productos;
 import com.siontrack.siontrack.models.Vehiculos;
 import com.siontrack.siontrack.models.enums.ResultadoEnvioMensaje;
+import com.siontrack.siontrack.repository.ClienteRepository;
 import com.siontrack.siontrack.repository.DetalleServicioRepository;
 import com.siontrack.siontrack.repository.NotificacionesRepository;
 import com.siontrack.siontrack.repository.ProductosRepository;
@@ -39,15 +40,18 @@ public class NotificacionesService {
     private final WhatsAppService whatsAppService;
     private final ProductosRepository productosRepository;
     private final DetalleServicioRepository detalleServicioRepository;
+    private final ClienteRepository clienteRepository;
 
     public NotificacionesService(NotificacionesRepository notificacionesRepository,
-                                         WhatsAppService whatsAppService,
-                                         ProductosRepository productosRepository,
-                                         DetalleServicioRepository detalleServicioRepository) {
+            WhatsAppService whatsAppService,
+            ProductosRepository productosRepository,
+            DetalleServicioRepository detalleServicioRepository,
+            ClienteRepository clienteRepository) {
         this.notificacionesRepository = notificacionesRepository;
         this.whatsAppService = whatsAppService;
         this.productosRepository = productosRepository;
         this.detalleServicioRepository = detalleServicioRepository;
+        this.clienteRepository = clienteRepository;
     }
 
     // =============================================
@@ -111,17 +115,84 @@ public class NotificacionesService {
                 telefono,
                 cliente.getNombre(),
                 placa,
-                kilometraje
-        );
+                kilometraje);
     }
 
+    // 1. Método para alimentar la lista del Frontend
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> obtenerClientesPendientesConsentimiento() {
+        return clienteRepository.findClientesPendientesDeConsentimiento().stream()
+                .map(c -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("id", c.getCliente_id());
+                    map.put("nombre", c.getNombre());
+                    map.put("telefono", c.getTelefonos() != null && !c.getTelefonos().isEmpty()
+                            ? c.getTelefonos().get(0).getTelefono()
+                            : "Sin teléfono");
+                    return map;
+                })
+                .collect(Collectors.toList());
+    }
+
+    // 2. Método actualizado para recibir únicamente los IDs seleccionados
+    @Transactional
+    public Map<String, Object> enviarConsentimientoMasivo(List<Integer> idsSeleccionados) {
+        log.info("📢 Iniciando envío masivo para {} clientes seleccionados...", idsSeleccionados.size());
+
+        // Busca solo los clientes que el usuario marcó en el HTML
+        List<Clientes> clientesATrabajar = clienteRepository.findAllById(idsSeleccionados);
+        
+        int enviados = 0, fallidos = 0, sinTelefono = 0;
+        Map<String, Object> resumen = new HashMap<>();
+
+        for (Clientes cliente : clientesATrabajar) {
+            if (cliente.getTelefonos() == null || cliente.getTelefonos().isEmpty()) {
+                sinTelefono++;
+                continue;
+            }
+
+            String telefono = cliente.getTelefonos().get(0).getTelefono();
+            ResultadoEnvioMensaje resultado = whatsAppService.enviarSolicitudConsentimiento(telefono, cliente.getNombre());
+
+            if (resultado == ResultadoEnvioMensaje.ENVIADO) {
+                enviados++;
+                guardarNotificacion(cliente, "Solicitud de consentimiento enviada", "enviado", resultado.name());
+            } else {
+                fallidos++;
+                guardarNotificacion(cliente, "Fallo al enviar solicitud", "fallido", resultado.name());
+            }
+        }
+
+        resumen.put("totalProcesados", clientesATrabajar.size());
+        resumen.put("enviados", enviados);
+        resumen.put("fallidos", fallidos);
+        resumen.put("sinTelefono", sinTelefono);
+        
+        return resumen;
+    }
+
+    // 3. Método auxiliar para guardar en el historial
+    private void guardarNotificacion(Clientes cliente, String mensaje, String estado, String resultadoEnvio) {
+        Notificaciones n = new Notificaciones();
+        n.setClientes(cliente);
+        n.setCanal("whatsapp");
+        n.setTipoNotificacion("CONSENTIMIENTO"); // Para distinguirlo de PROMOCION y RECORDATORIO
+        n.setMensaje_enviado(mensaje);
+        n.setEstado(estado);
+        n.setResultadoEnvio(resultadoEnvio);
+        n.setFecha_envio(new Timestamp(System.currentTimeMillis()));
+        n.setIntentosEnvio(1);
+        notificacionesRepository.save(n);
+    }
     // =============================================
     // PROMOCIONES
     // =============================================
 
     /**
-     * Retorna la lista de clientes elegibles para una promoción de un producto dado,
-     * incluyendo el estado de contacto reciente para mostrar advertencias en el frontend.
+     * Retorna la lista de clientes elegibles para una promoción de un producto
+     * dado,
+     * incluyendo el estado de contacto reciente para mostrar advertencias en el
+     * frontend.
      */
     @Transactional(readOnly = true)
     public List<ClientePreviewDTO> obtenerPreviewClientes(Integer productoId) {
@@ -130,10 +201,13 @@ public class NotificacionesService {
         Set<Integer> vistos = new HashSet<>();
         List<Clientes> clientesUnicos = new ArrayList<>();
         for (Detalle_Servicio detalle : detalles) {
-            if (detalle.getServicio() == null) continue;
+            if (detalle.getServicio() == null)
+                continue;
             Clientes c = detalle.getServicio().getClientes();
-            if (c == null) continue;
-            if (vistos.add(c.getCliente_id())) clientesUnicos.add(c);
+            if (c == null)
+                continue;
+            if (vistos.add(c.getCliente_id()))
+                clientesUnicos.add(c);
         }
 
         // Obtiene la fecha de la última promoción enviada exitosamente por cliente
@@ -150,7 +224,8 @@ public class NotificacionesService {
 
         return clientesUnicos.stream().map(c -> {
             String telefono = (c.getTelefonos() != null && !c.getTelefonos().isEmpty())
-                    ? c.getTelefonos().get(0).getTelefono() : null;
+                    ? c.getTelefonos().get(0).getTelefono()
+                    : null;
 
             Timestamp ultima = ultimaPromocion.get(c.getCliente_id());
             Integer dias = null;
@@ -167,8 +242,7 @@ public class NotificacionesService {
                     Boolean.TRUE.equals(c.getRecibeNotificaciones()),
                     telefono != null,
                     reciente,
-                    dias
-            );
+                    dias);
         }).collect(Collectors.toList());
     }
 
@@ -198,9 +272,11 @@ public class NotificacionesService {
         List<Clientes> clientesUnicos = new ArrayList<>();
 
         for (Detalle_Servicio detalle : detalles) {
-            if (detalle.getServicio() == null) continue;
+            if (detalle.getServicio() == null)
+                continue;
             Clientes cliente = detalle.getServicio().getClientes();
-            if (cliente == null) continue;
+            if (cliente == null)
+                continue;
             if (clientesVistos.add(cliente.getCliente_id())) {
                 clientesUnicos.add(cliente);
             }
@@ -241,9 +317,8 @@ public class NotificacionesService {
             String telefono = cliente.getTelefonos().get(0).getTelefono();
 
             ResultadoEnvioMensaje resultado = whatsAppService.enviarMensajePromo(
-                telefono, cliente.getNombre(), producto.getNombre(),
-                dto.getPromocion(), dto.getPrecioOferta(), dto.getRangoFechas()
-            );
+                    telefono, cliente.getNombre(), producto.getNombre(),
+                    dto.getPromocion(), dto.getPrecioOferta(), dto.getRangoFechas());
 
             if (resultado == ResultadoEnvioMensaje.ENVIADO) {
                 enviados++;
@@ -264,8 +339,8 @@ public class NotificacionesService {
     }
 
     private void guardarNotificacionPromocion(Clientes cliente,
-                                               String mensajePromo, String estado,
-                                               String resultadoEnvio) {
+            String mensajePromo, String estado,
+            String resultadoEnvio) {
         Notificaciones n = new Notificaciones();
         n.setClientes(cliente);
         n.setCanal("whatsapp");

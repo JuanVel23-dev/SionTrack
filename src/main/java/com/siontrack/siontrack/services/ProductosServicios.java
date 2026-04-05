@@ -54,7 +54,6 @@ public class ProductosServicios {
                     // Aseguramos el mapeo de datos (por si ModelMapper falló con los anidados)
                     dto.setCantidad_disponible(producto.getInventario().getCantidad_disponible());
                     dto.setStock_minimo(producto.getInventario().getStock_minimo());
-                    dto.setUbicacion(producto.getInventario().getUbicacion());
 
                     // --- CÁLCULO DE LA ALERTA ---
                     // Si hay stock mínimo definido y la cantidad actual es menor o igual
@@ -82,7 +81,6 @@ public class ProductosServicios {
         if (producto.getInventario() != null) {
             dto.setCantidad_disponible(producto.getInventario().getCantidad_disponible());
             dto.setStock_minimo(producto.getInventario().getStock_minimo());
-            dto.setUbicacion(producto.getInventario().getUbicacion());
 
             if (dto.getStock_minimo() != null && dto.getCantidad_disponible() != null 
                 && dto.getCantidad_disponible() <= dto.getStock_minimo()) {
@@ -102,11 +100,10 @@ public class ProductosServicios {
 
         producto.setProveedor(proveedor);
 
-        if (dto.getCantidad_disponible() != null || dto.getStock_minimo() != null || dto.getUbicacion() != null) {
+        if (dto.getCantidad_disponible() != null || dto.getStock_minimo() != null) {
             Inventario inventario = new Inventario();
             inventario.setCantidad_disponible(dto.getCantidad_disponible() != null ? dto.getCantidad_disponible() : 0);
             inventario.setStock_minimo(dto.getStock_minimo() != null ? dto.getStock_minimo() : 10);
-            inventario.setUbicacion(dto.getUbicacion());
 
             inventario.setProducto(producto);
             producto.setInventario(inventario);
@@ -140,12 +137,10 @@ public class ProductosServicios {
 
             if (dto.getPrecio_compra() != null) producto.setPrecio_compra(dto.getPrecio_compra());
             if (dto.getPrecio_venta() != null) producto.setPrecio_venta(dto.getPrecio_venta());
-            if (dto.getMarca() != null) producto.setMarca(dto.getMarca());
-            if (dto.getUnidad_medida() != null) producto.setUnidad_medida(dto.getUnidad_medida());
             if (dto.getFecha_compra() != null) producto.setFecha_compra(dto.getFecha_compra());
 
             // Actualizar inventario si se proporcionan datos de stock
-            if (dto.getCantidad_disponible() != null || dto.getStock_minimo() != null || dto.getUbicacion() != null) {
+            if (dto.getCantidad_disponible() != null || dto.getStock_minimo() != null ) {
                 Inventario inventario = producto.getInventario();
                 if (inventario == null) {
                     inventario = new Inventario();
@@ -156,7 +151,6 @@ public class ProductosServicios {
                     inventario.setCantidad_disponible(dto.getCantidad_disponible());
                 }
                 if (dto.getStock_minimo() != null) inventario.setStock_minimo(dto.getStock_minimo());
-                if (dto.getUbicacion() != null) inventario.setUbicacion(dto.getUbicacion());
             }
 
             productosRepository.save(producto);
@@ -194,8 +188,7 @@ public class ProductosServicios {
         }
 
         Inventario inventario = productoExistente.getInventario();
-        boolean inventarioDataProvided = dto.getCantidad_disponible() != null || dto.getStock_minimo() != null
-                || dto.getUbicacion() != null;
+        boolean inventarioDataProvided = dto.getCantidad_disponible() != null || dto.getStock_minimo() != null;
 
         if (inventarioDataProvided) {
             if (inventario == null) {
@@ -209,9 +202,7 @@ public class ProductosServicios {
             if (dto.getStock_minimo() != null) {
                 inventario.setStock_minimo(dto.getStock_minimo());
             }
-            if (dto.getUbicacion() != null) {
-                inventario.setUbicacion(dto.getUbicacion());
-            }
+            
         }
 
         System.out.println("ID before save: " + productoExistente.getProducto_id());
@@ -352,7 +343,6 @@ public class ProductosServicios {
                 dto.setProductoId(producto.getProducto_id());
                 dto.setNombre(producto.getNombre());
                 dto.setCategoria(producto.getCategoria());
-                dto.setMarca(producto.getMarca());
                 dto.setCantidadDisponible(cantidad);
                 dto.setStockMinimo(minimo);
                 dto.setUbicacion(inv.getUbicacion());

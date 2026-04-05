@@ -29,16 +29,6 @@ public class ProductosRequestDTO {
     @Setter
     private String categoria;
 
-    @Size(max = 50, message = "La marca no puede exceder 50 caracteres")
-    @Getter
-    @Setter
-    private String marca;
-
-    @Size(max = 30, message = "La unidad de medida no puede exceder 30 caracteres")
-    @Getter
-    @Setter
-    private String unidad_medida;
-
     @NotNull(message = "El precio de compra es obligatorio")
     @DecimalMin(value = "0.01", inclusive = true, message = "El precio de compra debe ser mayor a cero")
     @Getter
@@ -71,9 +61,5 @@ public class ProductosRequestDTO {
     @Setter
     private Integer stock_minimo;
 
-    @Size(max = 100, message = "La ubicacion no puede exceder 100 caracteres")
-    @Getter
-    @Setter
-    private String ubicacion;
 
 }

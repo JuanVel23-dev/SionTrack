@@ -25,4 +25,9 @@ public interface ClienteRepository extends JpaRepository<Clientes, Integer> {
 
     @Query("SELECT DISTINCT c FROM Clientes c JOIN c.telefonos t WHERE t.telefono = :telefono")
     List<Clientes> buscarPorTelefonos_Telefono(@Param("telefono") String telefono);
+
+    @Query("SELECT DISTINCT c FROM Clientes c JOIN c.telefonos t " +
+            "WHERE (c.consentimiento_procesado IS NULL OR c.consentimiento_procesado = false) " +
+            "AND t.telefono IS NOT NULL")
+    List<Clientes> findClientesPendientesDeConsentimiento();
 }

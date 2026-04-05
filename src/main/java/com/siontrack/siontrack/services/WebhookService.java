@@ -97,11 +97,13 @@ public class WebhookService {
 
         if (Boolean.TRUE.equals(cliente.getConsentimientoProcesado())) {
             log.info("⚠️ {} ya respondió anteriormente", cliente.getNombre());
+            whatsAppService.enviarMensajeTexto(
+                                        telefonoMeta, "Si tienes alguna duda, puedes contactar con un asesor a través de este número 👉 3192486297");
             return;
         }
 
         TipoConsentimiento tipo = clasificarRespuesta(respuestaNormalizada);
-        aplicarConsentimiento(cliente, tipo,telefonoMeta);
+        aplicarConsentimiento(cliente, tipo, telefonoMeta);
     }
 
     private TipoConsentimiento clasificarRespuesta(String respuesta) {
@@ -125,7 +127,7 @@ public class WebhookService {
                 log.info("✅ {} ACEPTÓ notificaciones", cliente.getNombre());
                 whatsAppService.enviarMensajeTexto(
                         telefonoCliente,
-                        "🎉 ¡Gracias por unirte!, Recibirás notificaciones sobre tus mantenimientos y beneficios exclusivos.");
+                        "🎉 ¡Gracias por unirte!, Recibirás notificaciones sobre tus mantenimientos y beneficios exclusivos. Si tienes alguna duda, puedes contactar con un asesor a través de este número 👉 3192486297 ");
             }
             case RECHAZO -> {
                 cliente.setRecibe_notificaciones(false);
@@ -135,13 +137,14 @@ public class WebhookService {
 
                 whatsAppService.enviarMensajeTexto(
                         telefonoCliente,
-                        "Entendido No recibirás notificaciones. Si cambias de opinión, contáctanos :).");
+                        "Entendido No recibirás notificaciones. Si cambias de opinión, contáctanos a través de este número 👉 3192486297:).");
             }
             case DESCONOCIDO -> {
                 log.warn("⚠️ Respuesta no reconocida de {}", cliente.getNombre());
                 whatsAppService.enviarMensajeTexto(
                         telefonoCliente,
                         "Has envíado una respuesta que no esta entre las opciones disponibles. Por favor intenta nuevamente. ");
+
             }
         }
     }
