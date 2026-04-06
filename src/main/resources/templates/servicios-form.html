@@ -75,18 +75,36 @@
 
                 <div class="form-grid">
                     <div class="form-group">
-                        <label for="cliente_id" class="form-label required">Cliente</label>
-                        <select id="cliente_id"
-                                th:field="*{cliente_id}"
-                                class="form-select"
-                                required>
-                            <option value="">Seleccione un cliente</option>
-                            <option th:each="cli : ${listaClientes}"
-                                    th:value="${cli.cliente_id}"
-                                    th:text="${cli.nombre}">
-                                Cliente
-                            </option>
-                        </select>
+                        <label for="cliente_search" class="form-label required">Cliente</label>
+                        <div class="ajax-select-wrap" id="clienteSelectWrap">
+                            <div class="ajax-select-input-wrap">
+                                <svg class="ajax-select-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                                <input type="text"
+                                       id="cliente_search"
+                                       class="form-input"
+                                       placeholder="Buscar cliente por nombre o cedula..."
+                                       autocomplete="off">
+                                <div class="ajax-select-actions">
+                                    <button type="button" class="ajax-select-btn" id="clienteSearchBtn" title="Buscar">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                                    </button>
+                                    <button type="button" class="ajax-select-toggle" id="clienteToggle" title="Abrir/Cerrar lista">
+                                        <svg class="toggle-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="ajax-select-dropdown" id="clienteDropdown"></div>
+                            <input type="hidden" id="cliente_id" th:field="*{cliente_id}" required>
+                            <div class="ajax-select-selected" id="clienteSelected" style="display:none;">
+                                <div class="ajax-select-selected-icon">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                </div>
+                                <span id="clienteSelectedName"></span>
+                                <button type="button" class="ajax-select-clear" id="clienteClear" title="Cambiar cliente">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                     <div class="form-group">
                         <label for="fecha_servicio" class="form-label required">Fecha del Servicio</label>
@@ -232,17 +250,7 @@
         </form>
     </div>
 
-    <!-- Productos disponibles (renderizados por Thymeleaf como data-attributes) -->
-    <div id="productos-data" style="display:none;">
-        <th:block th:each="prod : ${listaProductos}">
-            <div class="producto-item"
-                 th:data-id="${prod.producto_id}"
-                 th:data-nombre="${prod.nombre}"
-                 th:data-precio="${prod.precio_venta}"
-                 th:data-categoria="${prod.categoria}">
-            </div>
-        </th:block>
-    </div>
+    <!-- Productos se cargan via AJAX desde /api/productos/buscar -->
 
 </th:block>
 

@@ -35,13 +35,10 @@ public class ServiciosViewController {
     private ProductosServicios productosServicios;
 
     /**
-     * Carga las listas necesarias para el formulario (clientes y productos)
+     * Ya no carga listas completas — los selectores usan búsqueda AJAX paginada.
      */
     private void cargarDatosFormulario(Model model) {
-        List<ClienteResponseDTO> listaClientes = clienteServicios.obtenerListaClientes();
-        List<ProductosResponseDTO> listaProductos = productosServicios.obtenerListaProductos();
-        model.addAttribute("listaClientes", listaClientes);
-        model.addAttribute("listaProductos", listaProductos);
+        // Los clientes y productos se buscan via AJAX en /api/clientes/buscar y /api/productos/buscar
     }
 
     @GetMapping("/servicios")

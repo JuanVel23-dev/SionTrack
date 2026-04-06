@@ -2,8 +2,9 @@
  * SionTrack - Servicios Form
  *
  * Toggle tipo de servicio (PRODUCTO / MANO_DE_OBRA)
- * Vehiculos: se cargan via FETCH a /api/clientes/{id}/vehiculos
- * Productos: se leen del DOM (divs ocultos con data-attributes)
+ * Cliente: busqueda AJAX paginada en /api/clientes/buscar
+ * Vehiculos: cascada via FETCH a /api/clientes/{id}/vehiculos
+ * Productos: busqueda AJAX paginada en /api/productos/buscar
  */
 (function() {
     'use strict';
@@ -14,8 +15,60 @@
         '<line x1="18" y1="6" x2="6" y2="18"></line>' +
         '<line x1="6" y1="6" x2="18" y2="18"></line></svg>';
 
+    var searchSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+        '<circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>';
+
+    var closeSvg = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+        '<line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
+
+    var chevronSvg = '<svg class="toggle-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+        '<polyline points="6 9 12 15 18 9"></polyline></svg>';
+
+    var packageSvg = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+        '<line x1="16.5" y1="9.4" x2="7.5" y2="4.21"></line>' +
+        '<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>' +
+        '<polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>' +
+        '<line x1="12" y1="22.08" x2="12" y2="12"></line></svg>';
+
+    var arrowDownSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+        '<polyline points="7 13 12 18 17 13"></polyline><polyline points="7 6 12 11 17 6"></polyline></svg>';
+
+    function debounce(fn, delay) {
+        var timer;
+        return function() {
+            var ctx = this, args = arguments;
+            clearTimeout(timer);
+            timer = setTimeout(function() { fn.apply(ctx, args); }, delay);
+        };
+    }
+
+    // =============================================
+    // Abrir/cerrar dropdown con animacion
+    // =============================================
+    function abrirDropdown(dropdown, toggleBtn) {
+        dropdown.classList.add('visible');
+        if (toggleBtn) toggleBtn.classList.add('abierto');
+    }
+
+    function cerrarDropdown(dropdown, toggleBtn) {
+        dropdown.classList.remove('visible');
+        if (toggleBtn) toggleBtn.classList.remove('abierto');
+    }
+
+    function isDropdownVisible(dropdown) {
+        return dropdown.classList.contains('visible');
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
-        var clienteSelect = document.getElementById('cliente_id');
+        var clienteIdInput = document.getElementById('cliente_id');
+        var clienteSearchInput = document.getElementById('cliente_search');
+        var clienteDropdown = document.getElementById('clienteDropdown');
+        var clienteSelected = document.getElementById('clienteSelected');
+        var clienteSelectedName = document.getElementById('clienteSelectedName');
+        var clienteClear = document.getElementById('clienteClear');
+        var clienteSearchBtn = document.getElementById('clienteSearchBtn');
+        var clienteToggle = document.getElementById('clienteToggle');
+
         var vehiculoSelect = document.getElementById('vehiculo_id');
         var detallesContainer = document.getElementById('detalles-container');
         var addDetalleBtn = document.getElementById('add-detalle-btn');
@@ -38,9 +91,6 @@
         var tipoActual = '';
         var vehiculoVisible = false;
 
-        // Leer productos del DOM
-        var productosData = leerProductosDelDOM();
-
         // Fecha de hoy por defecto
         var fechaInput = document.getElementById('fecha_servicio');
         if (fechaInput && !fechaInput.value) {
@@ -53,23 +103,16 @@
         tipoBtns.forEach(function(btn) {
             btn.addEventListener('click', function() {
                 var valor = this.dataset.value;
-
-                // Actualizar visual
                 tipoBtns.forEach(function(b) { b.classList.remove('activo'); });
                 this.classList.add('activo');
-
-                // Actualizar input oculto
                 tipoInput.value = valor;
                 tipoActual = valor;
-
-                // Configurar campos segun tipo
                 configurarCamposVehiculo();
             });
         });
 
         function configurarCamposVehiculo() {
             if (tipoActual === 'MANO_DE_OBRA') {
-                // Vehiculo y km son obligatorios, siempre visibles
                 vehiculoWrap.style.display = '';
                 vehiculoAddBtn.style.display = 'none';
                 vehiculoCloseBtn.style.display = 'none';
@@ -78,13 +121,10 @@
                 kmLabel.classList.add('required');
                 vehiculoSelect.setAttribute('required', '');
             } else if (tipoActual === 'PRODUCTO') {
-                // Vehiculo y km son opcionales
                 vehiculoWrap.style.display = '';
                 vehiculoLabel.classList.remove('required');
                 kmLabel.classList.remove('required');
                 vehiculoSelect.removeAttribute('required');
-
-                // Resetear: ocultar campos, mostrar boton de añadir
                 vehiculoVisible = false;
                 vehiculoSection.style.display = 'none';
                 vehiculoSection.style.opacity = '';
@@ -92,13 +132,10 @@
                 vehiculoSection.style.maxHeight = '';
                 vehiculoAddBtn.style.display = '';
                 vehiculoCloseBtn.style.display = 'none';
-
-                // Limpiar valores
                 vehiculoSelect.value = '';
                 var kmInput = document.getElementById('kilometraje_servicio');
                 if (kmInput) kmInput.value = '';
             } else {
-                // Sin tipo seleccionado — ocultar todo
                 vehiculoWrap.style.display = 'none';
                 vehiculoVisible = false;
                 vehiculoLabel.classList.remove('required');
@@ -107,29 +144,24 @@
             }
         }
 
-        // Expandir campos con animacion
         function expandirCampos(inmediato) {
             vehiculoVisible = true;
             vehiculoSection.style.display = '';
-
             if (inmediato) {
                 vehiculoSection.style.opacity = '1';
                 vehiculoSection.style.transform = 'translateY(0)';
                 vehiculoSection.style.maxHeight = '300px';
                 return;
             }
-
             vehiculoSection.style.opacity = '0';
             vehiculoSection.style.transform = 'translateY(-10px)';
             vehiculoSection.style.maxHeight = '0';
             vehiculoSection.style.overflow = 'hidden';
-
             requestAnimationFrame(function() {
                 vehiculoSection.style.transition = 'opacity 0.35s ease, transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), max-height 0.35s ease';
                 vehiculoSection.style.opacity = '1';
                 vehiculoSection.style.transform = 'translateY(0)';
                 vehiculoSection.style.maxHeight = '300px';
-
                 setTimeout(function() {
                     vehiculoSection.style.overflow = '';
                     vehiculoSection.style.maxHeight = '';
@@ -137,7 +169,6 @@
             });
         }
 
-        // Colapsar campos con animacion elegante
         function colapsarCampos() {
             vehiculoVisible = false;
             vehiculoSection.style.overflow = 'hidden';
@@ -148,53 +179,41 @@
             vehiculoSection.style.opacity = '0';
             vehiculoSection.style.transform = 'scale(0.96)';
             vehiculoSection.style.filter = 'blur(4px)';
-
             setTimeout(function() {
                 vehiculoSection.style.display = 'none';
                 vehiculoSection.style.overflow = '';
                 vehiculoSection.style.filter = '';
                 vehiculoSection.style.transform = '';
             }, 300);
-
-            // Limpiar valores
             vehiculoSelect.value = '';
             var kmInput = document.getElementById('kilometraje_servicio');
             if (kmInput) kmInput.value = '';
         }
 
-        // Boton "Añadir vehiculo" (modo PRODUCTO)
         if (vehiculoAddBtn) {
             vehiculoAddBtn.addEventListener('click', function() {
-                // Ocultar boton de añadir con animacion
                 this.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
                 this.style.opacity = '0';
                 this.style.transform = 'scale(0.97)';
-
                 var addBtn = this;
                 setTimeout(function() {
                     addBtn.style.display = 'none';
                     addBtn.style.opacity = '';
                     addBtn.style.transform = '';
-
-                    // Mostrar campos y boton cerrar
                     vehiculoCloseBtn.style.display = '';
                     expandirCampos(false);
                 }, 200);
             });
         }
 
-        // Boton "Quitar vehiculo" (X en header de campos)
         if (vehiculoCloseBtn) {
             vehiculoCloseBtn.addEventListener('click', function() {
                 colapsarCampos();
-
-                // Materializar boton de añadir tras colapso
                 setTimeout(function() {
                     vehiculoAddBtn.style.display = '';
                     vehiculoAddBtn.style.opacity = '0';
                     vehiculoAddBtn.style.transform = 'translateY(8px) scale(0.98)';
                     vehiculoAddBtn.style.filter = 'blur(3px)';
-
                     requestAnimationFrame(function() {
                         vehiculoAddBtn.style.transition =
                             'opacity 0.4s cubic-bezier(0, 0, 0.2, 1), ' +
@@ -203,8 +222,6 @@
                         vehiculoAddBtn.style.opacity = '1';
                         vehiculoAddBtn.style.transform = 'translateY(0) scale(1)';
                         vehiculoAddBtn.style.filter = 'blur(0px)';
-
-                        // Limpiar estilos inline despues de la animacion
                         setTimeout(function() {
                             vehiculoAddBtn.style.transition = '';
                             vehiculoAddBtn.style.filter = '';
@@ -216,22 +233,169 @@
         }
 
         // =============================================
-        // CASCADA CLIENTE → VEHICULOS (via FETCH)
+        // BUSQUEDA AJAX DE CLIENTES
         // =============================================
-        if (clienteSelect) {
-            clienteSelect.addEventListener('change', function() {
-                cargarVehiculos(this.value);
+        var clientePage = 0;
+        var clienteQuery = '';
+        var clienteTotalElements = 0;
+
+        function buscarClientes(query, page, append) {
+            clienteQuery = query;
+            clientePage = page;
+
+            if (!append) {
+                clienteDropdown.innerHTML = '<div class="ajax-select-loading">Buscando clientes...</div>';
+                abrirDropdown(clienteDropdown, clienteToggle);
+            }
+
+            fetch('/api/clientes/buscar?q=' + encodeURIComponent(query) + '&page=' + page + '&size=20', {
+                headers: { 'Accept': 'application/json' }
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                var items = data.content || [];
+                clienteTotalElements = data.totalElements || 0;
+
+                if (!append) clienteDropdown.innerHTML = '';
+
+                if (items.length === 0 && !append) {
+                    clienteDropdown.innerHTML =
+                        '<div class="ajax-select-empty">' +
+                            '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>' +
+                            'No se encontraron clientes' +
+                        '</div>';
+                    return;
+                }
+
+                // Header con contador y boton cerrar
+                if (!append) {
+                    var header = document.createElement('div');
+                    header.className = 'ajax-select-dropdown-header';
+                    header.innerHTML =
+                        '<span class="ajax-select-dropdown-count">' + clienteTotalElements + ' clientes encontrados</span>' +
+                        '<button type="button" class="ajax-select-dropdown-close" title="Cerrar">' + closeSvg + '</button>';
+                    header.querySelector('.ajax-select-dropdown-close').addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        cerrarDropdown(clienteDropdown, clienteToggle);
+                    });
+                    clienteDropdown.appendChild(header);
+                }
+
+                items.forEach(function(c) {
+                    var div = document.createElement('div');
+                    div.className = 'ajax-select-option';
+                    div.dataset.id = c.cliente_id;
+                    div.innerHTML =
+                        '<span class="ajax-select-option-main">' + escapeHtml(c.nombre) + '</span>' +
+                        '<span class="ajax-select-option-sub">' + escapeHtml(c.cedula_ruc || '') + '</span>';
+                    div.addEventListener('click', function() {
+                        seleccionarCliente(c.cliente_id, c.nombre, c.cedula_ruc);
+                    });
+                    clienteDropdown.appendChild(div);
+                });
+
+                // Eliminar boton anterior de "cargar mas"
+                var existingMore = clienteDropdown.querySelector('.ajax-select-more');
+                if (existingMore) existingMore.remove();
+
+                if (!data.last) {
+                    var moreBtn = document.createElement('button');
+                    moreBtn.type = 'button';
+                    moreBtn.className = 'ajax-select-more';
+                    moreBtn.innerHTML = arrowDownSvg + ' Cargar mas resultados...';
+                    moreBtn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        buscarClientes(clienteQuery, clientePage + 1, true);
+                    });
+                    clienteDropdown.appendChild(moreBtn);
+                }
+            })
+            .catch(function() {
+                clienteDropdown.innerHTML = '<div class="ajax-select-empty">Error al buscar</div>';
             });
         }
 
+        function seleccionarCliente(id, nombre, cedula) {
+            clienteIdInput.value = id;
+            cerrarDropdown(clienteDropdown, clienteToggle);
+            clienteSearchInput.closest('.ajax-select-input-wrap').style.display = 'none';
+            clienteSelected.style.display = '';
+            clienteSelectedName.textContent = nombre + (cedula ? ' — ' + cedula : '');
+            cargarVehiculos(id);
+        }
+
+        function limpiarCliente() {
+            clienteIdInput.value = '';
+            clienteSearchInput.value = '';
+            clienteSearchInput.closest('.ajax-select-input-wrap').style.display = '';
+            clienteSelected.style.display = 'none';
+            cerrarDropdown(clienteDropdown, clienteToggle);
+            vehiculoSelect.innerHTML = '<option value="">Seleccione primero un cliente</option>';
+            clienteSearchInput.focus();
+        }
+
+        var debouncedClientSearch = debounce(function() {
+            var q = clienteSearchInput.value.trim();
+            buscarClientes(q, 0, false);
+        }, 350);
+
+        if (clienteSearchInput) {
+            clienteSearchInput.addEventListener('input', debouncedClientSearch);
+            clienteSearchInput.addEventListener('focus', function() {
+                if (!clienteIdInput.value && !isDropdownVisible(clienteDropdown)) {
+                    buscarClientes(this.value.trim(), 0, false);
+                }
+            });
+            clienteSearchInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    buscarClientes(this.value.trim(), 0, false);
+                }
+                if (e.key === 'Escape') {
+                    cerrarDropdown(clienteDropdown, clienteToggle);
+                }
+            });
+        }
+
+        if (clienteSearchBtn) {
+            clienteSearchBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                buscarClientes(clienteSearchInput.value.trim(), 0, false);
+            });
+        }
+
+        // Toggle: abre o cierra el dropdown
+        if (clienteToggle) {
+            clienteToggle.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (isDropdownVisible(clienteDropdown)) {
+                    cerrarDropdown(clienteDropdown, clienteToggle);
+                } else {
+                    buscarClientes(clienteSearchInput.value.trim(), 0, false);
+                }
+            });
+        }
+
+        if (clienteClear) {
+            clienteClear.addEventListener('click', limpiarCliente);
+        }
+
+        // Cerrar dropdown al hacer clic fuera
+        document.addEventListener('click', function(e) {
+            if (clienteDropdown && !e.target.closest('#clienteSelectWrap')) {
+                cerrarDropdown(clienteDropdown, clienteToggle);
+            }
+        });
+
+        // =============================================
+        // CASCADA CLIENTE → VEHICULOS (via FETCH)
+        // =============================================
         function cargarVehiculos(clienteId) {
             if (!clienteId) {
                 vehiculoSelect.innerHTML = '<option value="">Seleccione primero un cliente</option>';
                 return;
             }
-
-            vehiculoSelect.innerHTML = '<option value="">Cargando vehículos...</option>';
-
+            vehiculoSelect.innerHTML = '<option value="">Cargando vehiculos...</option>';
             fetch('/api/clientes/' + clienteId + '/vehiculos', {
                 headers: { 'Accept': 'application/json' }
             })
@@ -241,23 +405,201 @@
             })
             .then(function(vehiculos) {
                 if (!vehiculos || vehiculos.length === 0) {
-                    vehiculoSelect.innerHTML = '<option value="">Este cliente no tiene vehículos registrados</option>';
+                    vehiculoSelect.innerHTML = '<option value="">Este cliente no tiene vehiculos registrados</option>';
                     return;
                 }
-
-                var html = '<option value="">Seleccione un vehículo</option>';
+                var html = '<option value="">Seleccione un vehiculo</option>';
                 vehiculos.forEach(function(v) {
                     var label = (v.marca || '') + ' ' + (v.modelo || '');
                     if (v.placa) label += ' (' + v.placa + ')';
                     if (v.anio) label += ' - ' + v.anio;
                     html += '<option value="' + v.vehiculo_id + '">' + escapeHtml(label.trim()) + '</option>';
                 });
-
                 vehiculoSelect.innerHTML = html;
             })
             .catch(function(err) {
-                console.error('Error cargando vehículos:', err);
-                vehiculoSelect.innerHTML = '<option value="">Error al cargar vehículos</option>';
+                console.error('Error cargando vehiculos:', err);
+                vehiculoSelect.innerHTML = '<option value="">Error al cargar vehiculos</option>';
+            });
+        }
+
+        // =============================================
+        // BUSQUEDA AJAX DE PRODUCTOS (en filas de detalle)
+        // =============================================
+        function crearBuscadorProducto(fila, idx) {
+            var wrap = fila.querySelector('.detalle-producto-search-wrap');
+            var searchInput = wrap.querySelector('.detalle-prod-search');
+            var searchBtn = wrap.querySelector('.detalle-producto-search-btn');
+            var toggleBtn = wrap.querySelector('.detalle-producto-toggle');
+            var dropdown = wrap.querySelector('.detalle-producto-dropdown');
+            var hiddenInput = fila.querySelector('.detalle-producto-id');
+            var precioInput = fila.querySelector('.detalle-precio');
+            var selectedDiv = fila.querySelector('.detalle-producto-selected');
+            var selectedName = selectedDiv.querySelector('span');
+            var clearBtn = selectedDiv.querySelector('.detalle-producto-clear');
+
+            var prodPage = 0;
+            var prodQuery = '';
+
+            function buscarProductos(query, page, append) {
+                prodQuery = query;
+                prodPage = page;
+
+                // Subir z-index de la fila activa
+                var todasFilas = detallesContainer.querySelectorAll('.detalle-fila');
+                todasFilas.forEach(function(f) { f.classList.remove('dropdown-activo'); });
+                fila.classList.add('dropdown-activo');
+
+                if (!append) {
+                    dropdown.innerHTML = '<div class="ajax-select-loading">Buscando productos...</div>';
+                    abrirDropdown(dropdown, toggleBtn);
+                }
+
+                fetch('/api/productos/buscar?q=' + encodeURIComponent(query) + '&page=' + page + '&size=20', {
+                    headers: { 'Accept': 'application/json' }
+                })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    var items = data.content || [];
+                    var totalElements = data.totalElements || 0;
+
+                    if (!append) dropdown.innerHTML = '';
+
+                    if (items.length === 0 && !append) {
+                        dropdown.innerHTML =
+                            '<div class="ajax-select-empty">' +
+                                '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>' +
+                                'No se encontraron productos' +
+                            '</div>';
+                        return;
+                    }
+
+                    // Header con contador y boton cerrar
+                    if (!append) {
+                        var header = document.createElement('div');
+                        header.className = 'ajax-select-dropdown-header';
+                        header.innerHTML =
+                            '<span class="ajax-select-dropdown-count">' + totalElements + ' productos encontrados</span>' +
+                            '<button type="button" class="ajax-select-dropdown-close" title="Cerrar">' + closeSvg + '</button>';
+                        header.querySelector('.ajax-select-dropdown-close').addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            cerrarDropdown(dropdown, toggleBtn);
+                            fila.classList.remove('dropdown-activo');
+                        });
+                        dropdown.appendChild(header);
+                    }
+
+                    items.forEach(function(p) {
+                        var div = document.createElement('div');
+                        div.className = 'ajax-select-option';
+                        div.dataset.id = p.producto_id;
+                        div.dataset.precio = p.precio_venta || 0;
+                        var label = escapeHtml(p.nombre || '');
+                        var sub = escapeHtml(p.categoria || '');
+                        if (p.precio_venta) sub += ' — $' + parseFloat(p.precio_venta).toLocaleString('es-CO');
+                        div.innerHTML =
+                            '<span class="ajax-select-option-main">' + label + '</span>' +
+                            '<span class="ajax-select-option-sub">' + sub + '</span>';
+                        div.addEventListener('click', function() {
+                            seleccionarProducto(p);
+                        });
+                        dropdown.appendChild(div);
+                    });
+
+                    var existingMore = dropdown.querySelector('.ajax-select-more');
+                    if (existingMore) existingMore.remove();
+
+                    if (!data.last) {
+                        var moreBtn = document.createElement('button');
+                        moreBtn.type = 'button';
+                        moreBtn.className = 'ajax-select-more';
+                        moreBtn.innerHTML = arrowDownSvg + ' Cargar mas...';
+                        moreBtn.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            buscarProductos(prodQuery, prodPage + 1, true);
+                        });
+                        dropdown.appendChild(moreBtn);
+                    }
+                })
+                .catch(function() {
+                    dropdown.innerHTML = '<div class="ajax-select-empty">Error al buscar</div>';
+                });
+            }
+
+            function seleccionarProducto(p) {
+                hiddenInput.value = p.producto_id;
+                cerrarDropdown(dropdown, toggleBtn);
+                fila.classList.remove('dropdown-activo');
+                searchInput.style.display = 'none';
+                wrap.querySelector('.detalle-producto-actions').style.display = 'none';
+                selectedDiv.style.display = '';
+                var nombre = p.nombre || '';
+                if (p.categoria) nombre += ' — ' + p.categoria;
+                selectedName.textContent = nombre;
+                if (p.precio_venta) {
+                    precioInput.value = parseFloat(p.precio_venta).toFixed(2);
+                }
+                recalcularTotal();
+            }
+
+            function limpiarProducto() {
+                hiddenInput.value = '';
+                searchInput.value = '';
+                searchInput.style.display = '';
+                wrap.querySelector('.detalle-producto-actions').style.display = '';
+                selectedDiv.style.display = 'none';
+                cerrarDropdown(dropdown, toggleBtn);
+                fila.classList.remove('dropdown-activo');
+                precioInput.value = '';
+                recalcularTotal();
+                searchInput.focus();
+            }
+
+            var debouncedSearch = debounce(function() {
+                buscarProductos(searchInput.value.trim(), 0, false);
+            }, 350);
+
+            searchInput.addEventListener('input', debouncedSearch);
+            searchInput.addEventListener('focus', function() {
+                if (!hiddenInput.value && !isDropdownVisible(dropdown)) {
+                    buscarProductos(this.value.trim(), 0, false);
+                }
+            });
+            searchInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    buscarProductos(this.value.trim(), 0, false);
+                }
+                if (e.key === 'Escape') {
+                    cerrarDropdown(dropdown, toggleBtn);
+                    fila.classList.remove('dropdown-activo');
+                }
+            });
+
+            searchBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                buscarProductos(searchInput.value.trim(), 0, false);
+            });
+
+            // Toggle: abre o cierra
+            toggleBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (isDropdownVisible(dropdown)) {
+                    cerrarDropdown(dropdown, toggleBtn);
+                    fila.classList.remove('dropdown-activo');
+                } else {
+                    buscarProductos(searchInput.value.trim(), 0, false);
+                }
+            });
+
+            clearBtn.addEventListener('click', limpiarProducto);
+
+            // Cerrar dropdown al clic fuera
+            document.addEventListener('click', function(e) {
+                if (!wrap.contains(e.target)) {
+                    cerrarDropdown(dropdown, toggleBtn);
+                    fila.classList.remove('dropdown-activo');
+                }
             });
         }
 
@@ -277,22 +619,25 @@
             fila.style.opacity = '0';
             fila.style.transform = 'translateY(-10px)';
 
-            // Opciones de productos
-            var productosOptions = '<option value="">Seleccione producto</option>';
-            productosData.forEach(function(p) {
-                var label = p.nombre;
-                if (p.marca) label += ' - ' + p.marca;
-                productosOptions += '<option value="' + p.id + '" data-precio="' + p.precio + '" data-categoria="' + escapeAttr(p.categoria) + '">' + escapeHtml(label) + '</option>';
-            });
-
             fila.innerHTML =
                 '<input type="hidden" name="detalles[' + detalleIndex + '].tipoItem" value="PRODUCTO" />' +
                 '<div class="detalle-fila-grid">' +
                     '<div class="form-group">' +
                         '<label class="form-label">Producto</label>' +
-                        '<select name="detalles[' + detalleIndex + '].producto_id" class="form-select detalle-producto" required>' +
-                            productosOptions +
-                        '</select>' +
+                        '<div class="detalle-producto-search-wrap">' +
+                            '<input type="text" class="form-input detalle-prod-search" placeholder="Buscar producto..." autocomplete="off">' +
+                            '<div class="detalle-producto-actions">' +
+                                '<button type="button" class="detalle-producto-search-btn" title="Buscar">' + searchSvg + '</button>' +
+                                '<button type="button" class="detalle-producto-toggle" title="Abrir/Cerrar lista">' + chevronSvg + '</button>' +
+                            '</div>' +
+                            '<div class="detalle-producto-dropdown"></div>' +
+                            '<input type="hidden" name="detalles[' + detalleIndex + '].producto_id" class="detalle-producto-id" required>' +
+                            '<div class="detalle-producto-selected" style="display:none;">' +
+                                '<div class="detalle-producto-selected-icon">' + packageSvg + '</div>' +
+                                '<span></span>' +
+                                '<button type="button" class="detalle-producto-clear" title="Cambiar">' + closeSvg + '</button>' +
+                            '</div>' +
+                        '</div>' +
                     '</div>' +
                     '<div class="form-group">' +
                         '<label class="form-label">Cantidad</label>' +
@@ -312,46 +657,31 @@
                 '</div>';
 
             detallesContainer.appendChild(fila);
+
+            // Inicializar buscador de producto para esta fila
+            crearBuscadorProducto(fila, detalleIndex);
+
             detalleIndex++;
 
-            // Inicializar custom selects de la fila
-            if (window.SionSelect) {
-                fila.querySelectorAll('select.form-select').forEach(function(s) {
-                    SionSelect.init(s);
-                });
-            }
-
-            // Animacion
+            // Animacion de entrada
             requestAnimationFrame(function() {
                 fila.style.transition = 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)';
                 fila.style.opacity = '1';
                 fila.style.transform = 'translateY(0)';
             });
 
-            var productoSelect = fila.querySelector('.detalle-producto');
             var cantidadInput = fila.querySelector('.detalle-cantidad');
             var precioInput = fila.querySelector('.detalle-precio');
 
-            // Aplicar filtro numerico a inputs dinamicos
             if (window.SionNumericFilter) {
                 SionNumericFilter(cantidadInput);
                 SionNumericFilter(precioInput);
             }
 
-            // Al seleccionar producto → auto-precio
-            productoSelect.addEventListener('change', function() {
-                var selected = this.options[this.selectedIndex];
-                var precio = selected.getAttribute('data-precio');
-                if (precio) {
-                    precioInput.value = parseFloat(precio).toFixed(2);
-                }
-                recalcularTotal();
-            });
-
             cantidadInput.addEventListener('input', recalcularTotal);
             precioInput.addEventListener('input', recalcularTotal);
 
-            productoSelect.focus();
+            fila.querySelector('.detalle-prod-search').focus();
         }
 
         // =============================================
@@ -360,15 +690,12 @@
         detallesContainer.addEventListener('click', function(e) {
             var removeBtn = e.target.closest('.btn-remove-detalle');
             if (!removeBtn) return;
-
             e.preventDefault();
             var fila = removeBtn.closest('.detalle-fila');
             if (!fila) return;
-
             fila.style.transition = 'all 0.2s ease-out';
             fila.style.opacity = '0';
             fila.style.transform = 'translateX(-10px)';
-
             setTimeout(function() {
                 fila.remove();
                 reindexarDetalles();
@@ -399,14 +726,12 @@
                 var cantidad = parseFloat(fila.querySelector('.detalle-cantidad').value) || 0;
                 var precio = parseFloat(fila.querySelector('.detalle-precio').value) || 0;
                 var subtotal = cantidad * precio;
-
                 var subtotalEl = fila.querySelector('.detalle-subtotal');
                 if (subtotalEl) {
                     subtotalEl.textContent = '$ ' + subtotal.toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 }
                 total += subtotal;
             });
-
             if (totalDisplay) {
                 totalDisplay.textContent = '$ ' + total.toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             }
@@ -420,7 +745,6 @@
                 var ok = true;
                 var errores = [];
 
-                // Tipo de servicio obligatorio
                 if (!tipoInput.value) {
                     ok = false;
                     errores.push('Seleccione un tipo de servicio');
@@ -429,19 +753,20 @@
                     tipoToggle.classList.remove('error');
                 }
 
-                if (!clienteSelect.value) {
+                if (!clienteIdInput.value) {
                     ok = false;
-                    clienteSelect.classList.add('error');
                     errores.push('Seleccione un cliente');
+                    var wrap = document.getElementById('clienteSelectWrap');
+                    if (wrap) wrap.classList.add('error');
                 } else {
-                    clienteSelect.classList.remove('error');
+                    var wrap = document.getElementById('clienteSelectWrap');
+                    if (wrap) wrap.classList.remove('error');
                 }
 
-                // Vehiculo obligatorio solo en MANO_DE_OBRA
                 if (tipoActual === 'MANO_DE_OBRA' && !vehiculoSelect.value) {
                     ok = false;
                     vehiculoSelect.classList.add('error');
-                    errores.push('Seleccione un vehículo');
+                    errores.push('Seleccione un vehiculo');
                 } else {
                     vehiculoSelect.classList.remove('error');
                 }
@@ -453,14 +778,16 @@
                 }
 
                 filas.forEach(function(fila) {
-                    var producto = fila.querySelector('.detalle-producto');
+                    var productoId = fila.querySelector('.detalle-producto-id');
                     var cantidad = fila.querySelector('.detalle-cantidad');
 
-                    if (!producto.value) {
+                    if (!productoId || !productoId.value) {
                         ok = false;
-                        producto.classList.add('error');
+                        var searchWrap = fila.querySelector('.detalle-producto-search-wrap');
+                        if (searchWrap) searchWrap.classList.add('error');
                     } else {
-                        producto.classList.remove('error');
+                        var searchWrap = fila.querySelector('.detalle-producto-search-wrap');
+                        if (searchWrap) searchWrap.classList.remove('error');
                     }
 
                     if (!cantidad.value || parseFloat(cantidad.value) <= 0) {
@@ -483,24 +810,6 @@
         // Agregar primera fila por defecto
         agregarFilaDetalle();
     });
-
-    // =============================================
-    // LEER PRODUCTOS DEL DOM
-    // =============================================
-    function leerProductosDelDOM() {
-        var items = document.querySelectorAll('#productos-data .producto-item');
-        var productos = [];
-        items.forEach(function(el) {
-            productos.push({
-                id: el.dataset.id,
-                nombre: el.dataset.nombre || '',
-                marca: el.dataset.marca || '',
-                precio: el.dataset.precio || '0',
-                categoria: el.dataset.categoria || ''
-            });
-        });
-        return productos;
-    }
 
     function escapeHtml(text) {
         return SionUtils.esc(text, '');
