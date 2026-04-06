@@ -1864,6 +1864,8 @@ a.table-action-btn {
 .pagination-controls {
   display: flex;
   gap: var(--space-1);
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
 .pagination-btn {
@@ -1894,6 +1896,7 @@ a.table-action-btn {
 
 a.pagination-btn {
   text-decoration: none;
+  cursor: pointer;
 }
 
 .pagination-btn.active {
@@ -2518,6 +2521,12 @@ a.pagination-btn {
   .table-pagination {
     flex-direction: column;
     text-align: center;
+  }
+
+  .pagination-btn {
+    padding: var(--space-1) var(--space-2);
+    min-width: 30px;
+    font-size: 12px;
   }
 
   .toast-container {

@@ -1,5 +1,6 @@
 package com.siontrack.siontrack.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -32,4 +33,9 @@ public interface ProductosRepository extends JpaRepository<Productos, Integer> {
     Optional<Productos> findByCodigoProducto(String codigoProducto);
 
     Optional<Productos> findByNombreIgnoreCase(String nombre);
+
+    // Productos que necesitan reabastecimiento (cantidad <= 1.5 * stock_minimo)
+    @Query("SELECT p FROM Productos p JOIN FETCH p.inventario i " +
+           "WHERE i.stock_minimo > 0 AND i.cantidad_disponible <= i.stock_minimo * 1.5")
+    List<Productos> findProductosNecesitanRestock();
 }

@@ -179,7 +179,7 @@
          Nombres intuitivos, colores claros, animaciones fluidas
          ============================================ -->
     <div class="stock-card animate-in" style="animation-delay:600ms"
-         th:if="${alertasStock != null AND !alertasStock.isEmpty()}">
+         th:if="${totalAlertas != null AND totalAlertas > 0}">
 
         <!-- HEADER -->
         <div class="stock-card-header">
@@ -191,14 +191,14 @@
                 <div>
                     <div class="stock-header-title">Productos por reabastecer</div>
                     <div class="stock-header-subtitle"
-                         th:text="${#lists.size(alertasStock) + ' producto' + (#lists.size(alertasStock) == 1 ? ' necesita' : 's necesitan') + ' compra'}"></div>
+                         th:text="${totalAlertas + ' producto' + (totalAlertas == 1 ? ' necesita' : 's necesitan') + ' compra'}"></div>
                 </div>
             </div>
             <!-- Chips con mismos nombres que los badges — orden de prioridad -->
             <th:block th:with="
-                chipCritico=${#lists.size(alertasStock.?[esPopular == true and (nivelAlerta == 'AGOTADO' or nivelAlerta == 'CRITICO')])},
-                chipPriorizar=${#lists.size(alertasStock.?[esPopular == true and nivelAlerta == 'BAJO'])},
-                chipBajo=${#lists.size(alertasStock.?[esPopular == false and nivelAlerta != 'ADVERTENCIA'])},
+                chipCritico=${countAgotado + countCritico},
+                chipPriorizar=${countPopulares != null ? countPopulares : 0},
+                chipBajo=${countBajo != null ? countBajo : 0},
                 chipCasiAlMin=${countAdvertencia != null ? countAdvertencia : 0}
             ">
             <div class="stock-chips">
@@ -233,9 +233,9 @@
 
         <div class="stock-list">
 
-            <!-- SEPARADOR: Compra inmediata -->
+            <!-- SEPARADOR: Compra inmediata (solo si la página actual tiene items no-ADVERTENCIA) -->
             <div class="stock-separator urgente"
-                 th:if="${(countAgotado != null and countAgotado > 0) or (countCritico != null and countCritico > 0) or (countBajo != null and countBajo > 0)}">
+                 th:if="${not #lists.isEmpty(alertasStock.?[nivelAlerta != 'ADVERTENCIA'])}">
                 <div class="stock-separator-icon">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
                 </div>
@@ -328,9 +328,9 @@
                 </div>
             </th:block>
 
-            <!-- SEPARADOR: Revisar pronto -->
+            <!-- SEPARADOR: Revisar pronto (solo si la página actual tiene items ADVERTENCIA) -->
             <div class="stock-separator advertencia"
-                 th:if="${countAdvertencia != null and countAdvertencia > 0}">
+                 th:if="${not #lists.isEmpty(alertasStock.?[nivelAlerta == 'ADVERTENCIA'])}">
                 <div class="stock-separator-icon">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                 </div>
@@ -411,6 +411,9 @@
                 </div>
             </th:block>
         </div>
+
+        <!-- Paginación -->
+        <div th:if="${pageAlertasStock != null}" th:replace="~{fragments/paginacion :: paginacion(${pageAlertasStock}, '/web/dashboard', 'pageStock', '')}"></div>
 
         <!-- FOOTER -->
         <div class="stock-card-footer">

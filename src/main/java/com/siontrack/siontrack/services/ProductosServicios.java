@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -306,17 +307,8 @@ public class ProductosServicios {
             popularMap.put(p.getProductoId(), new int[]{ i + 1, p.getTotalVendido().intValue() });
         }
 
-        // 2. Obtener todos los productos con inventario y evaluar alertas
-        return productosRepository.findAll().stream()
-            .filter(producto -> producto.getInventario() != null)
-            .filter(producto -> {
-                int cantidad = producto.getInventario().getCantidad_disponible();
-                int minimo = producto.getInventario().getStock_minimo();
-                if (minimo <= 0) return false;
-
-                // Incluir productos hasta 1.5x el mínimo (nivel ADVERTENCIA)
-                return cantidad <= (int)(minimo * 1.5);
-            })
+        // 2. Obtener solo productos con stock bajo (query eficiente en vez de findAll)
+        return productosRepository.findProductosNecesitanRestock().stream()
             .map(producto -> {
                 Inventario inv = producto.getInventario();
                 int cantidad = inv.getCantidad_disponible();
@@ -398,4 +390,20 @@ public class ProductosServicios {
                 return a.getCantidadDisponible().compareTo(b.getCantidadDisponible());
             })
             .collect(Collectors.toList());
-    }}
+    }
+
+    /**
+     * Versión paginada de alertas de stock.
+     * Retorna un Page con el subconjunto solicitado de la lista ordenada.
+     */
+    @Transactional(readOnly = true)
+    public Page<AlertaStockDTO> obtenerAlertasStockPaginado(int page, int size) {
+        List<AlertaStockDTO> todas = obtenerAlertasStock();
+        int fromIndex = page * size;
+        if (fromIndex >= todas.size()) {
+            return new PageImpl<>(List.of(), PageRequest.of(page, size), todas.size());
+        }
+        int toIndex = Math.min(fromIndex + size, todas.size());
+        return new PageImpl<>(todas.subList(fromIndex, toIndex), PageRequest.of(page, size), todas.size());
+    }
+}

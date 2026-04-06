@@ -113,7 +113,7 @@
     }
 
     function fetchAlertasData() {
-        fetch('/api/alertas/stock', { headers: { 'Accept': 'application/json' } })
+        fetch('/api/alertas/stock/all', { headers: { 'Accept': 'application/json' } })
             .then(function (r) { return r.ok ? r.json() : []; })
             .then(function (data) {
                 alertasData = data;
@@ -537,114 +537,189 @@
     // =========================================
     // MODAL DE REABASTECIMIENTO
     // =========================================
+    // Estado de paginación del modal
+    var restockPaginaActual = 0;
+    var restockTotalPages = 0;
+
     function openRestockModal() {
+        restockPaginaActual = 0;
+        cargarPaginaRestock(0);
+    }
+
+    /**
+     * Carga una página de productos en el modal de reabastecimiento.
+     * Usa el endpoint paginado /api/alertas/stock?page=X&size=20
+     */
+    function cargarPaginaRestock(pagina) {
         var overlay = document.getElementById('restock-overlay');
         var body = document.getElementById('restock-body');
         if (!overlay || !body) return;
 
-        var products = alertasData.length > 0 ? alertasData : getProductsFromDOM();
+        if (!overlay.classList.contains('open')) {
+            overlay.classList.add('open');
+        }
 
-        if (!products.length) return;
+        fetch('/api/alertas/stock?page=' + pagina + '&size=20', { headers: { 'Accept': 'application/json' } })
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (pageData) {
+                if (!pageData || !pageData.content) return;
 
-        // Ordenar por prioridad combinada (popular+nivel+ranking)
-        products.sort(function (a, b) {
-            var diff = getPrioridadCombinada(a) - getPrioridadCombinada(b);
-            if (Math.abs(diff) > 0.001) return diff;
-            return (a.cantidadDisponible || 0) - (b.cantidadDisponible || 0);
-        });
+                restockPaginaActual = pageData.number;
+                restockTotalPages = pageData.totalPages;
 
-        var html = '';
-        var currentNivel = '';
+                var products = pageData.content;
+                var html = '';
+                var currentNivel = '';
 
-        products.forEach(function (p, i) {
-            var nivel = (p.nivelAlerta || 'bajo').toLowerCase();
-            var esPopular = p.esPopular || false;
-            var ranking = p.rankingPopular || null;
-            var badgeClass = getNivelClassUI(p.nivelAlerta, esPopular);
-            var badgeText = getNivelLabelUI(p.nivelAlerta, esPopular);
-            var need = (p.stockMinimo || 0) - (p.cantidadDisponible || 0);
-            if (need < 0) need = 0;
+                products.forEach(function (p, i) {
+                    var esPopular = p.esPopular || false;
+                    var ranking = p.rankingPopular || null;
+                    var badgeClass = getNivelClassUI(p.nivelAlerta, esPopular);
+                    var badgeText = getNivelLabelUI(p.nivelAlerta, esPopular);
+                    var need = (p.stockMinimo || 0) - (p.cantidadDisponible || 0);
+                    if (need < 0) need = 0;
 
-            // Separador de sección si cambia la categoría UI
-            var seccionActual = badgeClass;
-            if (seccionActual !== currentNivel) {
-                currentNivel = seccionActual;
-                var count = products.filter(function(x) {
-                    return getNivelClassUI(x.nivelAlerta, x.esPopular) === seccionActual;
-                }).length;
-                // Etiqueta descriptiva para cada sección
-                var secLabel = badgeText;
-                if (seccionActual === 'critico' && products.some(function(x) { return x.esPopular && getNivelClassUI(x.nivelAlerta, x.esPopular) === 'critico'; })) {
-                    secLabel = 'Crítico — más vendidos con poco stock';
-                } else if (seccionActual === 'priorizar') {
-                    secLabel = 'Priorizar — populares por reabastecer';
-                } else if (seccionActual === 'agotado') {
-                    secLabel = 'Agotado';
-                } else if (seccionActual === 'bajo') {
-                    secLabel = 'Bajo stock';
-                } else if (seccionActual === 'advertencia') {
-                    secLabel = 'Casi al mínimo';
+                    var seccionActual = badgeClass;
+                    if (seccionActual !== currentNivel) {
+                        currentNivel = seccionActual;
+                        var count = products.filter(function(x) {
+                            return getNivelClassUI(x.nivelAlerta, x.esPopular) === seccionActual;
+                        }).length;
+                        var secLabel = badgeText;
+                        if (seccionActual === 'critico' && products.some(function(x) { return x.esPopular && getNivelClassUI(x.nivelAlerta, x.esPopular) === 'critico'; })) {
+                            secLabel = 'Crítico — más vendidos con poco stock';
+                        } else if (seccionActual === 'priorizar') {
+                            secLabel = 'Priorizar — populares por reabastecer';
+                        } else if (seccionActual === 'agotado') {
+                            secLabel = 'Agotado';
+                        } else if (seccionActual === 'bajo') {
+                            secLabel = 'Bajo stock';
+                        } else if (seccionActual === 'advertencia') {
+                            secLabel = 'Casi al mínimo';
+                        }
+                        html += '<div class="stock-section-divider">' +
+                            '<span class="stock-section-dot ' + seccionActual + '"></span>' +
+                            '<span class="stock-section-label">' + secLabel + ' &mdash; ' + count + ' producto' + (count !== 1 ? 's' : '') + '</span>' +
+                        '</div>';
+                    }
+
+                    var needText = need > 0
+                        ? 'Necesita <strong class="restock-need ' + badgeClass + '">+' + need + '</strong> unidad' + (need === 1 ? '' : 'es')
+                        : 'En el límite mínimo';
+
+                    var popularBadge = '';
+                    if (esPopular && ranking) {
+                        popularBadge = ' <span class="stock-star" title="Top ' + ranking + ' más vendido">' +
+                            '<svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>' +
+                            '<span>' + ranking + '</span>' +
+                            '</span>';
+                    }
+
+                    html +=
+                        '<div class="restock-product" data-index="' + i + '" data-nivel="' + badgeClass + '">' +
+                            '<div class="restock-product-header">' +
+                                '<div class="restock-level-dot ' + badgeClass + '"></div>' +
+                                '<div class="restock-product-info">' +
+                                    '<div class="restock-product-name">' +
+                                        esc(p.nombre || 'Producto') +
+                                        ' <span class="restock-product-badge ' + badgeClass + '">' + badgeText.toUpperCase() + '</span>' +
+                                        popularBadge +
+                                    '</div>' +
+                                    '<div class="restock-product-stock">' +
+                                        'Stock: ' + (p.cantidadDisponible || 0) + ' / ' + (p.stockMinimo || 0) + ' mín.' +
+                                        ' &nbsp;·&nbsp; ' + needText +
+                                        (esPopular && p.totalVendido ? ' &nbsp;·&nbsp; <span style="color:var(--accent-primary);font-weight:600;">' + p.totalVendido + ' vendidos</span>' : '') +
+                                    '</div>' +
+                                '</div>' +
+                                '<div class="restock-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>' +
+                            '</div>' +
+                            '<div class="restock-details">' +
+                                '<div class="restock-details-inner">' +
+                                    '<div class="restock-grid">' +
+                                        '<div class="restock-field"><div class="restock-field-label">Categoría</div><div class="restock-field-value">' + esc(p.categoria || '—') + '</div></div>' +
+                                        '<div class="restock-field"><div class="restock-field-label">Marca</div><div class="restock-field-value">' + esc(p.marca || '—') + '</div></div>' +
+                                        '<div class="restock-field"><div class="restock-field-label">Ubicación</div><div class="restock-field-value">' + esc(p.ubicacion || '—') + '</div></div>' +
+                                        '<div class="restock-field"><div class="restock-field-label">Cantidad necesaria</div><div class="restock-field-value restock-need ' + badgeClass + '">+' + Math.max(need, 1) + ' unidades</div></div>' +
+                                    '</div>' +
+                                    buildSupplierCard(p) +
+                                '</div>' +
+                            '</div>' +
+                        '</div>';
+                });
+
+                // Controles de paginación si hay más de 1 página
+                if (restockTotalPages > 1) {
+                    html += renderPaginacionModal(pageData);
                 }
-                html += '<div class="stock-section-divider">' +
-                    '<span class="stock-section-dot ' + seccionActual + '"></span>' +
-                    '<span class="stock-section-label">' + secLabel + ' &mdash; ' + count + ' producto' + (count !== 1 ? 's' : '') + '</span>' +
-                '</div>';
-            }
 
-            var needText = need > 0
-                ? 'Necesita <strong class="restock-need ' + badgeClass + '">+' + need + '</strong> unidad' + (need === 1 ? '' : 'es')
-                : 'En el límite mínimo';
+                body.innerHTML = html;
+                body.scrollTop = 0;
+                bindAccordion(body);
+                bindPaginacionModal(body);
+            })
+            .catch(function () {
+                body.innerHTML = '<div style="padding:24px;text-align:center;color:var(--fg-subtle);">Error al cargar productos</div>';
+            });
+    }
 
-            // Estrella simple para productos populares (misma que la campana)
-            var popularBadge = '';
-            if (esPopular && ranking) {
-                popularBadge = ' <span class="stock-star" title="Top ' + ranking + ' más vendido">' +
-                    '<svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>' +
-                    '<span>' + ranking + '</span>' +
-                    '</span>';
-            }
+    /**
+     * Genera el HTML de los controles de paginación dentro del modal.
+     */
+    function renderPaginacionModal(pageData) {
+        var current = pageData.number;
+        var total = pageData.totalPages;
+        var totalEl = pageData.totalElements;
+        var size = pageData.size;
+        var desde = (current * size) + 1;
+        var hasta = ((current + 1) * size) > totalEl ? totalEl : ((current + 1) * size);
 
-            html +=
-                '<div class="restock-product" data-index="' + i + '" data-nivel="' + badgeClass + '">' +
-                    '<div class="restock-product-header">' +
-                        '<div class="restock-level-dot ' + badgeClass + '"></div>' +
-                        '<div class="restock-product-info">' +
-                            '<div class="restock-product-name">' +
-                                esc(p.nombre || 'Producto') +
-                                ' <span class="restock-product-badge ' + badgeClass + '">' + badgeText.toUpperCase() + '</span>' +
-                                popularBadge +
-                            '</div>' +
-                            '<div class="restock-product-stock">' +
-                                'Stock: ' + (p.cantidadDisponible || 0) + ' / ' + (p.stockMinimo || 0) + ' mín.' +
-                                ' &nbsp;·&nbsp; ' + needText +
-                                (esPopular && p.totalVendido ? ' &nbsp;·&nbsp; <span style="color:var(--accent-primary);font-weight:600;">' + p.totalVendido + ' vendidos</span>' : '') +
-                            '</div>' +
-                        '</div>' +
-                        '<div class="restock-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>' +
-                    '</div>' +
-                    '<div class="restock-details">' +
-                        '<div class="restock-details-inner">' +
-                            '<div class="restock-grid">' +
-                                '<div class="restock-field"><div class="restock-field-label">Categoría</div><div class="restock-field-value">' + esc(p.categoria || '—') + '</div></div>' +
-                                '<div class="restock-field"><div class="restock-field-label">Marca</div><div class="restock-field-value">' + esc(p.marca || '—') + '</div></div>' +
-                                '<div class="restock-field"><div class="restock-field-label">Ubicación</div><div class="restock-field-value">' + esc(p.ubicacion || '—') + '</div></div>' +
-                                '<div class="restock-field"><div class="restock-field-label">Cantidad necesaria</div><div class="restock-field-value restock-need ' + badgeClass + '">+' + Math.max(need, 1) + ' unidades</div></div>' +
-                            '</div>' +
-                            buildSupplierCard(p) +
-                        '</div>' +
-                    '</div>' +
-                '</div>';
+        var html = '<div class="table-pagination" style="margin-top:16px;padding:12px 16px;">';
+        html += '<div class="pagination-info">Mostrando <strong>' + desde + '</strong> a <strong>' + hasta + '</strong> de <strong>' + totalEl + '</strong></div>';
+        html += '<div class="pagination-controls">';
+
+        // Primera
+        html += '<a class="pagination-btn' + (current === 0 ? ' disabled' : '') + '" data-restock-page="0" title="Primera página">' +
+            '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/></svg></a>';
+        // Anterior
+        html += '<a class="pagination-btn' + (current === 0 ? ' disabled' : '') + '" data-restock-page="' + (current - 1) + '" title="Anterior">' +
+            '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></a>';
+
+        // Ventana de 5 números de página
+        var startPage = current - 2 > 0 ? current - 2 : 0;
+        var endPage = startPage + 4 < total - 1 ? startPage + 4 : total - 1;
+        var adjustedStart = endPage - 4 > 0 ? endPage - 4 : 0;
+
+        if (adjustedStart > 0) html += '<span class="pagination-btn disabled">...</span>';
+        for (var i = adjustedStart; i <= endPage; i++) {
+            html += '<a class="pagination-btn' + (i === current ? ' active' : '') + '" data-restock-page="' + i + '">' + (i + 1) + '</a>';
+        }
+        if (endPage < total - 1) html += '<span class="pagination-btn disabled">...</span>';
+
+        // Siguiente
+        html += '<a class="pagination-btn' + (current === total - 1 ? ' disabled' : '') + '" data-restock-page="' + (current + 1) + '" title="Siguiente">' +
+            '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>';
+        // Última
+        html += '<a class="pagination-btn' + (current === total - 1 ? ' disabled' : '') + '" data-restock-page="' + (total - 1) + '" title="Última página">' +
+            '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg></a>';
+
+        html += '</div></div>';
+        return html;
+    }
+
+    /**
+     * Vincula los eventos click a los botones de paginación del modal.
+     */
+    function bindPaginacionModal(container) {
+        container.querySelectorAll('[data-restock-page]').forEach(function (btn) {
+            if (btn.classList.contains('disabled') || btn.classList.contains('active')) return;
+            btn.addEventListener('click', function (e) {
+                e.preventDefault();
+                var page = parseInt(btn.dataset.restockPage);
+                if (!isNaN(page) && page >= 0 && page < restockTotalPages) {
+                    cargarPaginaRestock(page);
+                }
+            });
         });
-
-        body.innerHTML = html;
-
-        // Scroll al inicio siempre al abrir
-        body.scrollTop = 0;
-
-        // Bind accordion AFTER innerHTML
-        bindAccordion(body);
-
-        overlay.classList.add('open');
     }
 
     /**
