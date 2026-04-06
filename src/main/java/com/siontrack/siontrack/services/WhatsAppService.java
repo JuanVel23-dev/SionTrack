@@ -68,13 +68,12 @@ public class WhatsAppService {
     }
 
 
-    public ResultadoEnvioMensaje enviarMensajePromo (String telefono, String nombreCliente, String marcaVehiculo, String promocion, String precioOferta, String rangoFechas ){
+    public ResultadoEnvioMensaje enviarMensajePromo (String telefono, String nombreCliente, String promocion, String precioOferta, String rangoFechas ){
 
-        log.info("Enviando promocion a todos los vehiculos de marca {}", marcaVehiculo);
+        log.info("Enviando promocion a todos los clientes seleccionados");
 
         Map<String, String> parametros = new LinkedHashMap<>();
         parametros.put("nombre_cliente", validarTexto(nombreCliente, "estimado cliente"));
-        parametros.put("marca_vehiculo", validarTexto(marcaVehiculo, "vehiculo"));
         parametros.put("promocion", validarTexto(promocion, "Revisión gratis"));
         parametros.put("precio_oferta", validarTexto(precioOferta, "$0"));
         parametros.put("rango_fechas", validarTexto(rangoFechas, "01/01/2026 al 01/01/2027"));

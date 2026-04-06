@@ -7,6 +7,7 @@ import com.siontrack.siontrack.models.Productos;
 import com.siontrack.siontrack.models.Vehiculos;
 import com.siontrack.siontrack.repository.ClienteRepository;
 import com.siontrack.siontrack.repository.ProductosRepository;
+import com.siontrack.siontrack.repository.ProveedoresRepository;
 import com.siontrack.siontrack.repository.ServiciosRepository;
 import com.siontrack.siontrack.repository.VehiculosRepository;
 import org.apache.poi.ss.usermodel.*;
@@ -34,6 +35,8 @@ import java.util.Set;
 @Service
 public class ImportacionService {
 
+    private final ProveedoresRepository proveedoresRepository;
+
     private static final Logger log = LoggerFactory.getLogger(ImportacionService.class);
 
     private final ClienteServicios clienteServicios;
@@ -46,13 +49,13 @@ public class ImportacionService {
     private final ServiciosRepository serviciosRepository;
 
     public ImportacionService(ClienteServicios clienteServicios,
-                        ProductosServicios productosServicios,
-                        ProveedoresService proveedoresService,
-                        ServiciosService serviciosService,
-                        ClienteRepository clienteRepository,
-                        VehiculosRepository vehiculosRepository,
-                        ProductosRepository productosRepository,
-                        ServiciosRepository serviciosRepository) {
+            ProductosServicios productosServicios,
+            ProveedoresService proveedoresService,
+            ServiciosService serviciosService,
+            ClienteRepository clienteRepository,
+            VehiculosRepository vehiculosRepository,
+            ProductosRepository productosRepository,
+            ServiciosRepository serviciosRepository, ProveedoresRepository proveedoresRepository) {
         this.clienteServicios = clienteServicios;
         this.productosServicios = productosServicios;
         this.proveedoresService = proveedoresService;
@@ -61,6 +64,7 @@ public class ImportacionService {
         this.vehiculosRepository = vehiculosRepository;
         this.productosRepository = productosRepository;
         this.serviciosRepository = serviciosRepository;
+        this.proveedoresRepository = proveedoresRepository;
     }
 
     // ==================== IMPORTAR CLIENTES ====================
@@ -78,7 +82,8 @@ public class ImportacionService {
             return resultado;
         }
 
-        // Rastrear cédulas/nombres ya procesados en este archivo para ignorar duplicados internos
+        // Rastrear cédulas/nombres ya procesados en este archivo para ignorar
+        // duplicados internos
         Set<String> procesadosEnArchivo = new HashSet<>();
 
         for (int i = 0; i < filas.size(); i++) {
@@ -136,8 +141,10 @@ public class ImportacionService {
                     VehiculosRequestDTO vehiculoDto = new VehiculosRequestDTO();
                     vehiculoDto.setPlaca(placa);
                     String km = get(fila, "kilometraje_actual");
-                    if (km == null) km = get(fila, "kilometraje");
-                    if (km == null) km = "0";
+                    if (km == null)
+                        km = get(fila, "kilometraje");
+                    if (km == null)
+                        km = "0";
                     vehiculoDto.setKilometraje_actual(km);
                     dto.setVehiculos(List.of(vehiculoDto));
                 }
@@ -250,6 +257,9 @@ public class ImportacionService {
             return resultado;
         }
 
+        // Set para rastrear proveedores que vienen duplicados dentro del mismo Excel
+        Set<String> nombresProcesadosEnArchivo = new HashSet<>();
+
         for (int i = 0; i < filas.size(); i++) {
             Map<String, String> fila = filas.get(i);
             int numeroFila = i + 2;
@@ -257,19 +267,42 @@ public class ImportacionService {
 
             try {
                 ProveedoresRequestDTO dto = new ProveedoresRequestDTO();
-                dto.setNombre(get(fila, "nombre"));
+                String nombre = get(fila, "nombre");
+
+                dto.setNombre(nombre);
                 dto.setTelefono(get(fila, "telefono"));
                 dto.setEmail(get(fila, "email"));
                 dto.setDireccion(get(fila, "direccion"));
                 dto.setNombre_contacto(get(fila, "nombre_contacto"));
 
-                if (dto.getNombre() == null || dto.getNombre().trim().isEmpty()) {
+                // 1. Validar que el nombre no esté vacío
+                if (nombre == null || nombre.trim().isEmpty()) {
                     resultado.agregarError(numeroFila, "Nombre es requerido");
                     resultado.setRegistrosFallidos(resultado.getRegistrosFallidos() + 1);
                     continue;
                 }
 
+                String nombreNormalizado = nombre.trim().toLowerCase();
+
+                // 2. Validar duplicados dentro del mismo archivo Excel
+                if (nombresProcesadosEnArchivo.contains(nombreNormalizado)) {
+                    resultado.agregarError(numeroFila, "Proveedor duplicado dentro del archivo: " + nombre);
+                    resultado.setRegistrosFallidos(resultado.getRegistrosFallidos() + 1);
+                    continue;
+                }
+
+                // 3. Validar duplicados contra la base de datos
+                // Necesitarás tener un método en tu service que verifique la existencia
+                if (proveedoresRepository.existsByNombreIgnoreCase(nombre.trim())) {
+                    resultado.agregarError(numeroFila, "El proveedor ya existe en la base de datos: " + nombre);
+                    resultado.setRegistrosFallidos(resultado.getRegistrosFallidos() + 1);
+                    continue;
+                }
+
+                // Si pasa todas las validaciones, lo agregamos al Set y lo guardamos
+                nombresProcesadosEnArchivo.add(nombreNormalizado);
                 proveedoresService.crearProveedor(dto);
+
                 resultado.setRegistrosExitosos(resultado.getRegistrosExitosos() + 1);
 
             } catch (Exception e) {
@@ -318,7 +351,8 @@ public class ImportacionService {
                     cliente = clienteRepository.findByNombreIgnoreCase(nombreCliente).orElse(null);
                 }
                 if (cliente == null) {
-                    resultado.agregarError(numeroFila, "No se encontró cliente con cédula '" + cedulaRuc + "' o nombre '" + nombreCliente + "'");
+                    resultado.agregarError(numeroFila,
+                            "No se encontró cliente con cédula '" + cedulaRuc + "' o nombre '" + nombreCliente + "'");
                     resultado.setRegistrosFallidos(resultado.getRegistrosFallidos() + 1);
                     continue;
                 }
@@ -351,9 +385,11 @@ public class ImportacionService {
                 LocalDate fechaServicio = getLocalDate(fila, "fecha_servicio");
                 String tipoServicio = normalizarTipoServicio(get(fila, "tipo_servicio"));
 
-                // Clave de agrupación: mismo cliente + vehículo + fecha + tipo = un único servicio
+                // Clave de agrupación: mismo cliente + vehículo + fecha + tipo = un único
+                // servicio
                 final Integer vehiculoIdFinal = vehiculoId;
-                String claveGrupo = cliente.getCliente_id() + "|" + vehiculoId + "|" + fechaServicio + "|" + tipoServicio;
+                String claveGrupo = cliente.getCliente_id() + "|" + vehiculoId + "|" + fechaServicio + "|"
+                        + tipoServicio;
 
                 // Obtener el grupo existente o crear uno nuevo con los datos de la primera fila
                 GrupoServicio grupo = grupos.computeIfAbsent(claveGrupo, k -> {
@@ -372,18 +408,24 @@ public class ImportacionService {
                 // La resolución del producto tiene su propio try-catch para que un fallo
                 // aquí no descarte el grupo completo del servicio.
                 String codigoProducto = get(fila, "codigo_producto");
-                // Fallback: algunos Excel usan "nombre_producto" o "producto" en lugar de código
+                // Fallback: algunos Excel usan "nombre_producto" o "producto" en lugar de
+                // código
                 String nombreProducto = get(fila, "nombre_producto");
-                if (nombreProducto == null) nombreProducto = get(fila, "producto");
+                if (nombreProducto == null)
+                    nombreProducto = get(fila, "producto");
 
                 // Cantidad: acepta decimales (ej: 0.5, 1.5 litros)
                 BigDecimal cantidad = getBigDecimal(fila, "cantidad");
 
-                // Precio unitario desde el Excel — se prueban varios nombres de columna posibles
+                // Precio unitario desde el Excel — se prueban varios nombres de columna
+                // posibles
                 BigDecimal precioUnitario = getBigDecimal(fila, "precio_unitario");
-                if (precioUnitario == null) precioUnitario = getBigDecimal(fila, "precio");
-                if (precioUnitario == null) precioUnitario = getBigDecimal(fila, "precio_unitario_congelado");
-                if (precioUnitario == null) precioUnitario = getBigDecimal(fila, "precio_venta");
+                if (precioUnitario == null)
+                    precioUnitario = getBigDecimal(fila, "precio");
+                if (precioUnitario == null)
+                    precioUnitario = getBigDecimal(fila, "precio_unitario_congelado");
+                if (precioUnitario == null)
+                    precioUnitario = getBigDecimal(fila, "precio_venta");
 
                 String tipoItem = get(fila, "tipo_item");
 
@@ -434,9 +476,11 @@ public class ImportacionService {
             try {
                 // Verificar si el servicio ya existe en base de datos
                 if (grupo.fechaServicio != null && grupo.tipoServicio != null &&
-                        serviciosRepository.existsDuplicado(grupo.clienteId, grupo.vehiculoId, grupo.fechaServicio, grupo.tipoServicio)) {
+                        serviciosRepository.existsDuplicado(grupo.clienteId, grupo.vehiculoId, grupo.fechaServicio,
+                                grupo.tipoServicio)) {
                     resultado.agregarAdvertencia(grupo.filas.get(0),
-                            "Servicio ya registrado (filas " + grupo.filas + "): mismo cliente, vehículo, fecha y tipo — omitido");
+                            "Servicio ya registrado (filas " + grupo.filas
+                                    + "): mismo cliente, vehículo, fecha y tipo — omitido");
                     resultado.setRegistrosOmitidos(resultado.getRegistrosOmitidos() + 1);
                     continue;
                 }
@@ -464,7 +508,8 @@ public class ImportacionService {
         return resultado;
     }
 
-    // Clase auxiliar para agrupar las filas del Excel que pertenecen al mismo servicio
+    // Clase auxiliar para agrupar las filas del Excel que pertenecen al mismo
+    // servicio
     private static class GrupoServicio {
         int clienteId;
         Integer vehiculoId;
@@ -517,7 +562,8 @@ public class ImportacionService {
                 if ("AGREGAR".equalsIgnoreCase(operacion)) {
                     var productoActual = productosServicios.obtenerProductoByID(productoId);
                     int cantidadActual = productoActual.getCantidad_disponible() != null
-                            ? productoActual.getCantidad_disponible() : 0;
+                            ? productoActual.getCantidad_disponible()
+                            : 0;
                     cantidadFinal = cantidadActual + cantidadNueva;
                 } else {
                     cantidadFinal = cantidadNueva;
@@ -555,7 +601,8 @@ public class ImportacionService {
 
             // Leer cabeceras de la primera fila
             Row filaCabecera = sheet.getRow(0);
-            if (filaCabecera == null) return filas;
+            if (filaCabecera == null)
+                return filas;
 
             List<String> cabeceras = new ArrayList<>();
             for (int j = 0; j < filaCabecera.getLastCellNum(); j++) {
@@ -567,25 +614,29 @@ public class ImportacionService {
             // Leer filas de datos desde la segunda fila
             for (int i = 1; i <= sheet.getLastRowNum(); i++) {
                 Row row = sheet.getRow(i);
-                if (row == null || esFilaVacia(row)) continue;
+                if (row == null || esFilaVacia(row))
+                    continue;
 
                 Map<String, String> fila = new LinkedHashMap<>();
                 for (int j = 0; j < cabeceras.size(); j++) {
                     String cabecera = cabeceras.get(j);
-                    if (cabecera.isEmpty()) continue;
+                    if (cabecera.isEmpty())
+                        continue;
 
                     Cell cell = row.getCell(j);
                     String valor = null;
                     if (cell != null) {
                         if (cell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(cell)) {
-                            // Extraer fecha directamente en formato ISO para evitar problemas de localización
+                            // Extraer fecha directamente en formato ISO para evitar problemas de
+                            // localización
                             valor = DateUtil.getLocalDateTime(cell.getNumericCellValue()).toLocalDate().toString();
                         } else if (cell.getCellType() == CellType.NUMERIC) {
                             valor = NumberToTextConverter.toText(cell.getNumericCellValue()).trim();
                         } else {
                             valor = formatter.formatCellValue(cell).trim();
                         }
-                        if (valor.isEmpty()) valor = null;
+                        if (valor.isEmpty())
+                            valor = null;
                     }
                     fila.put(cabecera, valor);
                 }
@@ -603,7 +654,8 @@ public class ImportacionService {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
             String linea;
             while ((linea = reader.readLine()) != null) {
-                if (linea.trim().isEmpty()) continue;
+                if (linea.trim().isEmpty())
+                    continue;
                 String[] campos = parsearLineaCSV(linea);
 
                 if (cabeceras == null) {
@@ -617,7 +669,8 @@ public class ImportacionService {
                 Map<String, String> fila = new LinkedHashMap<>();
                 for (int j = 0; j < cabeceras.size(); j++) {
                     String cabecera = cabeceras.get(j);
-                    if (cabecera.isEmpty()) continue;
+                    if (cabecera.isEmpty())
+                        continue;
                     String valor = j < campos.length ? campos[j].trim() : null;
                     fila.put(cabecera, (valor == null || valor.isEmpty()) ? null : valor);
                 }
@@ -661,7 +714,8 @@ public class ImportacionService {
     }
 
     private String normalizarCabecera(String cabecera) {
-        if (cabecera == null) return "";
+        if (cabecera == null)
+            return "";
         return cabecera.trim().toLowerCase().replaceAll("\\s+", "_");
     }
 
@@ -672,7 +726,8 @@ public class ImportacionService {
 
     private Integer getInteger(Map<String, String> fila, String cabecera) {
         String val = get(fila, cabecera);
-        if (val == null) return null;
+        if (val == null)
+            return null;
         try {
             return (int) Double.parseDouble(val);
         } catch (NumberFormatException e) {
@@ -682,7 +737,8 @@ public class ImportacionService {
 
     private BigDecimal getBigDecimal(Map<String, String> fila, String cabecera) {
         String val = get(fila, cabecera);
-        if (val == null) return null;
+        if (val == null)
+            return null;
         try {
             return new BigDecimal(val.replace(",", "."));
         } catch (NumberFormatException e) {
@@ -691,27 +747,31 @@ public class ImportacionService {
     }
 
     private static final List<DateTimeFormatter> FORMATOS_FECHA = List.of(
-        DateTimeFormatter.ISO_LOCAL_DATE,                    // 2026-03-26
-        DateTimeFormatter.ofPattern("dd/MM/yyyy"),           // 26/03/2026
-        DateTimeFormatter.ofPattern("MM/dd/yyyy"),           // 03/26/2026
-        DateTimeFormatter.ofPattern("dd-MM-yyyy"),           // 26-03-2026
-        DateTimeFormatter.ofPattern("yyyy/MM/dd")            // 2026/03/26
+            DateTimeFormatter.ISO_LOCAL_DATE, // 2026-03-26
+            DateTimeFormatter.ofPattern("dd/MM/yyyy"), // 26/03/2026
+            DateTimeFormatter.ofPattern("MM/dd/yyyy"), // 03/26/2026
+            DateTimeFormatter.ofPattern("dd-MM-yyyy"), // 26-03-2026
+            DateTimeFormatter.ofPattern("yyyy/MM/dd") // 2026/03/26
     );
 
     /**
      * Normaliza el tipo de servicio leído del Excel al valor exacto esperado.
-     * Acepta variantes como "Producto", "producto", "Mano de Obra", "mano_de_obra", etc.
+     * Acepta variantes como "Producto", "producto", "Mano de Obra", "mano_de_obra",
+     * etc.
      */
     private String normalizarTipoServicio(String valor) {
-        if (valor == null) return "PRODUCTO";
+        if (valor == null)
+            return "PRODUCTO";
         String v = valor.trim().toUpperCase().replace(" ", "_").replace("-", "_");
-        if (v.contains("MANO") || v.equals("MANO_DE_OBRA")) return "MANO_DE_OBRA";
+        if (v.contains("MANO") || v.equals("MANO_DE_OBRA"))
+            return "MANO_DE_OBRA";
         return "PRODUCTO";
     }
 
     private LocalDate getLocalDate(Map<String, String> fila, String cabecera) {
         String val = get(fila, cabecera);
-        if (val == null) return null;
+        if (val == null)
+            return null;
         for (DateTimeFormatter fmt : FORMATOS_FECHA) {
             try {
                 return LocalDate.parse(val, fmt);

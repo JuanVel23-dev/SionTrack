@@ -31,4 +31,5 @@ public interface ProveedoresRepository extends JpaRepository <Proveedores, Integ
 
     Optional<Proveedores> findByNombreIgnoreCase(String nombre);
 
+    public boolean existsByNombreIgnoreCase(String nombre);
 }

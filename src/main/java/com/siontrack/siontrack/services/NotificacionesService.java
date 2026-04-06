@@ -60,7 +60,7 @@ public class NotificacionesService {
     // RECORDATORIOS PROGRAMADOS (sin cambios)
     // =============================================
 
-    @Scheduled(cron = "0 20 20 * * *")
+    @Scheduled(cron = "0 39 01 * * *")
     @Transactional
     public void enviarNotificacionesProgramadas() {
         log.info("🔔 Enviando recordatorios programados...");
@@ -351,8 +351,7 @@ public class NotificacionesService {
             String telefono = cliente.getTelefonos().get(0).getTelefono();
 
             ResultadoEnvioMensaje resultado = whatsAppService.enviarMensajePromo(
-                    telefono, cliente.getNombre(), producto.getNombre(),
-                    dto.getPromocion(), dto.getPrecioOferta(), dto.getRangoFechas());
+                    telefono, cliente.getNombre(), dto.getPromocion(), dto.getPrecioOferta(), dto.getRangoFechas());
 
             if (resultado == ResultadoEnvioMensaje.ENVIADO) {
                 enviados++;

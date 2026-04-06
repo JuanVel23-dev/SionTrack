@@ -33,3 +33,12 @@ build/
 .vscode/
 
 src/main/resources/application.properties
+
+# Perfil local con credenciales reales
+src/main/resources/application-local.properties
+
+# Backups de BD
+*.sql
+
+# Variables de entorno
+.env
