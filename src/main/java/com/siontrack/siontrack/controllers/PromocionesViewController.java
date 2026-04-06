@@ -48,7 +48,7 @@ public class PromocionesViewController {
     @GetMapping("/notificaciones/promocion/nueva")
     public String mostrarFormularioPromocion(Model model) {
         model.addAttribute("promocion", new PromocionesRequestDTO());
-        model.addAttribute("productosDisponibles", notificacionesService.obtenerProductosDisponibles());
+        // Los productos se buscan via AJAX en /api/productos/buscar
         return "promociones-form";
     }
 
