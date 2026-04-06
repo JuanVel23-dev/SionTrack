@@ -1,15 +1,16 @@
 <!-- Fragmento reutilizable de paginación -->
-<!-- Parámetros: page (Page object), baseUrl (String), paramName (String), extraParams (String, opcional, ej: '&pageRec=2') -->
+<!-- Parámetros: page (Page object), baseUrl (String), paramName (String), extraParams (String, opcional) -->
 <div th:fragment="paginacion(page, baseUrl, paramName, extraParams)"
      class="table-pagination"
      th:if="${page.totalPages > 1}"
      th:with="extra=${extraParams != null ? extraParams : ''}">
 
-    <div class="pagination-info">
+    <div class="pagination-info"
+         th:with="desde=${(page.number * page.size) + 1}, hasta=${((page.number + 1L) * page.size) > page.totalElements ? page.totalElements : ((page.number + 1L) * page.size)}">
         Mostrando
-        <strong th:text="${(page.number * page.size) + 1}">1</strong>
+        <strong th:text="${desde}">1</strong>
         a
-        <strong th:text="${T(java.lang.Math).min(((page.number + 1) * page.size), page.totalElements)}">50</strong>
+        <strong th:text="${hasta}">50</strong>
         de
         <strong th:text="${page.totalElements}">500</strong>
     </div>
@@ -37,9 +38,9 @@
         <th:block th:with="
             totalPages=${page.totalPages},
             currentPage=${page.number},
-            startPage=${T(java.lang.Math).max(0, currentPage - 2)},
-            endPage=${T(java.lang.Math).min(totalPages - 1, startPage + 4)},
-            adjustedStart=${T(java.lang.Math).max(0, endPage - 4)}">
+            startPage=${currentPage - 2 > 0 ? currentPage - 2 : 0},
+            endPage=${startPage + 4 < totalPages - 1 ? startPage + 4 : totalPages - 1},
+            adjustedStart=${endPage - 4 > 0 ? endPage - 4 : 0}">
 
             <!-- Puntos suspensivos iniciales -->
             <span class="pagination-btn disabled" th:if="${adjustedStart > 0}">...</span>
