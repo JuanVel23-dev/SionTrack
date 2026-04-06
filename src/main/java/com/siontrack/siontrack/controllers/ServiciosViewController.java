@@ -3,6 +3,8 @@ package com.siontrack.siontrack.controllers;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -43,9 +45,13 @@ public class ServiciosViewController {
     }
 
     @GetMapping("/servicios")
-    public String mostrarListaServicios(Model model) {
-        List<ServicioResponseDTO> listaServicios = serviciosService.obtenerTodos();
-        model.addAttribute("servicios", listaServicios);
+    public String mostrarListaServicios(
+            @RequestParam(defaultValue = "0") int page,
+            Model model) {
+        Page<ServicioResponseDTO> pagina = serviciosService.obtenerTodosPaginado(
+                PageRequest.of(page, 50));
+        model.addAttribute("servicios", pagina.getContent());
+        model.addAttribute("page", pagina);
         return "servicios-lista";
     }
 

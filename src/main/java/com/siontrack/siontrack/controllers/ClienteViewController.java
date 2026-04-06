@@ -14,7 +14,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.siontrack.siontrack.DTO.Request.VehiculosRequestDTO;
 
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 
 import com.siontrack.siontrack.DTO.Request.ClienteRequestDTO;
 import com.siontrack.siontrack.DTO.Response.ClienteResponseDTO;
@@ -36,10 +37,14 @@ public class ClienteViewController {
     }
 
     @GetMapping("/clientes")
-    public String mostrarListaClientes(Model model) {
-        List<ClienteResponseDTO> listaClientes = clienteServicios.obtenerListaClientes();
-        model.addAttribute("clientes", listaClientes);
-        return "clientes-lista"; 
+    public String mostrarListaClientes(
+            @RequestParam(defaultValue = "0") int page,
+            Model model) {
+        Page<ClienteResponseDTO> pagina = clienteServicios.obtenerListaClientesPaginado(
+                PageRequest.of(page, 50));
+        model.addAttribute("clientes", pagina.getContent());
+        model.addAttribute("page", pagina);
+        return "clientes-lista";
     }
 
     @GetMapping("/clientes/nuevo")

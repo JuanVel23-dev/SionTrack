@@ -15,6 +15,8 @@ import com.siontrack.siontrack.repository.ProductosRepository;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -136,6 +138,29 @@ public class NotificacionesService {
                     return map;
                 })
                 .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public Page<Map<String, Object>> obtenerClientesPendientesPaginado(Pageable pageable) {
+        return clienteRepository.findClientesPendientesDeConsentimientoPaginado(pageable)
+                .map(c -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("id", c.getCliente_id());
+                    map.put("nombre", c.getNombre());
+                    map.put("cedula", c.getCedula_ruc());
+                    map.put("telefono", c.getTelefonos() != null && !c.getTelefonos().isEmpty()
+                            ? c.getTelefonos().get(0).getTelefono()
+                            : "Sin teléfono");
+                    map.put("fechaCreacion", c.getFecha_registro() != null
+                            ? c.getFecha_registro().toString()
+                            : null);
+                    return map;
+                });
+    }
+
+    @Transactional(readOnly = true)
+    public long contarClientesPendientesConsentimiento() {
+        return clienteRepository.countClientesPendientesDeConsentimiento();
     }
 
     // 2. Método actualizado para recibir únicamente los IDs seleccionados
@@ -369,8 +394,18 @@ public class NotificacionesService {
     }
 
     @Transactional(readOnly = true)
+    public Page<Notificaciones> obtenerPromocionesEnviadasPaginado(Pageable pageable) {
+        return notificacionesRepository.findByTipoNotificacionPaginado("PROMOCION", pageable);
+    }
+
+    @Transactional(readOnly = true)
     public List<Notificaciones> obtenerRecordatorios() {
         return notificacionesRepository.findRecordatoriosOrdenados();
+    }
+
+    @Transactional(readOnly = true)
+    public Page<Notificaciones> obtenerRecordatoriosPaginado(Pageable pageable) {
+        return notificacionesRepository.findRecordatoriosPaginados(pageable);
     }
 
     @Transactional(readOnly = true)

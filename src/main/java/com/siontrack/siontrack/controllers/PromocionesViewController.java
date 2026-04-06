@@ -3,6 +3,8 @@ package com.siontrack.siontrack.controllers;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -22,11 +24,21 @@ public class PromocionesViewController {
      * Lista con tabs: Promociones / Recordatorios
      */
     @GetMapping("/notificaciones")
-    public String mostrarNotificaciones(Model model) {
-        model.addAttribute("promociones", notificacionesService.obtenerPromocionesEnviadas());
-        model.addAttribute("recordatorios", notificacionesService.obtenerRecordatorios());
-        var pendientes = notificacionesService.obtenerClientesPendientesConsentimiento();
-        model.addAttribute("pendientesCount", pendientes.size());
+    public String mostrarNotificaciones(
+            @RequestParam(defaultValue = "0") int pagePromo,
+            @RequestParam(defaultValue = "0") int pageRec,
+            Model model) {
+        Page<com.siontrack.siontrack.models.Notificaciones> paginaPromo =
+                notificacionesService.obtenerPromocionesEnviadasPaginado(PageRequest.of(pagePromo, 50));
+        Page<com.siontrack.siontrack.models.Notificaciones> paginaRec =
+                notificacionesService.obtenerRecordatoriosPaginado(PageRequest.of(pageRec, 50));
+
+        model.addAttribute("promociones", paginaPromo.getContent());
+        model.addAttribute("pagePromo", paginaPromo);
+        model.addAttribute("recordatorios", paginaRec.getContent());
+        model.addAttribute("pageRec", paginaRec);
+
+        model.addAttribute("pendientesCount", notificacionesService.contarClientesPendientesConsentimiento());
         return "notificaciones-lista";
     }
 

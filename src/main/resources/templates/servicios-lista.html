@@ -141,6 +141,9 @@
             </tbody>
         </table>
 
+        <!-- Paginación -->
+        <div th:if="${page != null}" th:replace="~{fragments/paginacion :: paginacion(${page}, '/web/servicios', 'page', null)}"></div>
+
         <!-- Empty State -->
         <div th:if="${servicios == null or servicios.empty}" class="table-empty">
             <div class="empty-state">

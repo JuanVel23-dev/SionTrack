@@ -1885,9 +1885,15 @@ a.table-action-btn {
   border-color: var(--accent-primary);
 }
 
-.pagination-btn:disabled {
+.pagination-btn:disabled,
+.pagination-btn.disabled {
   opacity: 0.4;
   cursor: not-allowed;
+  pointer-events: none;
+}
+
+a.pagination-btn {
+  text-decoration: none;
 }
 
 .pagination-btn.active {

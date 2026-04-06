@@ -1,12 +1,15 @@
 package com.siontrack.siontrack.controllers;
 
-import org.modelmapper.ModelMapper; 
+import java.util.List;
+
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*; 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import java.util.List;
 
 import com.siontrack.siontrack.DTO.Request.ProductosRequestDTO;
 import com.siontrack.siontrack.DTO.Response.ProductosResponseDTO;
@@ -36,10 +39,14 @@ public class ProductosViewController {
     }
 
     @GetMapping("/productos")
-    public String mostrarListaProductos(Model model) {
-        List<ProductosResponseDTO> listaProductos = productosServicios.obtenerListaProductos();
-        model.addAttribute("productos", listaProductos);
-        return "productos-lista"; 
+    public String mostrarListaProductos(
+            @RequestParam(defaultValue = "0") int page,
+            Model model) {
+        Page<ProductosResponseDTO> pagina = productosServicios.obtenerListaProductosPaginado(
+                PageRequest.of(page, 50));
+        model.addAttribute("productos", pagina.getContent());
+        model.addAttribute("page", pagina);
+        return "productos-lista";
     }
 
     @GetMapping("/productos/nuevo")

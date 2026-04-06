@@ -3,6 +3,8 @@ package com.siontrack.siontrack.repository;
 import java.sql.Timestamp;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -46,6 +48,15 @@ public interface NotificacionesRepository extends JpaRepository<Notificaciones, 
            "ORDER BY n.creado_en DESC")
     List<Notificaciones> findByTipoNotificacionOrdenado(@Param("tipo") String tipoNotificacion);
 
+    @Query(value = "SELECT DISTINCT n FROM Notificaciones n " +
+           "LEFT JOIN FETCH n.clientes c " +
+           "LEFT JOIN FETCH c.telefonos " +
+           "LEFT JOIN FETCH n.vehiculo " +
+           "WHERE n.tipoNotificacion = :tipo " +
+           "ORDER BY n.creado_en DESC",
+           countQuery = "SELECT COUNT(DISTINCT n) FROM Notificaciones n WHERE n.tipoNotificacion = :tipo")
+    Page<Notificaciones> findByTipoNotificacionPaginado(@Param("tipo") String tipoNotificacion, Pageable pageable);
+
     @Query("SELECT DISTINCT n FROM Notificaciones n " +
            "LEFT JOIN FETCH n.clientes c " +
            "LEFT JOIN FETCH c.telefonos " +
@@ -53,6 +64,15 @@ public interface NotificacionesRepository extends JpaRepository<Notificaciones, 
            "WHERE n.tipoNotificacion = 'RECORDATORIO_SERVICIO' " +
            "ORDER BY n.creado_en DESC")
     List<Notificaciones> findRecordatoriosOrdenados();
+
+    @Query(value = "SELECT DISTINCT n FROM Notificaciones n " +
+           "LEFT JOIN FETCH n.clientes c " +
+           "LEFT JOIN FETCH c.telefonos " +
+           "LEFT JOIN FETCH n.vehiculo " +
+           "WHERE n.tipoNotificacion = 'RECORDATORIO_SERVICIO' " +
+           "ORDER BY n.creado_en DESC",
+           countQuery = "SELECT COUNT(DISTINCT n) FROM Notificaciones n WHERE n.tipoNotificacion = 'RECORDATORIO_SERVICIO'")
+    Page<Notificaciones> findRecordatoriosPaginados(Pageable pageable);
 
     // Busca recordatorios pendientes para un cliente+vehículo específico
     @Query("SELECT n FROM Notificaciones n " +

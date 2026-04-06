@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -68,6 +69,25 @@ public class ProductosServicios {
                 return dto;
             })
             .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ProductosResponseDTO> obtenerListaProductosPaginado(Pageable pageable) {
+        return productosRepository.findAllOrderByIdDesc(pageable)
+                .map(producto -> {
+                    ProductosResponseDTO dto = modelMapper.map(producto, ProductosResponseDTO.class);
+                    if (producto.getInventario() != null) {
+                        dto.setCantidad_disponible(producto.getInventario().getCantidad_disponible());
+                        dto.setStock_minimo(producto.getInventario().getStock_minimo());
+                        if (dto.getStock_minimo() != null && dto.getCantidad_disponible() != null
+                            && dto.getCantidad_disponible() <= dto.getStock_minimo()) {
+                            dto.setAlerta_stock(true);
+                        } else {
+                            dto.setAlerta_stock(false);
+                        }
+                    }
+                    return dto;
+                });
     }
 
     @Transactional(readOnly = true)

@@ -3,9 +3,10 @@ package com.siontrack.siontrack.controllers;
 import org.modelmapper.ModelMapper; 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import java.util.List;
 
 import com.siontrack.siontrack.DTO.Request.ProveedoresRequestDTO;
 import com.siontrack.siontrack.DTO.Response.ProveedoresResponseDTO;
@@ -27,10 +28,14 @@ public class ProveedoresViewController {
     }
 
     @GetMapping("/proveedores")
-    public String mostrarListaProveedores(Model model) {
-        List<ProveedoresResponseDTO> listaProveedores = proveedoresService.obtenerListaProveedores();
-        model.addAttribute("proveedores", listaProveedores);
-        return "proveedores-lista"; 
+    public String mostrarListaProveedores(
+            @RequestParam(defaultValue = "0") int page,
+            Model model) {
+        Page<ProveedoresResponseDTO> pagina = proveedoresService.obtenerListaProveedoresPaginado(
+                PageRequest.of(page, 50));
+        model.addAttribute("proveedores", pagina.getContent());
+        model.addAttribute("page", pagina);
+        return "proveedores-lista";
     }
 
     @GetMapping("/proveedores/nuevo")

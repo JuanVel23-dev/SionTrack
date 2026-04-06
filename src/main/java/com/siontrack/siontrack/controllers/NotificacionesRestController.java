@@ -1,11 +1,14 @@
 package com.siontrack.siontrack.controllers;
 
 import com.siontrack.siontrack.services.NotificacionesService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -22,8 +25,11 @@ public class NotificacionesRestController {
     }
 
     @GetMapping("/pendientes")
-    public ResponseEntity<List<Map<String, Object>>> obtenerPendientes() {
-        return ResponseEntity.ok(notificacionesService.obtenerClientesPendientesConsentimiento());
+    public ResponseEntity<Page<Map<String, Object>>> obtenerPendientes(
+            @RequestParam(defaultValue = "0") int page) {
+        Page<Map<String, Object>> pagina = notificacionesService.obtenerClientesPendientesPaginado(
+                PageRequest.of(page, 50));
+        return ResponseEntity.ok(pagina);
     }
 
     @PostMapping("/consentimiento-masivo")

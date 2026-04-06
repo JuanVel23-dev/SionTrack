@@ -108,6 +108,9 @@
                         </tbody>
                     </table>
 
+                    <!-- Paginación Promociones -->
+                    <div th:if="${pagePromo != null}" th:replace="~{fragments/paginacion :: paginacion(${pagePromo}, '/web/notificaciones', 'pagePromo', '&amp;pageRec=' + ${pageRec.number})}"></div>
+
                     <div th:if="${promociones == null or promociones.isEmpty()}" class="table-empty">
                         <div class="empty-state">
                             <div class="empty-state-icon">
@@ -196,6 +199,9 @@
                             </tr>
                         </tbody>
                     </table>
+
+                    <!-- Paginación Recordatorios -->
+                    <div th:if="${pageRec != null}" th:replace="~{fragments/paginacion :: paginacion(${pageRec}, '/web/notificaciones', 'pageRec', '&amp;pagePromo=' + ${pagePromo.number})}"></div>
 
                     <div th:if="${recordatorios == null or recordatorios.isEmpty()}" class="table-empty">
                         <div class="empty-state">

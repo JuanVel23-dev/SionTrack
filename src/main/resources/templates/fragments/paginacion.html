@@ -1,0 +1,76 @@
+<!-- Fragmento reutilizable de paginación -->
+<!-- Parámetros: page (Page object), baseUrl (String), paramName (String), extraParams (String, opcional, ej: '&pageRec=2') -->
+<div th:fragment="paginacion(page, baseUrl, paramName, extraParams)"
+     class="table-pagination"
+     th:if="${page.totalPages > 1}"
+     th:with="extra=${extraParams != null ? extraParams : ''}">
+
+    <div class="pagination-info">
+        Mostrando
+        <strong th:text="${(page.number * page.size) + 1}">1</strong>
+        a
+        <strong th:text="${T(Math).min(((page.number + 1) * page.size), page.totalElements)}">50</strong>
+        de
+        <strong th:text="${page.totalElements}">500</strong>
+    </div>
+
+    <div class="pagination-controls">
+        <!-- Primera -->
+        <a th:href="${baseUrl + '?' + paramName + '=0' + extra}"
+           class="pagination-btn"
+           th:classappend="${page.first} ? 'disabled' : ''"
+           th:tabindex="${page.first} ? '-1' : '0'"
+           title="Primera página">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/></svg>
+        </a>
+
+        <!-- Anterior -->
+        <a th:href="${baseUrl + '?' + paramName + '=' + (page.number - 1) + extra}"
+           class="pagination-btn"
+           th:classappend="${page.first} ? 'disabled' : ''"
+           th:tabindex="${page.first} ? '-1' : '0'"
+           title="Anterior">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        </a>
+
+        <!-- Números de página (ventana de 5 páginas) -->
+        <th:block th:with="
+            totalPages=${page.totalPages},
+            currentPage=${page.number},
+            startPage=${T(Math).max(0, currentPage - 2)},
+            endPage=${T(Math).min(totalPages - 1, startPage + 4)},
+            adjustedStart=${T(Math).max(0, endPage - 4)}">
+
+            <!-- Puntos suspensivos iniciales -->
+            <span class="pagination-btn disabled" th:if="${adjustedStart > 0}">...</span>
+
+            <th:block th:each="i : ${#numbers.sequence(adjustedStart, endPage)}">
+                <a th:href="${baseUrl + '?' + paramName + '=' + i + extra}"
+                   class="pagination-btn"
+                   th:classappend="${i == currentPage} ? 'active' : ''"
+                   th:text="${i + 1}">1</a>
+            </th:block>
+
+            <!-- Puntos suspensivos finales -->
+            <span class="pagination-btn disabled" th:if="${endPage < totalPages - 1}">...</span>
+        </th:block>
+
+        <!-- Siguiente -->
+        <a th:href="${baseUrl + '?' + paramName + '=' + (page.number + 1) + extra}"
+           class="pagination-btn"
+           th:classappend="${page.last} ? 'disabled' : ''"
+           th:tabindex="${page.last} ? '-1' : '0'"
+           title="Siguiente">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </a>
+
+        <!-- Última -->
+        <a th:href="${baseUrl + '?' + paramName + '=' + (page.totalPages - 1) + extra}"
+           class="pagination-btn"
+           th:classappend="${page.last} ? 'disabled' : ''"
+           th:tabindex="${page.last} ? '-1' : '0'"
+           title="Última página">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>
+        </a>
+    </div>
+</div>

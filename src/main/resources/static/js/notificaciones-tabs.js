@@ -93,6 +93,7 @@
            ══════════════════════════════════════════ */
 
         var pendientesData = [];
+        var pendientesPageActual = 0;
         var tbody = document.getElementById('pendientes-tbody');
         var loading = document.getElementById('pendientes-loading');
         var tablaWrap = document.getElementById('pendientes-tabla-wrap');
@@ -103,20 +104,24 @@
         var checkMaestro = document.getElementById('check-maestro-pend');
         var countBadge = document.getElementById('pendientes-count');
 
-        function cargarPendientes() {
+        function cargarPendientes(pagina) {
             if (!tbody || !loading) return;
             pendientesCargados = true;
+            if (pagina === undefined) pagina = 0;
+            pendientesPageActual = pagina;
 
             loading.style.display = 'flex';
             tablaWrap.style.display = 'none';
             vacio.style.display = 'none';
             footer.style.display = 'none';
 
-            SionUtils.fetchSeguro('/api/notificaciones/pendientes')
+            SionUtils.fetchSeguro('/api/notificaciones/pendientes?page=' + pagina)
                 .then(function(res) { return res.json(); })
-                .then(function(data) {
-                    pendientesData = data || [];
+                .then(function(pageData) {
+                    pendientesData = pageData.content || [];
                     renderizarPendientes(pendientesData);
+                    renderizarPaginacionPendientes(pageData);
+                    if (countBadge) countBadge.textContent = pageData.totalElements || 0;
                 })
                 .catch(function(err) {
                     if (typeof showToast === 'function') showToast('Error al cargar usuarios pendientes', 'error');
@@ -134,6 +139,9 @@
                 tablaWrap.style.display = 'none';
                 vacio.style.display = 'block';
                 footer.style.display = 'none';
+                // Eliminar paginación si existe
+                var pagVieja = document.getElementById('pendientes-paginacion');
+                if (pagVieja) pagVieja.remove();
                 return;
             }
 
@@ -142,7 +150,6 @@
                 tr.className = 'data-row data-row-pendientes';
                 tr.dataset.id = cliente.id;
 
-                // Formatear fecha
                 var fechaTexto = '—';
                 if (cliente.fechaCreacion) {
                     var partes = cliente.fechaCreacion.split('-');
@@ -167,6 +174,87 @@
             vacio.style.display = 'none';
             footer.style.display = 'flex';
             actualizarContador();
+        }
+
+        function renderizarPaginacionPendientes(pageData) {
+            var existente = document.getElementById('pendientes-paginacion');
+            if (existente) existente.remove();
+
+            if (pageData.totalPages <= 1) return;
+
+            var current = pageData.number;
+            var total = pageData.totalPages;
+            var totalElements = pageData.totalElements;
+            var size = pageData.size;
+
+            var container = document.createElement('div');
+            container.id = 'pendientes-paginacion';
+            container.className = 'table-pagination';
+
+            // Info
+            var info = document.createElement('div');
+            info.className = 'pagination-info';
+            var desde = (current * size) + 1;
+            var hasta = Math.min((current + 1) * size, totalElements);
+            info.innerHTML = 'Mostrando <strong>' + desde + '</strong> a <strong>' + hasta + '</strong> de <strong>' + totalElements + '</strong>';
+            container.appendChild(info);
+
+            // Controles
+            var controls = document.createElement('div');
+            controls.className = 'pagination-controls';
+
+            // Primera
+            controls.appendChild(crearBtnPag('«', 0, current === 0));
+            // Anterior
+            controls.appendChild(crearBtnPag('‹', current - 1, current === 0));
+
+            // Números (ventana de 5)
+            var start = Math.max(0, current - 2);
+            var end = Math.min(total - 1, start + 4);
+            start = Math.max(0, end - 4);
+
+            if (start > 0) {
+                var dots = document.createElement('span');
+                dots.className = 'pagination-btn disabled';
+                dots.textContent = '...';
+                controls.appendChild(dots);
+            }
+
+            for (var i = start; i <= end; i++) {
+                var btn = crearBtnPag(String(i + 1), i, false);
+                if (i === current) btn.classList.add('active');
+                controls.appendChild(btn);
+            }
+
+            if (end < total - 1) {
+                var dots2 = document.createElement('span');
+                dots2.className = 'pagination-btn disabled';
+                dots2.textContent = '...';
+                controls.appendChild(dots2);
+            }
+
+            // Siguiente
+            controls.appendChild(crearBtnPag('›', current + 1, current >= total - 1));
+            // Última
+            controls.appendChild(crearBtnPag('»', total - 1, current >= total - 1));
+
+            container.appendChild(controls);
+
+            // Insertar después de la tabla
+            tablaWrap.parentNode.insertBefore(container, tablaWrap.nextSibling);
+        }
+
+        function crearBtnPag(texto, pagina, deshabilitado) {
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'pagination-btn' + (deshabilitado ? ' disabled' : '');
+            btn.textContent = texto;
+            if (!deshabilitado) {
+                btn.addEventListener('click', function() {
+                    cargarPendientes(pagina);
+                });
+            }
+            return btn;
         }
 
         function escapeHtml(text) {
