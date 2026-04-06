@@ -76,20 +76,42 @@
                         <span th:if="${#fields.hasErrors('categoria')}" th:errors="*{categoria}" class="form-error"></span>
                     </div>
                     <div class="form-group">
-                        <label for="proveedor_id" class="form-label required">Proveedor</label>
-                        <select id="proveedor_id"
-                                th:field="*{proveedor_id}"
-                                class="form-select"
-                                th:errorclass="'error'"
-                                required
-                                data-searchable>
-                            <option value="">Seleccione un proveedor</option>
-                            <option th:each="prov : ${listaProveedores}"
-                                    th:value="${prov.proveedor_id}"
-                                    th:text="${prov.nombre}">
-                                Proveedor
-                            </option>
-                        </select>
+                        <label for="proveedor_search" class="form-label required">Proveedor</label>
+                        <div class="ajax-select-wrap" id="proveedorSelectWrap">
+                            <div class="ajax-select-input-wrap" id="proveedorInputWrap">
+                                <svg class="ajax-select-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                                </svg>
+                                <input type="text"
+                                       id="proveedor_search"
+                                       class="form-input"
+                                       placeholder="Buscar proveedor por nombre..."
+                                       autocomplete="off">
+                                <div class="ajax-select-actions">
+                                    <button type="button" class="ajax-select-btn" id="proveedorSearchBtn" title="Buscar">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                                    </button>
+                                    <button type="button" class="ajax-select-toggle" id="proveedorToggle" title="Abrir/Cerrar lista">
+                                        <svg class="toggle-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="ajax-select-dropdown" id="proveedorDropdown"></div>
+                            <input type="hidden" id="proveedor_id" th:field="*{proveedor_id}" required>
+                            <div class="ajax-select-selected" id="proveedorSelected" style="display:none;">
+                                <div class="ajax-select-selected-icon">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.24a2 2 0 0 0-1.8 1.1l-.8 1.63A6 6 0 0 0 2 12.42V16h2"></path>
+                                        <circle cx="6.5" cy="16.5" r="2.5"></circle>
+                                        <circle cx="16.5" cy="16.5" r="2.5"></circle>
+                                    </svg>
+                                </div>
+                                <span id="proveedorSelectedName"></span>
+                                <button type="button" class="ajax-select-clear" id="proveedorClear" title="Cambiar proveedor">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                </button>
+                            </div>
+                        </div>
                         <span th:if="${#fields.hasErrors('proveedor_id')}" th:errors="*{proveedor_id}" class="form-error"></span>
                     </div>
                 </div>
@@ -222,6 +244,10 @@
             </div>
         </form>
     </div>
+</th:block>
+
+<th:block layout:fragment="customJS">
+    <script th:src="@{/js/productos-form.js}"></script>
 </th:block>
 
 </html>

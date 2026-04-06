@@ -34,8 +34,7 @@ public class ProductosViewController {
     private ModelMapper modelMapper; 
 
     private void cargarProveedores(Model model) {
-        List<?> listaProveedores = proveedoresService.obtenerListaProveedores(); 
-        model.addAttribute("listaProveedores", listaProveedores);
+        // Los proveedores se buscan via AJAX en /api/proveedores/buscar
     }
 
     @GetMapping("/productos")
