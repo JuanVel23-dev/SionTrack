@@ -25,16 +25,18 @@
     <div class="table-container animate-in delay-1">
         <div class="table-toolbar">
             <div class="table-toolbar-left">
-                <div class="table-search">
+                <form class="table-search" th:action="@{/web/productos}" method="get">
                     <svg class="table-search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="11" cy="11" r="8"></circle>
                         <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                     </svg>
                     <input type="text"
                            id="searchInput"
-                           placeholder="Buscar por código, nombre, categoría, marca o proveedor..."
+                           name="search"
+                           th:value="${search}"
+                           placeholder="Buscar por código, nombre o categoría..."
                            aria-label="Buscar productos">
-                </div>
+                </form>
             </div>
         </div>
 
@@ -119,7 +121,7 @@
         </table>
 
         <!-- Paginación -->
-        <div th:if="${page != null}" th:replace="~{fragments/paginacion :: paginacion(${page}, '/web/productos', 'page', null)}"></div>
+        <div th:if="${page != null}" th:replace="~{fragments/paginacion :: paginacion(${page}, '/web/productos', 'page', ${search != null ? '&amp;search=' + search : ''})}"></div>
 
         <!-- Empty State -->
         <div th:if="${productos == null or productos.empty}" class="table-empty">

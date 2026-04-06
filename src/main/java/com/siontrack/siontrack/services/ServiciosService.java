@@ -194,7 +194,11 @@ public class ServiciosService {
                 .collect(Collectors.toList());
     }
 
-    public Page<ServicioResponseDTO> obtenerTodosPaginado(Pageable pageable) {
+    public Page<ServicioResponseDTO> obtenerTodosPaginado(Pageable pageable, String busqueda) {
+        if (busqueda != null && !busqueda.trim().isEmpty()) {
+            return serviciosRepository.buscarPaginado(busqueda.trim(), pageable)
+                    .map(this::mapearServicioADTO);
+        }
         return serviciosRepository.findAllOrderByIdDesc(pageable)
                 .map(this::mapearServicioADTO);
     }

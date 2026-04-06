@@ -30,11 +30,13 @@ public class ProveedoresViewController {
     @GetMapping("/proveedores")
     public String mostrarListaProveedores(
             @RequestParam(defaultValue = "0") int page,
+            @RequestParam(required = false) String search,
             Model model) {
         Page<ProveedoresResponseDTO> pagina = proveedoresService.obtenerListaProveedoresPaginado(
-                PageRequest.of(page, 50));
+                PageRequest.of(page, 50), search);
         model.addAttribute("proveedores", pagina.getContent());
         model.addAttribute("page", pagina);
+        model.addAttribute("search", search);
         return "proveedores-lista";
     }
 

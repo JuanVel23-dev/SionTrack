@@ -47,11 +47,13 @@ public class ServiciosViewController {
     @GetMapping("/servicios")
     public String mostrarListaServicios(
             @RequestParam(defaultValue = "0") int page,
+            @RequestParam(required = false) String search,
             Model model) {
         Page<ServicioResponseDTO> pagina = serviciosService.obtenerTodosPaginado(
-                PageRequest.of(page, 50));
+                PageRequest.of(page, 50), search);
         model.addAttribute("servicios", pagina.getContent());
         model.addAttribute("page", pagina);
+        model.addAttribute("search", search);
         return "servicios-lista";
     }
 

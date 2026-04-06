@@ -42,23 +42,8 @@
             });
         });
 
-        // Búsqueda con debounce
-        if (searchInput) {
-            searchInput.addEventListener('input', SionUtils.debounce(aplicarFiltros, 200));
-        }
-
         function aplicarFiltros() {
-            var termino = searchInput ? searchInput.value.toLowerCase().trim() : '';
-
             rows.forEach(function(row) {
-                // Búsqueda por texto (nombre, cédula)
-                var coincideBusqueda = true;
-                if (termino) {
-                    var col0 = row.children[0] ? row.children[0].textContent.toLowerCase() : '';
-                    var col1 = row.children[1] ? row.children[1].textContent.toLowerCase() : '';
-                    coincideBusqueda = col0.indexOf(termino) !== -1 || col1.indexOf(termino) !== -1;
-                }
-
                 // Filtro por tipo
                 var coincideTipo = true;
                 if (filtrosActivos.tipo) {
@@ -77,7 +62,7 @@
                     coincideVehiculo = (row.getAttribute('data-vehiculo') || '') === filtrosActivos.vehiculo;
                 }
 
-                var visible = coincideBusqueda && coincideTipo && coincideNotif && coincideVehiculo;
+                var visible = coincideTipo && coincideNotif && coincideVehiculo;
 
                 if (visible && row.style.display === 'none') {
                     row.style.display = '';

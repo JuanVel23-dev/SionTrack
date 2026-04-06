@@ -32,37 +32,15 @@
             });
         });
 
-        // Busqueda con debounce
-        if (searchInput) {
-            searchInput.addEventListener('input', SionUtils.debounce(aplicarFiltros, 200));
-        }
-
         function aplicarFiltros() {
-            var termino = searchInput ? searchInput.value.toLowerCase().trim() : '';
-
             rows.forEach(function(row) {
-                // Busqueda por texto (codigo, nombre, categoria, marca, proveedor)
-                var coincideBusqueda = true;
-                if (termino) {
-                    var col0 = row.children[0] ? row.children[0].textContent.toLowerCase() : '';
-                    var col1 = row.children[1] ? row.children[1].textContent.toLowerCase() : '';
-                    var col2 = row.children[2] ? row.children[2].textContent.toLowerCase() : '';
-                    var col3 = row.children[3] ? row.children[3].textContent.toLowerCase() : '';
-                    var col4 = row.children[4] ? row.children[4].textContent.toLowerCase() : '';
-                    coincideBusqueda = col0.indexOf(termino) !== -1 ||
-                                       col1.indexOf(termino) !== -1 ||
-                                       col2.indexOf(termino) !== -1 ||
-                                       col3.indexOf(termino) !== -1 ||
-                                       col4.indexOf(termino) !== -1;
-                }
-
                 // Filtro por stock
                 var coincideStock = true;
                 if (filtrosActivos.stock) {
                     coincideStock = (row.getAttribute('data-stock') || '') === filtrosActivos.stock;
                 }
 
-                var visible = coincideBusqueda && coincideStock;
+                var visible = coincideStock;
 
                 if (visible && row.style.display === 'none') {
                     row.style.display = '';

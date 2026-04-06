@@ -175,7 +175,11 @@ public class ClienteServicios {
     }
 
     @Transactional(readOnly = true)
-    public Page<ClienteResponseDTO> obtenerListaClientesPaginado(Pageable pageable) {
+    public Page<ClienteResponseDTO> obtenerListaClientesPaginado(Pageable pageable, String busqueda) {
+        if (busqueda != null && !busqueda.trim().isEmpty()) {
+            return clienteRepository.buscarPaginado(busqueda.trim(), pageable)
+                    .map(this::mapearClienteADTO);
+        }
         return clienteRepository.findAllOrderByIdDesc(pageable)
                 .map(this::mapearClienteADTO);
     }

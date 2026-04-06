@@ -25,16 +25,18 @@
     <div class="table-container animate-in delay-1">
         <div class="table-toolbar">
             <div class="table-toolbar-left">
-                <div class="table-search">
+                <form class="table-search" th:action="@{/web/servicios}" method="get">
                     <svg class="table-search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="11" cy="11" r="8"></circle>
                         <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                     </svg>
                     <input type="text"
                            id="searchInput"
+                           name="search"
+                           th:value="${search}"
                            placeholder="Buscar por cliente, vehículo o tipo..."
                            aria-label="Buscar servicios">
-                </div>
+                </form>
             </div>
         </div>
 
@@ -142,7 +144,7 @@
         </table>
 
         <!-- Paginación -->
-        <div th:if="${page != null}" th:replace="~{fragments/paginacion :: paginacion(${page}, '/web/servicios', 'page', null)}"></div>
+        <div th:if="${page != null}" th:replace="~{fragments/paginacion :: paginacion(${page}, '/web/servicios', 'page', ${search != null ? '&amp;search=' + search : ''})}"></div>
 
         <!-- Empty State -->
         <div th:if="${servicios == null or servicios.empty}" class="table-empty">

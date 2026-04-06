@@ -141,9 +141,14 @@ public class NotificacionesService {
     }
 
     @Transactional(readOnly = true)
-    public Page<Map<String, Object>> obtenerClientesPendientesPaginado(Pageable pageable) {
-        return clienteRepository.findClientesPendientesDeConsentimientoPaginado(pageable)
-                .map(c -> {
+    public Page<Map<String, Object>> obtenerClientesPendientesPaginado(Pageable pageable, String busqueda) {
+        Page<Clientes> page;
+        if (busqueda != null && !busqueda.trim().isEmpty()) {
+            page = clienteRepository.buscarPendientesPaginado(busqueda.trim(), pageable);
+        } else {
+            page = clienteRepository.findClientesPendientesDeConsentimientoPaginado(pageable);
+        }
+        return page.map(c -> {
                     Map<String, Object> map = new HashMap<>();
                     map.put("id", c.getCliente_id());
                     map.put("nombre", c.getNombre());

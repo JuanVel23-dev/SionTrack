@@ -25,16 +25,18 @@
     <div class="table-container animate-in delay-1">
         <div class="table-toolbar">
             <div class="table-toolbar-left">
-                <div class="table-search">
+                <form class="table-search" th:action="@{/web/clientes}" method="get">
                     <svg class="table-search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="11" cy="11" r="8"></circle>
                         <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                     </svg>
                     <input type="text"
                            id="searchInput"
+                           name="search"
+                           th:value="${search}"
                            placeholder="Buscar clientes..."
                            aria-label="Buscar clientes">
-                </div>
+                </form>
                 <button type="button" class="btn-buscar-placa" id="btnBuscarPlaca" title="Buscar vehículo por placa">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.24a2 2 0 0 0-1.8 1.1l-.8 1.63A6 6 0 0 0 2 12.42V16h2"/>
@@ -216,7 +218,7 @@
         </table>
 
         <!-- Paginación -->
-        <div th:if="${page != null}" th:replace="~{fragments/paginacion :: paginacion(${page}, '/web/clientes', 'page', null)}"></div>
+        <div th:if="${page != null}" th:replace="~{fragments/paginacion :: paginacion(${page}, '/web/clientes', 'page', ${search != null ? '&amp;search=' + search : ''})}"></div>
 
         <!-- Empty State -->
         <div th:if="${clientes == null OR clientes.isEmpty()}" class="table-empty">

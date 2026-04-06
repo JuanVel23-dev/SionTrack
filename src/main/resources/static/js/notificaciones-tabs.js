@@ -38,7 +38,7 @@
                 var term = input.value.toLowerCase().trim();
 
                 if (target === 'pendientes') {
-                    filtrarPendientes(term);
+                    cargarPendientes(0, term);
                     return;
                 }
 
@@ -104,10 +104,13 @@
         var checkMaestro = document.getElementById('check-maestro-pend');
         var countBadge = document.getElementById('pendientes-count');
 
-        function cargarPendientes(pagina) {
+        var pendientesSearchActual = '';
+
+        function cargarPendientes(pagina, busqueda) {
             if (!tbody || !loading) return;
             pendientesCargados = true;
             if (pagina === undefined) pagina = 0;
+            if (busqueda !== undefined) pendientesSearchActual = busqueda;
             pendientesPageActual = pagina;
 
             loading.style.display = 'flex';
@@ -115,7 +118,10 @@
             vacio.style.display = 'none';
             footer.style.display = 'none';
 
-            SionUtils.fetchSeguro('/api/notificaciones/pendientes?page=' + pagina)
+            var url = '/api/notificaciones/pendientes?page=' + pagina;
+            if (pendientesSearchActual) url += '&search=' + encodeURIComponent(pendientesSearchActual);
+
+            SionUtils.fetchSeguro(url)
                 .then(function(res) { return res.json(); })
                 .then(function(pageData) {
                     pendientesData = pageData.content || [];

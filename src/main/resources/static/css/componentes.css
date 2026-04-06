@@ -1879,7 +1879,7 @@ a.table-action-btn {
   text-align: center;
 }
 
-.pagination-btn:hover:not(:disabled) {
+.pagination-btn:hover:not(:disabled):not(.disabled):not(.active) {
   background: var(--accent-primary);
   color: var(--fg-on-accent);
   border-color: var(--accent-primary);

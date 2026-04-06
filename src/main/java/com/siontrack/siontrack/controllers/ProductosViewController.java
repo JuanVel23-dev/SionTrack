@@ -41,11 +41,13 @@ public class ProductosViewController {
     @GetMapping("/productos")
     public String mostrarListaProductos(
             @RequestParam(defaultValue = "0") int page,
+            @RequestParam(required = false) String search,
             Model model) {
         Page<ProductosResponseDTO> pagina = productosServicios.obtenerListaProductosPaginado(
-                PageRequest.of(page, 50));
+                PageRequest.of(page, 50), search);
         model.addAttribute("productos", pagina.getContent());
         model.addAttribute("page", pagina);
+        model.addAttribute("search", search);
         return "productos-lista";
     }
 

@@ -42,7 +42,11 @@ public class ProveedoresService {
     }
 
     @Transactional(readOnly = true)
-    public Page<ProveedoresResponseDTO> obtenerListaProveedoresPaginado(Pageable pageable) {
+    public Page<ProveedoresResponseDTO> obtenerListaProveedoresPaginado(Pageable pageable, String busqueda) {
+        if (busqueda != null && !busqueda.trim().isEmpty()) {
+            return proveedoresRepository.buscarPaginado(busqueda.trim(), pageable)
+                    .map(proveedor -> modelMapper.map(proveedor, ProveedoresResponseDTO.class));
+        }
         return proveedoresRepository.findAllOrderByIdDesc(pageable)
                 .map(proveedor -> modelMapper.map(proveedor, ProveedoresResponseDTO.class));
     }

@@ -9,7 +9,7 @@
         Mostrando
         <strong th:text="${(page.number * page.size) + 1}">1</strong>
         a
-        <strong th:text="${T(Math).min(((page.number + 1) * page.size), page.totalElements)}">50</strong>
+        <strong th:text="${T(java.lang.Math).min(((page.number + 1) * page.size), page.totalElements)}">50</strong>
         de
         <strong th:text="${page.totalElements}">500</strong>
     </div>
@@ -37,9 +37,9 @@
         <th:block th:with="
             totalPages=${page.totalPages},
             currentPage=${page.number},
-            startPage=${T(Math).max(0, currentPage - 2)},
-            endPage=${T(Math).min(totalPages - 1, startPage + 4)},
-            adjustedStart=${T(Math).max(0, endPage - 4)}">
+            startPage=${T(java.lang.Math).max(0, currentPage - 2)},
+            endPage=${T(java.lang.Math).min(totalPages - 1, startPage + 4)},
+            adjustedStart=${T(java.lang.Math).max(0, endPage - 4)}">
 
             <!-- Puntos suspensivos iniciales -->
             <span class="pagination-btn disabled" th:if="${adjustedStart > 0}">...</span>

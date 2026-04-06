@@ -26,9 +26,10 @@ public class NotificacionesRestController {
 
     @GetMapping("/pendientes")
     public ResponseEntity<Page<Map<String, Object>>> obtenerPendientes(
-            @RequestParam(defaultValue = "0") int page) {
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(required = false) String search) {
         Page<Map<String, Object>> pagina = notificacionesService.obtenerClientesPendientesPaginado(
-                PageRequest.of(page, 50));
+                PageRequest.of(page, 50), search);
         return ResponseEntity.ok(pagina);
     }
 

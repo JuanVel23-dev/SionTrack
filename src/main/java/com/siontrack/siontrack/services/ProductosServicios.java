@@ -72,8 +72,14 @@ public class ProductosServicios {
     }
 
     @Transactional(readOnly = true)
-    public Page<ProductosResponseDTO> obtenerListaProductosPaginado(Pageable pageable) {
-        return productosRepository.findAllOrderByIdDesc(pageable)
+    public Page<ProductosResponseDTO> obtenerListaProductosPaginado(Pageable pageable, String busqueda) {
+        Page<Productos> page;
+        if (busqueda != null && !busqueda.trim().isEmpty()) {
+            page = productosRepository.buscarPaginado(busqueda.trim(), pageable);
+        } else {
+            page = productosRepository.findAllOrderByIdDesc(pageable);
+        }
+        return page
                 .map(producto -> {
                     ProductosResponseDTO dto = modelMapper.map(producto, ProductosResponseDTO.class);
                     if (producto.getInventario() != null) {

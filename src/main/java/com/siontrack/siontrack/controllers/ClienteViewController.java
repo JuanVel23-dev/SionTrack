@@ -39,11 +39,13 @@ public class ClienteViewController {
     @GetMapping("/clientes")
     public String mostrarListaClientes(
             @RequestParam(defaultValue = "0") int page,
+            @RequestParam(required = false) String search,
             Model model) {
         Page<ClienteResponseDTO> pagina = clienteServicios.obtenerListaClientesPaginado(
-                PageRequest.of(page, 50));
+                PageRequest.of(page, 50), search);
         model.addAttribute("clientes", pagina.getContent());
         model.addAttribute("page", pagina);
+        model.addAttribute("search", search);
         return "clientes-lista";
     }
 
