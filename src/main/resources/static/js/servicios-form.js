@@ -613,7 +613,7 @@
             });
         }
 
-        function agregarFilaDetalle() {
+        function agregarFilaDetalle(sinFocus) {
             var fila = document.createElement('div');
             fila.className = 'detalle-fila';
             fila.style.opacity = '0';
@@ -681,7 +681,7 @@
             cantidadInput.addEventListener('input', recalcularTotal);
             precioInput.addEventListener('input', recalcularTotal);
 
-            fila.querySelector('.detalle-prod-search').focus();
+            if (!sinFocus) fila.querySelector('.detalle-prod-search').focus();
         }
 
         // =============================================
@@ -807,8 +807,8 @@
             });
         }
 
-        // Agregar primera fila por defecto
-        agregarFilaDetalle();
+        // Agregar primera fila por defecto (sin focus para no hacer scroll)
+        agregarFilaDetalle(true);
     });
 
     function escapeHtml(text) {
