@@ -165,6 +165,11 @@ public class ProductosServicios {
             if (dto.getPrecio_compra() != null) producto.setPrecio_compra(dto.getPrecio_compra());
             if (dto.getPrecio_venta() != null) producto.setPrecio_venta(dto.getPrecio_venta());
             if (dto.getFecha_compra() != null) producto.setFecha_compra(dto.getFecha_compra());
+            if (dto.getProveedor_id() != null) {
+                Proveedores proveedor = proveedorRepository.findById(dto.getProveedor_id())
+                        .orElseThrow(() -> new RuntimeException("Proveedor no encontrado con ID: " + dto.getProveedor_id()));
+                producto.setProveedor(proveedor);
+            }
 
             // Actualizar inventario si se proporcionan datos de stock
             if (dto.getCantidad_disponible() != null || dto.getStock_minimo() != null ) {
