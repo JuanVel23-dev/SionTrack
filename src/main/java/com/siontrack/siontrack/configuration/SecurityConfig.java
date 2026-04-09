@@ -62,7 +62,7 @@ public class SecurityConfig {
                         .requestMatchers("/css/**", "/js/**", "/images/**", "/img/**", "/webjars/**", "/login", "/error").permitAll()
                         .requestMatchers("/api/webhook", "/api/webhook/**").permitAll()
                         // Restringir endpoints de Actuator
-                        .requestMatchers("/actuator/**").permitAll()
+                        .requestMatchers("/actuator/**").authenticated()
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().authenticated())
 
