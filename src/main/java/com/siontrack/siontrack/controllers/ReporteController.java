@@ -4,6 +4,7 @@ import com.siontrack.siontrack.services.ReporteService;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -28,58 +29,90 @@ public class ReporteController {
     }
 
     @GetMapping("/clientes")
-    public ResponseEntity<byte[]> reporteClientes() {
-        return generarDescarga("clientes", () -> reporteService.generarReporteClientes());
+    public ResponseEntity<byte[]> reporteClientes(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaInicio,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaFin) {
+        try {
+            byte[] pdf = reporteService.generarReporteClientes(fechaInicio, fechaFin);
+            return generarDescarga("clientes", pdf);
+        } catch (Exception e) {
+            log.error("Error al generar reporte de clientes: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
     @GetMapping("/productos")
-    public ResponseEntity<byte[]> reporteProductos() {
-        return generarDescarga("productos", () -> reporteService.generarReporteProductos());
+    public ResponseEntity<byte[]> reporteProductos(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaInicio,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaFin) {
+        try {
+            byte[] pdf = reporteService.generarReporteProductos(fechaInicio, fechaFin);
+            return generarDescarga("productos", pdf);
+        } catch (Exception e) {
+            log.error("Error al generar reporte de productos: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
     @GetMapping("/proveedores")
-    public ResponseEntity<byte[]> reporteProveedores() {
-        return generarDescarga("proveedores", () -> reporteService.generarReporteProveedores());
+    public ResponseEntity<byte[]> reporteProveedores(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaInicio,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaFin) {
+        try {
+            byte[] pdf = reporteService.generarReporteProveedores(fechaInicio, fechaFin);
+            return generarDescarga("proveedores", pdf);
+        } catch (Exception e) {
+            log.error("Error al generar reporte de proveedores: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
     @GetMapping("/servicios")
-    public ResponseEntity<byte[]> reporteServicios() {
-        return generarDescarga("servicios", () -> reporteService.generarReporteServicios());
+    public ResponseEntity<byte[]> reporteServicios(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaInicio,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaFin) {
+        try {
+            byte[] pdf = reporteService.generarReporteServicios(fechaInicio, fechaFin);
+            return generarDescarga("servicios", pdf);
+        } catch (Exception e) {
+            log.error("Error al generar reporte de servicios: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
     @GetMapping("/notificaciones")
-    public ResponseEntity<byte[]> reporteNotificaciones() {
-        return generarDescarga("notificaciones", () -> reporteService.generarReporteNotificaciones());
+    public ResponseEntity<byte[]> reporteNotificaciones(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaInicio,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaFin) {
+        try {
+            byte[] pdf = reporteService.generarReporteNotificaciones(fechaInicio, fechaFin);
+            return generarDescarga("notificaciones", pdf);
+        } catch (Exception e) {
+            log.error("Error al generar reporte de notificaciones: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
     @GetMapping("/productos-populares")
     public ResponseEntity<byte[]> reporteProductosPopulares(
             @RequestParam(defaultValue = "general") String periodo) {
-        String sufijo = "populares_" + periodo;
-        return generarDescarga(sufijo, () -> reporteService.generarReporteProductosPopulares(periodo));
-    }
-
-    // Genera la respuesta HTTP con headers de descarga PDF
-    private ResponseEntity<byte[]> generarDescarga(String tipo, PdfGenerator generador) {
         try {
-            byte[] pdf = generador.generar();
-            String fecha = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-            String nombre = "SionTrack_" + tipo + "_" + fecha + ".pdf";
-
-            return ResponseEntity.ok()
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + nombre + "\"")
-                    .contentType(MediaType.APPLICATION_PDF)
-                    .contentLength(pdf.length)
-                    .body(pdf);
-
+            byte[] pdf = reporteService.generarReporteProductosPopulares(periodo);
+            return generarDescarga("populares_" + periodo, pdf);
         } catch (Exception e) {
-            log.error("Error al generar reporte {}: {}", tipo, e.getMessage(), e);
+            log.error("Error al generar reporte de productos populares: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().build();
         }
     }
 
-    @FunctionalInterface
-    private interface PdfGenerator {
-        byte[] generar() throws Exception;
+    private ResponseEntity<byte[]> generarDescarga(String tipo, byte[] pdf) {
+        String fecha = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+        String nombre = "SionTrack_" + tipo + "_" + fecha + ".pdf";
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + nombre + "\"")
+                .contentType(MediaType.APPLICATION_PDF)
+                .contentLength(pdf.length)
+                .body(pdf);
     }
 }

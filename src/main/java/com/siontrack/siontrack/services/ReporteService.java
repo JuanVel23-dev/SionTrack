@@ -25,7 +25,8 @@ import com.itextpdf.layout.properties.VerticalAlignment;
 import com.itextpdf.io.font.constants.StandardFonts;
 
 import com.siontrack.siontrack.DTO.Response.*;
-import com.siontrack.siontrack.models.Notificaciones;
+import com.siontrack.siontrack.models.*;
+import com.siontrack.siontrack.repository.*;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,13 +41,14 @@ import java.util.List;
 @Service
 public class ReporteService {
 
-    private final ClienteServicios clienteServicios;
+    private final ClienteRepository clienteRepository;
+    private final ProductosRepository productosRepository;
+    private final ServiciosRepository serviciosRepository;
+    private final NotificacionesRepository notificacionesRepository;
+    private final ProveedoresRepository proveedoresRepository;
     private final ProductosServicios productosServicios;
-    private final ProveedoresService proveedoresService;
-    private final ServiciosService serviciosService;
-    private final NotificacionesService notificacionesService;
 
-    // Paleta minimalista — fondo blanco, acentos sutiles
+    // Paleta minimalista
     private static final DeviceRgb BLANCO = new DeviceRgb(255, 255, 255);
     private static final DeviceRgb GRIS_98 = new DeviceRgb(250, 250, 250);
     private static final DeviceRgb GRIS_95 = new DeviceRgb(243, 244, 246);
@@ -65,16 +67,18 @@ public class ReporteService {
     private static final DateTimeFormatter FMT_FECHA = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private static final DateTimeFormatter FMT_FECHA_HORA = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
-    public ReporteService(ClienteServicios clienteServicios,
-                          ProductosServicios productosServicios,
-                          ProveedoresService proveedoresService,
-                          ServiciosService serviciosService,
-                          NotificacionesService notificacionesService) {
-        this.clienteServicios = clienteServicios;
+    public ReporteService(ClienteRepository clienteRepository,
+                          ProductosRepository productosRepository,
+                          ServiciosRepository serviciosRepository,
+                          NotificacionesRepository notificacionesRepository,
+                          ProveedoresRepository proveedoresRepository,
+                          ProductosServicios productosServicios) {
+        this.clienteRepository = clienteRepository;
+        this.productosRepository = productosRepository;
+        this.serviciosRepository = serviciosRepository;
+        this.notificacionesRepository = notificacionesRepository;
+        this.proveedoresRepository = proveedoresRepository;
         this.productosServicios = productosServicios;
-        this.proveedoresService = proveedoresService;
-        this.serviciosService = serviciosService;
-        this.notificacionesService = notificacionesService;
     }
 
     // =============================================
@@ -82,111 +86,190 @@ public class ReporteService {
     // =============================================
 
     @Transactional(readOnly = true)
-    public byte[] generarReporteClientes() throws Exception {
-        List<ClienteResponseDTO> clientes = clienteServicios.obtenerListaClientes();
+    public byte[] generarReporteClientes(LocalDate fechaInicio, LocalDate fechaFin) throws Exception {
+        // Dos queries separadas para evitar MultipleBagFetchException (telefonos + correos son List)
+        // Hibernate fusiona ambas colecciones vía caché L1 dentro de la misma transacción
+        List<Clientes> clientes = clienteRepository.findParaReporteConTelefonosPorFechas(fechaInicio, fechaFin);
+        clienteRepository.findParaReporteConCorreosPorFechas(fechaInicio, fechaFin);
 
-        String[] enc = {"Nombre", "Cédula / NIT", "Tipo", "Teléfono", "Email", "Notificaciones"};
-        float[] anc = {3f, 2f, 1.3f, 2f, 2.5f, 1.5f};
-
-        return generarPdf("Clientes", "Directorio completo de clientes registrados",
-                enc, anc, clientes.size(), (tabla, fontBase, i) -> {
-            ClienteResponseDTO c = clientes.get(i);
-            boolean par = i % 2 == 0;
-
-            agregarCelda(tabla, c.getNombre(), par, TextAlignment.LEFT, fontBase);
-            agregarCelda(tabla, c.getCedula_ruc(), par, TextAlignment.LEFT, fontBase);
-            agregarCelda(tabla, formatTipoCliente(c.getTipo_cliente()), par, TextAlignment.CENTER, fontBase);
-            agregarCelda(tabla, extraerTelefono(c.getTelefonos()), par, TextAlignment.LEFT, fontBase);
-            agregarCelda(tabla, extraerEmail(c.getCorreos()), par, TextAlignment.LEFT, fontBase);
-            agregarCeldaColor(tabla, c.isRecibe_notificaciones() ? "Activo" : "Inactivo", par,
-                    c.isRecibe_notificaciones() ? VERDE : GRIS_CLARO, fontBase);
-        });
-    }
-
-    @Transactional(readOnly = true)
-    public byte[] generarReporteProductos() throws Exception {
-        List<ProductosResponseDTO> productos = productosServicios.obtenerListaProductos();
-
-        String[] enc = {"Código", "Nombre", "Categoría", "Proveedor", "Precio Venta", "Stock"};
-        float[] anc = {1.5f, 3f, 2f, 2f, 1.5f, 1f};
-
-        return generarPdf("Productos", "Inventario completo con precios y niveles de stock",
-                enc, anc, productos.size(), (tabla, fontBase, i) -> {
-            ProductosResponseDTO p = productos.get(i);
-            boolean par = i % 2 == 0;
-
-            agregarCelda(tabla, p.getCodigo_producto(), par, TextAlignment.LEFT, fontBase);
-            agregarCelda(tabla, p.getNombre(), par, TextAlignment.LEFT, fontBase);
-            agregarCelda(tabla, p.getCategoria(), par, TextAlignment.LEFT, fontBase);
-            agregarCelda(tabla, p.getProveedor() != null ? p.getProveedor().getNombre() : "—", par, TextAlignment.LEFT, fontBase);
-            agregarCelda(tabla, formatMoneda(p.getPrecio_venta()), par, TextAlignment.RIGHT, fontBase);
-            agregarCeldaColor(tabla, p.getCantidad_disponible() != null ? String.valueOf(p.getCantidad_disponible()) : "—",
-                    par, p.isAlerta_stock() ? ROJO : GRIS_TEXTO, fontBase);
-        });
-    }
-
-    @Transactional(readOnly = true)
-    public byte[] generarReporteProveedores() throws Exception {
-        List<ProveedoresResponseDTO> proveedores = proveedoresService.obtenerListaProveedores();
-
-        String[] enc = {"ID", "Nombre", "Teléfono", "Email", "Contacto"};
-        float[] anc = {0.7f, 3f, 2f, 3f, 2.5f};
-
-        return generarPdf("Proveedores", "Directorio de proveedores y contactos",
-                enc, anc, proveedores.size(), (tabla, fontBase, i) -> {
-            ProveedoresResponseDTO p = proveedores.get(i);
-            boolean par = i % 2 == 0;
-
-            agregarCelda(tabla, String.valueOf(p.getProveedor_id()), par, TextAlignment.CENTER, fontBase);
-            agregarCelda(tabla, p.getNombre(), par, TextAlignment.LEFT, fontBase);
-            agregarCelda(tabla, safe(p.getTelefono()), par, TextAlignment.LEFT, fontBase);
-            agregarCelda(tabla, safe(p.getEmail()), par, TextAlignment.LEFT, fontBase);
-            agregarCelda(tabla, safe(p.getNombre_contacto()), par, TextAlignment.LEFT, fontBase);
-        });
-    }
-
-    @Transactional(readOnly = true)
-    public byte[] generarReporteServicios() throws Exception {
-        List<ServicioResponseDTO> servicios = serviciosService.obtenerTodos();
-
-        String[] enc = {"Fecha", "Cliente", "Vehículo", "Kilometraje", "Total", "Tipo"};
-        float[] anc = {1.5f, 2.5f, 1.8f, 1.3f, 1.5f, 1.5f};
-
-        return generarPdf("Servicios", "Historial completo de servicios realizados",
-                enc, anc, servicios.size(), (tabla, fontBase, i) -> {
-            ServicioResponseDTO s = servicios.get(i);
-            boolean par = i % 2 == 0;
-
-            agregarCelda(tabla, formatFecha(s.getFecha_servicio()), par, TextAlignment.LEFT, fontBase);
-            agregarCelda(tabla, s.getCliente() != null ? s.getCliente().getNombre() : "—", par, TextAlignment.LEFT, fontBase);
-            agregarCelda(tabla, s.getVehiculo() != null ? s.getVehiculo().getPlaca() : "—", par, TextAlignment.LEFT, fontBase);
-            agregarCelda(tabla, safe(s.getKilometraje_servicio()), par, TextAlignment.CENTER, fontBase);
-            agregarCelda(tabla, formatMoneda(s.getTotal()), par, TextAlignment.RIGHT, fontBase);
-            agregarCelda(tabla, safe(s.getTipo_servicio()), par, TextAlignment.CENTER, fontBase);
-        });
-    }
-
-    @Transactional(readOnly = true)
-    public byte[] generarReporteNotificaciones() throws Exception {
-        List<Notificaciones> promociones = notificacionesService.obtenerPromocionesEnviadas();
-        List<Notificaciones> recordatorios = notificacionesService.obtenerRecordatorios();
+        PdfFont fontBase = PdfFontFactory.createFont(StandardFonts.HELVETICA);
+        PdfFont fontBold = PdfFontFactory.createFont(StandardFonts.HELVETICA_BOLD);
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         PdfWriter writer = new PdfWriter(baos);
         PdfDocument pdf = new PdfDocument(writer);
         Document doc = new Document(pdf, PageSize.A4.rotate());
         doc.setMargins(40, 40, 50, 40);
+        pdf.addEventHandler(PdfDocumentEvent.END_PAGE, new PiePaginaHandler(fontBase));
+
+        String descripcion = "Clientes registrados del " + fechaInicio.format(FMT_FECHA) + " al " + fechaFin.format(FMT_FECHA);
+        agregarEncabezado(doc, "Clientes", descripcion, clientes.size(), fontBase, fontBold);
+
+        String[] enc = {"Nombre", "Cédula / NIT", "Tipo", "Teléfono", "Email", "Notificaciones"};
+        float[] anc = {3f, 2f, 1.3f, 2f, 2.5f, 1.5f};
+        Table tabla = crearTabla(anc, enc, fontBold);
+
+        for (int i = 0; i < clientes.size(); i++) {
+            Clientes c = clientes.get(i);
+            boolean par = i % 2 == 0;
+            agregarCelda(tabla, safe(c.getNombre()), par, TextAlignment.LEFT, fontBase);
+            agregarCelda(tabla, safe(c.getCedula_ruc()), par, TextAlignment.LEFT, fontBase);
+            agregarCelda(tabla, formatTipoCliente(c.getTipo_cliente()), par, TextAlignment.CENTER, fontBase);
+            agregarCelda(tabla, extraerTelefonoEntidad(c.getTelefonos()), par, TextAlignment.LEFT, fontBase);
+            agregarCelda(tabla, extraerCorreoEntidad(c.getCorreos()), par, TextAlignment.LEFT, fontBase);
+            boolean recibe = Boolean.TRUE.equals(c.getRecibeNotificaciones());
+            agregarCeldaColor(tabla, recibe ? "Activo" : "Inactivo", par,
+                    recibe ? VERDE : GRIS_CLARO, fontBase);
+        }
+
+        doc.add(tabla);
+        doc.close();
+        return baos.toByteArray();
+    }
+
+    @Transactional(readOnly = true)
+    public byte[] generarReporteProductos(LocalDate fechaInicio, LocalDate fechaFin) throws Exception {
+        List<Productos> productos = productosRepository.findAllParaReportePorFechas(fechaInicio, fechaFin);
 
         PdfFont fontBase = PdfFontFactory.createFont(StandardFonts.HELVETICA);
         PdfFont fontBold = PdfFontFactory.createFont(StandardFonts.HELVETICA_BOLD);
 
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        PdfWriter writer = new PdfWriter(baos);
+        PdfDocument pdf = new PdfDocument(writer);
+        Document doc = new Document(pdf, PageSize.A4.rotate());
+        doc.setMargins(40, 40, 50, 40);
         pdf.addEventHandler(PdfDocumentEvent.END_PAGE, new PiePaginaHandler(fontBase));
 
-        int total = promociones.size() + recordatorios.size();
-        agregarEncabezado(doc, "Notificaciones",
-                "Registro de promociones y recordatorios", total, fontBase, fontBold);
+        String descripcion = "Productos comprados del " + fechaInicio.format(FMT_FECHA) + " al " + fechaFin.format(FMT_FECHA);
+        agregarEncabezado(doc, "Productos", descripcion, productos.size(), fontBase, fontBold);
 
-        // Promociones
+        String[] enc = {"Código", "Nombre", "Categoría", "Proveedor", "Precio Venta", "Stock"};
+        float[] anc = {1.5f, 3f, 2f, 2f, 1.5f, 1f};
+        Table tabla = crearTabla(anc, enc, fontBold);
+
+        for (int i = 0; i < productos.size(); i++) {
+            Productos prod = productos.get(i);
+            boolean par = i % 2 == 0;
+            agregarCelda(tabla, safe(prod.getCodigoProducto()), par, TextAlignment.LEFT, fontBase);
+            agregarCelda(tabla, safe(prod.getNombre()), par, TextAlignment.LEFT, fontBase);
+            agregarCelda(tabla, safe(prod.getCategoria()), par, TextAlignment.LEFT, fontBase);
+            agregarCelda(tabla, prod.getProveedor() != null ? prod.getProveedor().getNombre() : "—", par, TextAlignment.LEFT, fontBase);
+            agregarCelda(tabla, formatMoneda(prod.getPrecio_venta()), par, TextAlignment.RIGHT, fontBase);
+
+            boolean alertaStock = false;
+            String stockTexto = "—";
+            if (prod.getInventario() != null) {
+                Integer cant = prod.getInventario().getCantidad_disponible();
+                Integer minimo = prod.getInventario().getStock_minimo();
+                stockTexto = cant != null ? String.valueOf(cant) : "—";
+                alertaStock = minimo != null && cant != null && cant <= minimo;
+            }
+            agregarCeldaColor(tabla, stockTexto, par, alertaStock ? ROJO : GRIS_TEXTO, fontBase);
+        }
+
+        doc.add(tabla);
+        doc.close();
+        return baos.toByteArray();
+    }
+
+    @Transactional(readOnly = true)
+    public byte[] generarReporteProveedores(LocalDate fechaInicio, LocalDate fechaFin) throws Exception {
+        // Proveedores no tiene campo de fecha propio; se filtran por productos comprados en el rango
+        List<Proveedores> proveedores = proveedoresRepository.findProveedoresConProductosEnRango(fechaInicio, fechaFin);
+
+        PdfFont fontBase = PdfFontFactory.createFont(StandardFonts.HELVETICA);
+        PdfFont fontBold = PdfFontFactory.createFont(StandardFonts.HELVETICA_BOLD);
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        PdfWriter writer = new PdfWriter(baos);
+        PdfDocument pdf = new PdfDocument(writer);
+        Document doc = new Document(pdf, PageSize.A4.rotate());
+        doc.setMargins(40, 40, 50, 40);
+        pdf.addEventHandler(PdfDocumentEvent.END_PAGE, new PiePaginaHandler(fontBase));
+
+        String descripcion = "Proveedores con productos del " + fechaInicio.format(FMT_FECHA) + " al " + fechaFin.format(FMT_FECHA);
+        agregarEncabezado(doc, "Proveedores", descripcion, proveedores.size(), fontBase, fontBold);
+
+        String[] enc = {"ID", "Nombre", "Teléfono", "Email", "Contacto"};
+        float[] anc = {0.7f, 3f, 2f, 3f, 2.5f};
+        Table tabla = crearTabla(anc, enc, fontBold);
+
+        for (int i = 0; i < proveedores.size(); i++) {
+            Proveedores p = proveedores.get(i);
+            boolean par = i % 2 == 0;
+            agregarCelda(tabla, String.valueOf(p.getProveedor_id()), par, TextAlignment.CENTER, fontBase);
+            agregarCelda(tabla, safe(p.getNombre()), par, TextAlignment.LEFT, fontBase);
+            agregarCelda(tabla, safe(p.getTelefono()), par, TextAlignment.LEFT, fontBase);
+            agregarCelda(tabla, safe(p.getEmail()), par, TextAlignment.LEFT, fontBase);
+            agregarCelda(tabla, safe(p.getNombre_contacto()), par, TextAlignment.LEFT, fontBase);
+        }
+
+        doc.add(tabla);
+        doc.close();
+        return baos.toByteArray();
+    }
+
+    @Transactional(readOnly = true)
+    public byte[] generarReporteServicios(LocalDate fechaInicio, LocalDate fechaFin) throws Exception {
+        List<Servicios> servicios = serviciosRepository.findAllParaReportePorFechas(fechaInicio, fechaFin);
+
+        PdfFont fontBase = PdfFontFactory.createFont(StandardFonts.HELVETICA);
+        PdfFont fontBold = PdfFontFactory.createFont(StandardFonts.HELVETICA_BOLD);
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        PdfWriter writer = new PdfWriter(baos);
+        PdfDocument pdf = new PdfDocument(writer);
+        Document doc = new Document(pdf, PageSize.A4.rotate());
+        doc.setMargins(40, 40, 50, 40);
+        pdf.addEventHandler(PdfDocumentEvent.END_PAGE, new PiePaginaHandler(fontBase));
+
+        String descripcion = "Servicios del " + fechaInicio.format(FMT_FECHA) + " al " + fechaFin.format(FMT_FECHA);
+        agregarEncabezado(doc, "Servicios", descripcion, servicios.size(), fontBase, fontBold);
+
+        String[] enc = {"Fecha", "Cliente", "Vehículo", "Kilometraje", "Total", "Tipo"};
+        float[] anc = {1.5f, 2.5f, 1.8f, 1.3f, 1.5f, 1.5f};
+        Table tabla = crearTabla(anc, enc, fontBold);
+
+        for (int i = 0; i < servicios.size(); i++) {
+            Servicios s = servicios.get(i);
+            boolean par = i % 2 == 0;
+            agregarCelda(tabla, formatFecha(s.getFecha_servicio()), par, TextAlignment.LEFT, fontBase);
+            agregarCelda(tabla, s.getClientes() != null ? s.getClientes().getNombre() : "—", par, TextAlignment.LEFT, fontBase);
+            agregarCelda(tabla, s.getVehiculos() != null ? s.getVehiculos().getPlaca() : "—", par, TextAlignment.LEFT, fontBase);
+            agregarCelda(tabla, safe(s.getKilometraje_servicio()), par, TextAlignment.CENTER, fontBase);
+            agregarCelda(tabla, formatMoneda(s.getTotal()), par, TextAlignment.RIGHT, fontBase);
+            agregarCelda(tabla, safe(s.getTipo_servicio()), par, TextAlignment.CENTER, fontBase);
+        }
+
+        doc.add(tabla);
+        doc.close();
+        return baos.toByteArray();
+    }
+
+    @Transactional(readOnly = true)
+    public byte[] generarReporteNotificaciones(LocalDate fechaInicio, LocalDate fechaFin) throws Exception {
+        LocalDateTime desde = fechaInicio.atStartOfDay();
+        LocalDateTime hasta = fechaFin.plusDays(1).atStartOfDay();
+
+        List<Notificaciones> promociones = notificacionesRepository.findPromocionesParaReportePorFechas(desde, hasta);
+        List<Notificaciones> recordatorios = notificacionesRepository.findRecordatoriosParaReportePorFechas(desde, hasta);
+
+        PdfFont fontBase = PdfFontFactory.createFont(StandardFonts.HELVETICA);
+        PdfFont fontBold = PdfFontFactory.createFont(StandardFonts.HELVETICA_BOLD);
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        PdfWriter writer = new PdfWriter(baos);
+        PdfDocument pdf = new PdfDocument(writer);
+        Document doc = new Document(pdf, PageSize.A4.rotate());
+        doc.setMargins(40, 40, 50, 40);
+        pdf.addEventHandler(PdfDocumentEvent.END_PAGE, new PiePaginaHandler(fontBase));
+
+        String descripcion = "Notificaciones del " + fechaInicio.format(FMT_FECHA) + " al " + fechaFin.format(FMT_FECHA);
+        agregarEncabezado(doc, "Notificaciones", descripcion,
+                promociones.size() + recordatorios.size(), fontBase, fontBold);
+
+        // Seccion: Promociones
         if (!promociones.isEmpty()) {
             agregarTituloSeccion(doc, "Promociones", promociones.size(), fontBold);
 
@@ -197,7 +280,6 @@ public class ReporteService {
             for (int i = 0; i < promociones.size(); i++) {
                 Notificaciones n = promociones.get(i);
                 boolean par = i % 2 == 0;
-
                 agregarCelda(t, n.getClientes() != null ? n.getClientes().getNombre() : "—", par, TextAlignment.LEFT, fontBase);
                 agregarCelda(t, safe(n.getMensaje_enviado()), par, TextAlignment.LEFT, fontBase);
                 agregarCeldaEstado(t, n.getEstado(), par, fontBase);
@@ -208,7 +290,7 @@ public class ReporteService {
             doc.add(t);
         }
 
-        // Recordatorios
+        // Seccion: Recordatorios
         if (!recordatorios.isEmpty()) {
             agregarTituloSeccion(doc, "Recordatorios", recordatorios.size(), fontBold);
 
@@ -219,7 +301,6 @@ public class ReporteService {
             for (int i = 0; i < recordatorios.size(); i++) {
                 Notificaciones n = recordatorios.get(i);
                 boolean par = i % 2 == 0;
-
                 agregarCelda(t, n.getClientes() != null ? n.getClientes().getNombre() : "—", par, TextAlignment.LEFT, fontBase);
                 agregarCelda(t, safe(n.getNombreServicio()), par, TextAlignment.LEFT, fontBase);
                 agregarCelda(t, safe(n.getKilometrajeServicio()), par, TextAlignment.CENTER, fontBase);
@@ -247,15 +328,14 @@ public class ReporteService {
             default -> "Histórico General";
         };
 
+        PdfFont fontBase = PdfFontFactory.createFont(StandardFonts.HELVETICA);
+        PdfFont fontBold = PdfFontFactory.createFont(StandardFonts.HELVETICA_BOLD);
+
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         PdfWriter writer = new PdfWriter(baos);
         PdfDocument pdf = new PdfDocument(writer);
         Document doc = new Document(pdf, PageSize.A4);
         doc.setMargins(40, 40, 50, 40);
-
-        PdfFont fontBase = PdfFontFactory.createFont(StandardFonts.HELVETICA);
-        PdfFont fontBold = PdfFontFactory.createFont(StandardFonts.HELVETICA_BOLD);
-
         pdf.addEventHandler(PdfDocumentEvent.END_PAGE, new PiePaginaHandler(fontBase));
 
         agregarEncabezado(doc, "Productos Populares",
@@ -278,7 +358,6 @@ public class ReporteService {
                     ProductoPopularDTO p = populares.get(i);
                     Cell c = new Cell().setBorder(Border.NO_BORDER).setPadding(8);
 
-                    // Contenedor interior con borde
                     Table inner = new Table(1).useAllAvailableWidth();
                     Cell innerCell = new Cell().setBorder(new SolidBorder(GRIS_BORDE, 0.5f))
                             .setBorderTop(new SolidBorder(colores[i], 2.5f))
@@ -330,53 +409,17 @@ public class ReporteService {
     // CONSTRUCCIÓN DEL DOCUMENTO
     // =============================================
 
-    @FunctionalInterface
-    private interface FilaCallback {
-        void agregar(Table tabla, PdfFont fontBase, int indice);
-    }
-
-    private byte[] generarPdf(String titulo, String descripcion,
-                               String[] encabezados, float[] anchos,
-                               int totalRegistros, FilaCallback callback) throws Exception {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        PdfWriter writer = new PdfWriter(baos);
-        PdfDocument pdf = new PdfDocument(writer);
-        Document doc = new Document(pdf, PageSize.A4.rotate());
-        doc.setMargins(40, 40, 50, 40);
-
-        PdfFont fontBase = PdfFontFactory.createFont(StandardFonts.HELVETICA);
-        PdfFont fontBold = PdfFontFactory.createFont(StandardFonts.HELVETICA_BOLD);
-
-        pdf.addEventHandler(PdfDocumentEvent.END_PAGE, new PiePaginaHandler(fontBase));
-
-        agregarEncabezado(doc, titulo, descripcion, totalRegistros, fontBase, fontBold);
-
-        Table tabla = crearTabla(anchos, encabezados, fontBold);
-
-        for (int i = 0; i < totalRegistros; i++) {
-            callback.agregar(tabla, fontBase, i);
-        }
-
-        doc.add(tabla);
-        doc.close();
-        return baos.toByteArray();
-    }
-
-    /**
-     * Encabezado del documento: línea dorada, nombre empresa, título, metadata
-     */
     private void agregarEncabezado(Document doc, String titulo, String descripcion,
-                                    int totalRegistros, PdfFont fontBase, PdfFont fontBold) {
+                                   int totalRegistros, PdfFont fontBase, PdfFont fontBold) {
         // Línea dorada superior
         Table linea = new Table(UnitValue.createPercentArray(1)).useAllAvailableWidth();
         linea.addCell(new Cell().setHeight(2.5f).setBackgroundColor(ACENTO).setBorder(Border.NO_BORDER));
         doc.add(linea);
 
-        // Header layout: izquierda (marca + título) | derecha (metadata)
+        // Header layout
         Table header = new Table(UnitValue.createPercentArray(new float[]{1f, 1f}))
                 .useAllAvailableWidth().setMarginTop(14).setMarginBottom(6);
 
-        // Columna izquierda
         Cell izq = new Cell().setBorder(Border.NO_BORDER);
         izq.add(new Paragraph("SIONTRACK")
                 .setFont(fontBold).setFontSize(9).setFontColor(ACENTO)
@@ -386,7 +429,6 @@ public class ReporteService {
                 .setMarginBottom(0));
         header.addCell(izq);
 
-        // Columna derecha — metadata
         Cell der = new Cell().setBorder(Border.NO_BORDER).setTextAlignment(TextAlignment.RIGHT)
                 .setVerticalAlignment(VerticalAlignment.BOTTOM);
         der.add(new Paragraph("Grupo Sion S.A.S")
@@ -402,7 +444,7 @@ public class ReporteService {
         sep.addCell(new Cell().setHeight(0.5f).setBackgroundColor(GRIS_BORDE).setBorder(Border.NO_BORDER));
         doc.add(sep);
 
-        // Subtítulo: descripción + contador
+        // Subtítulo
         Table sub = new Table(UnitValue.createPercentArray(new float[]{1f, 1f}))
                 .useAllAvailableWidth().setMarginTop(8).setMarginBottom(14);
 
@@ -415,14 +457,10 @@ public class ReporteService {
         doc.add(sub);
     }
 
-    /**
-     * Título de sección dentro del documento
-     */
     private void agregarTituloSeccion(Document doc, String titulo, int cantidad, PdfFont fontBold) {
         Table sec = new Table(UnitValue.createPercentArray(new float[]{0.03f, 1f}))
                 .useAllAvailableWidth().setMarginTop(20).setMarginBottom(8);
 
-        // Indicador vertical dorado
         sec.addCell(new Cell().setBackgroundColor(ACENTO).setBorder(Border.NO_BORDER).setWidth(3));
         sec.addCell(new Cell().setBorder(Border.NO_BORDER).setPaddingLeft(8)
                 .add(new Paragraph(titulo + "  (" + cantidad + ")")
@@ -455,7 +493,7 @@ public class ReporteService {
     }
 
     private void agregarCelda(Table tabla, String texto, boolean par,
-                               TextAlignment alineacion, PdfFont fontBase) {
+                              TextAlignment alineacion, PdfFont fontBase) {
         Cell cell = new Cell()
                 .add(new Paragraph(safe(texto)).setFont(fontBase).setFontSize(8.5f).setFontColor(GRIS_TEXTO))
                 .setBackgroundColor(par ? BLANCO : GRIS_95)
@@ -469,7 +507,7 @@ public class ReporteService {
     }
 
     private void agregarCeldaColor(Table tabla, String texto, boolean par,
-                                    DeviceRgb color, PdfFont fontBase) {
+                                   DeviceRgb color, PdfFont fontBase) {
         Cell cell = new Cell()
                 .add(new Paragraph(safe(texto)).setFont(fontBase).setFontSize(8.5f).setFontColor(color))
                 .setBackgroundColor(par ? BLANCO : GRIS_95)
@@ -503,7 +541,7 @@ public class ReporteService {
     }
 
     // =============================================
-    // PIE DE PÁGINA CON NÚMERO DE PÁGINA
+    // PIE DE PÁGINA
     // =============================================
 
     private static class PiePaginaHandler implements IEventHandler {
@@ -524,14 +562,12 @@ public class ReporteService {
 
             PdfCanvas pdfCanvas = new PdfCanvas(page.newContentStreamAfter(), page.getResources(), pdf);
 
-            // Línea separadora del pie
             pdfCanvas.setStrokeColor(new DeviceRgb(229, 231, 235))
                     .setLineWidth(0.5f)
                     .moveTo(area.getLeft() + 40, area.getBottom() + 36)
                     .lineTo(area.getRight() - 40, area.getBottom() + 36)
                     .stroke();
 
-            // Texto izquierdo: marca
             Canvas canvas = new Canvas(pdfCanvas, area);
             canvas.showTextAligned(
                     new Paragraph("SionTrack — Confidencial")
@@ -540,7 +576,6 @@ public class ReporteService {
                     area.getLeft() + 40, area.getBottom() + 22,
                     TextAlignment.LEFT);
 
-            // Texto derecho: número de página
             canvas.showTextAligned(
                     new Paragraph("Página " + pageNum + " de " + totalPages)
                             .setFont(font).setFontSize(7)
@@ -574,13 +609,14 @@ public class ReporteService {
         return tipo.equalsIgnoreCase("empresa") ? "Empresa" : "Persona";
     }
 
-    private String extraerTelefono(List<TelefonosResponseDTO> telefonos) {
+    private String extraerTelefonoEntidad(List<Cliente_Telefonos> telefonos) {
         if (telefonos == null || telefonos.isEmpty()) return "—";
         return telefonos.get(0).getTelefono();
     }
 
-    private String extraerEmail(List<CorreosResponseDTO> correos) {
+    private String extraerCorreoEntidad(List<Cliente_Correos> correos) {
         if (correos == null || correos.isEmpty()) return "—";
         return correos.get(0).getCorreo();
     }
+
 }

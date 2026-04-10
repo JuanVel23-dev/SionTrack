@@ -1,5 +1,7 @@
 package com.siontrack.siontrack.repository;
 
+import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -32,4 +34,12 @@ public interface ProveedoresRepository extends JpaRepository <Proveedores, Integ
     Optional<Proveedores> findByNombreIgnoreCase(String nombre);
 
     public boolean existsByNombreIgnoreCase(String nombre);
+
+    // Proveedores que tuvieron al menos un producto comprado en el rango de fechas
+    @Query("SELECT DISTINCT p FROM Proveedores p " +
+           "JOIN p.productos prod " +
+           "WHERE prod.fecha_compra BETWEEN :desde AND :hasta " +
+           "ORDER BY p.proveedor_id ASC")
+    List<Proveedores> findProveedoresConProductosEnRango(@Param("desde") LocalDate desde,
+                                                         @Param("hasta") LocalDate hasta);
 }

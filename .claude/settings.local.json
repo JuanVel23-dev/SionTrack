@@ -6,7 +6,8 @@
       "Bash(grep -c \"$sel\" componentes.css)",
       "Bash(done)",
       "Bash(./mvnw compile:*)",
-      "Bash(./mvnw test:*)"
+      "Bash(./mvnw test:*)",
+      "Bash(netstat -ano)"
     ]
   }
 }

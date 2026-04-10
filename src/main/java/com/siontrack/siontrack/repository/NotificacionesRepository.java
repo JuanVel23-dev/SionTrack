@@ -1,6 +1,7 @@
 package com.siontrack.siontrack.repository;
 
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
@@ -57,6 +58,21 @@ public interface NotificacionesRepository extends JpaRepository<Notificaciones, 
            countQuery = "SELECT COUNT(DISTINCT n) FROM Notificaciones n WHERE n.tipoNotificacion = :tipo")
     Page<Notificaciones> findByTipoNotificacionPaginado(@Param("tipo") String tipoNotificacion, Pageable pageable);
 
+    @Query(value = "SELECT DISTINCT n FROM Notificaciones n " +
+           "LEFT JOIN FETCH n.clientes c " +
+           "LEFT JOIN FETCH c.telefonos " +
+           "LEFT JOIN FETCH n.vehiculo " +
+           "WHERE n.tipoNotificacion = :tipo " +
+           "AND n.creado_en >= :desde AND n.creado_en < :hasta " +
+           "ORDER BY n.creado_en DESC",
+           countQuery = "SELECT COUNT(DISTINCT n) FROM Notificaciones n " +
+           "WHERE n.tipoNotificacion = :tipo AND n.creado_en >= :desde AND n.creado_en < :hasta")
+    Page<Notificaciones> findByTipoNotificacionYFechaPaginado(
+            @Param("tipo") String tipoNotificacion,
+            @Param("desde") LocalDateTime desde,
+            @Param("hasta") LocalDateTime hasta,
+            Pageable pageable);
+
     @Query("SELECT DISTINCT n FROM Notificaciones n " +
            "LEFT JOIN FETCH n.clientes c " +
            "LEFT JOIN FETCH c.telefonos " +
@@ -74,6 +90,20 @@ public interface NotificacionesRepository extends JpaRepository<Notificaciones, 
            countQuery = "SELECT COUNT(DISTINCT n) FROM Notificaciones n WHERE n.tipoNotificacion = 'RECORDATORIO_SERVICIO'")
     Page<Notificaciones> findRecordatoriosPaginados(Pageable pageable);
 
+    @Query(value = "SELECT DISTINCT n FROM Notificaciones n " +
+           "LEFT JOIN FETCH n.clientes c " +
+           "LEFT JOIN FETCH c.telefonos " +
+           "LEFT JOIN FETCH n.vehiculo " +
+           "WHERE n.tipoNotificacion = 'RECORDATORIO_SERVICIO' " +
+           "AND n.creado_en >= :desde AND n.creado_en < :hasta " +
+           "ORDER BY n.creado_en DESC",
+           countQuery = "SELECT COUNT(DISTINCT n) FROM Notificaciones n " +
+           "WHERE n.tipoNotificacion = 'RECORDATORIO_SERVICIO' AND n.creado_en >= :desde AND n.creado_en < :hasta")
+    Page<Notificaciones> findRecordatoriosPaginadosPorFecha(
+            @Param("desde") LocalDateTime desde,
+            @Param("hasta") LocalDateTime hasta,
+            Pageable pageable);
+
     // Busca recordatorios pendientes para un cliente+vehículo específico
     @Query("SELECT n FROM Notificaciones n " +
            "WHERE n.clientes.cliente_id = :clienteId " +
@@ -83,6 +113,42 @@ public interface NotificacionesRepository extends JpaRepository<Notificaciones, 
     List<Notificaciones> findRecordatoriosPendientesByClienteVehiculo(
             @Param("clienteId") Integer clienteId,
             @Param("vehiculoId") Integer vehiculoId);
+
+    // Query optimizada para reportes de promociones
+    @Query("SELECT n FROM Notificaciones n " +
+           "LEFT JOIN FETCH n.clientes c " +
+           "LEFT JOIN FETCH n.vehiculo " +
+           "WHERE n.tipoNotificacion = 'PROMOCION' " +
+           "ORDER BY n.creado_en DESC")
+    List<Notificaciones> findPromocionesParaReporte();
+
+    // Promociones filtradas por rango de fechas
+    @Query("SELECT n FROM Notificaciones n " +
+           "LEFT JOIN FETCH n.clientes c " +
+           "LEFT JOIN FETCH n.vehiculo " +
+           "WHERE n.tipoNotificacion = 'PROMOCION' " +
+           "AND n.creado_en >= :desde AND n.creado_en < :hasta " +
+           "ORDER BY n.creado_en DESC")
+    List<Notificaciones> findPromocionesParaReportePorFechas(@Param("desde") LocalDateTime desde,
+                                                             @Param("hasta") LocalDateTime hasta);
+
+    // Query optimizada para reportes de recordatorios
+    @Query("SELECT n FROM Notificaciones n " +
+           "LEFT JOIN FETCH n.clientes c " +
+           "LEFT JOIN FETCH n.vehiculo " +
+           "WHERE n.tipoNotificacion = 'RECORDATORIO_SERVICIO' " +
+           "ORDER BY n.creado_en DESC")
+    List<Notificaciones> findRecordatoriosParaReporte();
+
+    // Recordatorios filtrados por rango de fechas
+    @Query("SELECT n FROM Notificaciones n " +
+           "LEFT JOIN FETCH n.clientes c " +
+           "LEFT JOIN FETCH n.vehiculo " +
+           "WHERE n.tipoNotificacion = 'RECORDATORIO_SERVICIO' " +
+           "AND n.creado_en >= :desde AND n.creado_en < :hasta " +
+           "ORDER BY n.creado_en DESC")
+    List<Notificaciones> findRecordatoriosParaReportePorFechas(@Param("desde") LocalDateTime desde,
+                                                               @Param("hasta") LocalDateTime hasta);
 
     /**
      * Retorna el cliente_id y la fecha del último envío exitoso de promoción

@@ -22,19 +22,19 @@
     </div>
 
     <!-- Tabs Container -->
-    <div class="table-container animate-in delay-1">
+    <div class="table-container animate-in delay-1" th:attr="data-tab-activo=${tabActivo}">
 
         <!-- Tab Buttons -->
         <div class="ntab-header">
             <button type="button" class="ntab-btn active" data-tab="promociones">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"></path><path d="M22 2L15 22L11 13L2 9L22 2Z"></path></svg>
                 Promociones
-                <span class="ntab-count" th:text="${promociones != null ? #lists.size(promociones) : 0}">0</span>
+                <span class="ntab-count" th:text="${pagePromo != null ? pagePromo.totalElements : 0}">0</span>
             </button>
             <button type="button" class="ntab-btn" data-tab="recordatorios">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
                 Recordatorios
-                <span class="ntab-count" th:text="${recordatorios != null ? #lists.size(recordatorios) : 0}">0</span>
+                <span class="ntab-count" th:text="${pageRec != null ? pageRec.totalElements : 0}">0</span>
             </button>
             <button type="button" class="ntab-btn" data-tab="pendientes">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
@@ -49,6 +49,53 @@
 
                 <!-- ===== PANEL: PROMOCIONES ===== -->
                 <div class="ntab-panel" id="panel-promociones">
+                    <!-- Filtro de fechas Promociones -->
+                    <form method="get" th:action="@{/web/notificaciones}" class="notif-filtro-form">
+                        <div class="notif-filtro-grupo">
+                            <label class="notif-filtro-label">Desde</label>
+                            <div class="sion-datepicker notif-datepicker" id="dpPromoDesde">
+                                <button type="button" class="sion-datepicker-btn">
+                                    <svg class="sion-datepicker-icono" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                                    </svg>
+                                    <span class="sion-datepicker-texto placeholder">Fecha inicio</span>
+                                    <svg class="sion-datepicker-flecha" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                </button>
+                                <input type="date" name="desde" class="sion-datepicker-hidden" th:value="${filtroDesde}" required>
+                            </div>
+                        </div>
+                        <div class="notif-filtro-sep">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                        </div>
+                        <div class="notif-filtro-grupo">
+                            <label class="notif-filtro-label">Hasta</label>
+                            <div class="sion-datepicker notif-datepicker" id="dpPromoHasta">
+                                <button type="button" class="sion-datepicker-btn">
+                                    <svg class="sion-datepicker-icono" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                                    </svg>
+                                    <span class="sion-datepicker-texto placeholder">Fecha fin</span>
+                                    <svg class="sion-datepicker-flecha" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                </button>
+                                <input type="date" name="hasta" class="sion-datepicker-hidden" th:value="${filtroHasta}" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-sm notif-filtro-btn">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                            Consultar
+                        </button>
+                        <a th:href="@{/web/notificaciones}" class="notif-filtro-reset" title="Restablecer a ultimas 2 semanas">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
+                            Restablecer
+                        </a>
+                    </form>
+
                     <div class="table-toolbar">
                         <div class="table-toolbar-left">
                             <div class="table-search">
@@ -109,7 +156,7 @@
                     </table>
 
                     <!-- Paginación Promociones -->
-                    <div th:if="${pagePromo != null}" th:replace="~{fragments/paginacion :: paginacion(${pagePromo}, '/web/notificaciones', 'pagePromo', '&amp;pageRec=' + ${pageRec.number})}"></div>
+                    <div th:if="${pagePromo != null}" th:replace="~{fragments/paginacion :: paginacion(${pagePromo}, '/web/notificaciones', 'pagePromo', '&amp;pageRec=' + ${pageRec.number} + '&amp;desde=' + ${filtroDesde} + '&amp;hasta=' + ${filtroHasta})}"></div>
 
                     <div th:if="${promociones == null or promociones.isEmpty()}" class="table-empty">
                         <div class="empty-state">
@@ -128,6 +175,54 @@
 
                 <!-- ===== PANEL: RECORDATORIOS ===== -->
                 <div class="ntab-panel" id="panel-recordatorios">
+                    <!-- Filtro de fechas Recordatorios -->
+                    <form method="get" th:action="@{/web/notificaciones}" class="notif-filtro-form">
+                        <input type="hidden" name="tab" value="recordatorios">
+                        <div class="notif-filtro-grupo">
+                            <label class="notif-filtro-label">Desde</label>
+                            <div class="sion-datepicker notif-datepicker" id="dpRecDesde">
+                                <button type="button" class="sion-datepicker-btn">
+                                    <svg class="sion-datepicker-icono" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                                    </svg>
+                                    <span class="sion-datepicker-texto placeholder">Fecha inicio</span>
+                                    <svg class="sion-datepicker-flecha" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                </button>
+                                <input type="date" name="desde" class="sion-datepicker-hidden" th:value="${filtroDesde}" required>
+                            </div>
+                        </div>
+                        <div class="notif-filtro-sep">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                        </div>
+                        <div class="notif-filtro-grupo">
+                            <label class="notif-filtro-label">Hasta</label>
+                            <div class="sion-datepicker notif-datepicker" id="dpRecHasta">
+                                <button type="button" class="sion-datepicker-btn">
+                                    <svg class="sion-datepicker-icono" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                                    </svg>
+                                    <span class="sion-datepicker-texto placeholder">Fecha fin</span>
+                                    <svg class="sion-datepicker-flecha" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                </button>
+                                <input type="date" name="hasta" class="sion-datepicker-hidden" th:value="${filtroHasta}" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-sm notif-filtro-btn">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                            Consultar
+                        </button>
+                        <a th:href="@{/web/notificaciones}" class="notif-filtro-reset" title="Restablecer a ultimas 2 semanas">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
+                            Restablecer
+                        </a>
+                    </form>
+
                     <div class="table-toolbar">
                         <div class="table-toolbar-left">
                             <div class="table-search">
@@ -201,7 +296,7 @@
                     </table>
 
                     <!-- Paginación Recordatorios -->
-                    <div th:if="${pageRec != null}" th:replace="~{fragments/paginacion :: paginacion(${pageRec}, '/web/notificaciones', 'pageRec', '&amp;pagePromo=' + ${pagePromo.number})}"></div>
+                    <div th:if="${pageRec != null}" th:replace="~{fragments/paginacion :: paginacion(${pageRec}, '/web/notificaciones', 'pageRec', '&amp;pagePromo=' + ${pagePromo.number} + '&amp;desde=' + ${filtroDesde} + '&amp;hasta=' + ${filtroHasta})}"></div>
 
                     <div th:if="${recordatorios == null or recordatorios.isEmpty()}" class="table-empty">
                         <div class="empty-state">
@@ -489,6 +584,7 @@
 </th:block>
 
 <th:block layout:fragment="customJS">
+    <script th:src="@{/js/sion-datepicker.js}"></script>
     <script th:src="@{/js/notificaciones-tabs.js}"></script>
 </th:block>
 

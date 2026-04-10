@@ -1,10 +1,15 @@
 package com.siontrack.siontrack.controllers;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.temporal.TemporalAdjusters;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -27,16 +32,37 @@ public class PromocionesViewController {
     public String mostrarNotificaciones(
             @RequestParam(defaultValue = "0") int pagePromo,
             @RequestParam(defaultValue = "0") int pageRec,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta,
+            @RequestParam(required = false) String tab,
             Model model) {
+
+        // Por defecto: lunes de la semana anterior hasta fin del dia actual
+        LocalDate hoy = LocalDate.now();
+        if (desde == null) {
+            desde = hoy.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)).minusWeeks(1);
+        }
+        if (hasta == null) {
+            hasta = hoy;
+        }
+
+        LocalDateTime desdeDateTime = desde.atStartOfDay();
+        LocalDateTime hastaDateTime = hasta.plusDays(1).atStartOfDay();
+
         Page<com.siontrack.siontrack.models.Notificaciones> paginaPromo =
-                notificacionesService.obtenerPromocionesEnviadasPaginado(PageRequest.of(pagePromo, 50));
+                notificacionesService.obtenerPromocionesPorFechaPaginado(
+                        PageRequest.of(pagePromo, 50), desdeDateTime, hastaDateTime);
         Page<com.siontrack.siontrack.models.Notificaciones> paginaRec =
-                notificacionesService.obtenerRecordatoriosPaginado(PageRequest.of(pageRec, 50));
+                notificacionesService.obtenerRecordatoriosPorFechaPaginado(
+                        PageRequest.of(pageRec, 50), desdeDateTime, hastaDateTime);
 
         model.addAttribute("promociones", paginaPromo.getContent());
         model.addAttribute("pagePromo", paginaPromo);
         model.addAttribute("recordatorios", paginaRec.getContent());
         model.addAttribute("pageRec", paginaRec);
+        model.addAttribute("filtroDesde", desde);
+        model.addAttribute("filtroHasta", hasta);
+        model.addAttribute("tabActivo", tab != null ? tab : "promociones");
 
         model.addAttribute("pendientesCount", notificacionesService.contarClientesPendientesConsentimiento());
         return "notificaciones-lista";

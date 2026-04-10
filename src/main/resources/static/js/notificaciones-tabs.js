@@ -29,6 +29,14 @@
                     }
                 });
             });
+
+            // Activar tab según parámetro del servidor
+            var container = document.querySelector('.table-container[data-tab-activo]');
+            var tabActivo = container ? container.getAttribute('data-tab-activo') : null;
+            if (tabActivo && tabActivo !== 'promociones') {
+                var tabBtn = document.querySelector('.ntab-btn[data-tab="' + tabActivo + '"]');
+                if (tabBtn) tabBtn.click();
+            }
         }
 
         /* ── Búsqueda independiente por panel ── */

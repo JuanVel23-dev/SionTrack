@@ -403,6 +403,12 @@ public class NotificacionesService {
     }
 
     @Transactional(readOnly = true)
+    public Page<Notificaciones> obtenerPromocionesPorFechaPaginado(Pageable pageable,
+            java.time.LocalDateTime desde, java.time.LocalDateTime hasta) {
+        return notificacionesRepository.findByTipoNotificacionYFechaPaginado("PROMOCION", desde, hasta, pageable);
+    }
+
+    @Transactional(readOnly = true)
     public List<Notificaciones> obtenerRecordatorios() {
         return notificacionesRepository.findRecordatoriosOrdenados();
     }
@@ -410,6 +416,12 @@ public class NotificacionesService {
     @Transactional(readOnly = true)
     public Page<Notificaciones> obtenerRecordatoriosPaginado(Pageable pageable) {
         return notificacionesRepository.findRecordatoriosPaginados(pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<Notificaciones> obtenerRecordatoriosPorFechaPaginado(Pageable pageable,
+            java.time.LocalDateTime desde, java.time.LocalDateTime hasta) {
+        return notificacionesRepository.findRecordatoriosPaginadosPorFecha(desde, hasta, pageable);
     }
 
     @Transactional(readOnly = true)

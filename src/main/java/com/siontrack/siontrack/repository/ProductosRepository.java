@@ -1,5 +1,6 @@
 package com.siontrack.siontrack.repository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -38,4 +39,20 @@ public interface ProductosRepository extends JpaRepository<Productos, Integer> {
     @Query("SELECT p FROM Productos p JOIN FETCH p.inventario i " +
            "WHERE i.stock_minimo > 0 AND i.cantidad_disponible <= i.stock_minimo * 1.5")
     List<Productos> findProductosNecesitanRestock();
+
+    // Query optimizada para reportes: trae inventario y proveedor en una sola consulta
+    @Query("SELECT p FROM Productos p " +
+           "LEFT JOIN FETCH p.inventario " +
+           "LEFT JOIN FETCH p.proveedor " +
+           "ORDER BY p.producto_id ASC")
+    List<Productos> findAllParaReporte();
+
+    // Reporte filtrado por rango de fechas de compra
+    @Query("SELECT p FROM Productos p " +
+           "LEFT JOIN FETCH p.inventario " +
+           "LEFT JOIN FETCH p.proveedor " +
+           "WHERE p.fecha_compra BETWEEN :desde AND :hasta " +
+           "ORDER BY p.producto_id ASC")
+    List<Productos> findAllParaReportePorFechas(@Param("desde") LocalDate desde,
+                                                @Param("hasta") LocalDate hasta);
 }

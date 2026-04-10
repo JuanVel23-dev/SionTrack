@@ -1,5 +1,6 @@
 package com.siontrack.siontrack.repository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -72,4 +73,22 @@ public interface ClienteRepository extends JpaRepository<Clientes, Integer> {
             "WHERE (c.consentimiento_procesado IS NULL OR c.consentimiento_procesado = false) " +
             "AND t.telefono IS NOT NULL")
     long countClientesPendientesDeConsentimiento();
+
+    // Reportes: dos queries separadas para evitar MultipleBagFetchException
+    @Query("SELECT DISTINCT c FROM Clientes c LEFT JOIN FETCH c.telefonos ORDER BY c.cliente_id ASC")
+    List<Clientes> findAllParaReporteConTelefonos();
+
+    @Query("SELECT DISTINCT c FROM Clientes c LEFT JOIN FETCH c.correos ORDER BY c.cliente_id ASC")
+    List<Clientes> findAllParaReporteConCorreos();
+
+    // Reportes filtrados por fecha de registro
+    @Query("SELECT DISTINCT c FROM Clientes c LEFT JOIN FETCH c.telefonos " +
+           "WHERE c.fecha_registro BETWEEN :desde AND :hasta ORDER BY c.cliente_id ASC")
+    List<Clientes> findParaReporteConTelefonosPorFechas(@Param("desde") LocalDate desde,
+                                                        @Param("hasta") LocalDate hasta);
+
+    @Query("SELECT DISTINCT c FROM Clientes c LEFT JOIN FETCH c.correos " +
+           "WHERE c.fecha_registro BETWEEN :desde AND :hasta ORDER BY c.cliente_id ASC")
+    List<Clientes> findParaReporteConCorreosPorFechas(@Param("desde") LocalDate desde,
+                                                      @Param("hasta") LocalDate hasta);
 }
