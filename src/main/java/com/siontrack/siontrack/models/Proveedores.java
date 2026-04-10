@@ -18,7 +18,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name = "proveedores")
+@Table(name = "proveedores", schema = "siontrack")
 public class Proveedores {
 
     @Id

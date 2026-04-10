@@ -19,7 +19,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name = "notificaciones")
+@Table(name = "notificaciones", schema = "siontrack")
 public class Notificaciones {
 
     @Id

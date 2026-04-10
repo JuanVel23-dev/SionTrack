@@ -23,7 +23,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name = "vehiculos")
+@Table(name = "vehiculos", schema = "siontrack")
 public class Vehiculos {
 
     @Id

@@ -12,7 +12,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name = "usuarios")
+@Table(name = "usuarios", schema = "siontrack")
 public class Usuarios {
 
     @Id

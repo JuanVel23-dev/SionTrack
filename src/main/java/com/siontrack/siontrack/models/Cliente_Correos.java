@@ -15,7 +15,7 @@ import lombok.Setter;
 
 
 @Entity
-@Table(name = "cliente_correos")
+@Table(name = "cliente_correos", schema = "siontrack")
 public class Cliente_Correos {
 
     @Id

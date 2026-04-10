@@ -19,7 +19,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name = "detalle_servicio")
+@Table(name = "detalle_servicio", schema = "siontrack")
 public class Detalle_Servicio {
 
     public enum tipoItem{
