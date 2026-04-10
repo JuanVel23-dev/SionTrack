@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.siontrack.siontrack.DTO.Request.WebhookPayloadDTO;
 import com.siontrack.siontrack.configuration.WhatsAppConfig;
 import com.siontrack.siontrack.services.WebhookService;
