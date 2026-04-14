@@ -6,7 +6,7 @@
 <th:block layout:fragment="customCSS"></th:block>
 
 <th:block layout:fragment="content">
-    <!-- Page Header -->
+    
     <div class="page-header animate-in">
         <div class="page-header-content">
             <h1 class="page-header-title">Productos</h1>
@@ -21,7 +21,7 @@
         </a>
     </div>
 
-    <!-- Table Container -->
+    
     <div class="table-container animate-in delay-1">
         <div class="table-toolbar">
             <div class="table-toolbar-left">
@@ -46,7 +46,7 @@
             </div>
         </div>
 
-        <!-- Filtros rapidos -->
+        
         <div class="filter-chips" id="filterChips">
             <button type="button" class="filter-chip active" data-filter="stock" data-value="">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
@@ -126,10 +126,10 @@
             </tbody>
         </table>
 
-        <!-- Paginación -->
+        
         <div th:if="${page != null}" th:replace="~{fragments/paginacion :: paginacion(${page}, '/web/productos', 'page', ${search != null ? '&amp;search=' + search : ''})}"></div>
 
-        <!-- Empty State -->
+        
         <div th:if="${productos == null or productos.empty}" class="table-empty">
             <div class="empty-state">
                 <div class="empty-state-icon">

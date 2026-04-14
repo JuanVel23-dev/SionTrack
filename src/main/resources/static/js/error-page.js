@@ -1,13 +1,10 @@
-/**
- * SionTrack v2.0 - Pagina de Error
- * Sistema de particulas, tema claro/oscuro, animaciones stagger
- */
+
 (function () {
     'use strict';
 
-    // ===================================================================
-    //  DETECCION DE TEMA
-    // ===================================================================
+    
+    
+    
     var savedTheme = localStorage.getItem('siontrack-theme');
     if (savedTheme) {
         document.documentElement.setAttribute('data-theme', savedTheme);
@@ -15,15 +12,15 @@
         document.documentElement.setAttribute('data-theme', 'light');
     }
 
-    // ===================================================================
-    //  SISTEMA DE PARTICULAS EN CANVAS
-    // ===================================================================
+    
+    
+    
     var canvas = document.getElementById('errorCanvas');
     var ctx = canvas ? canvas.getContext('2d') : null;
     var particulas = [];
     var mouse = { x: -9999, y: -9999 };
 
-    // Color base: rojo-ambar para error (mezcla con el dorado del sistema)
+    
     var COLOR_R = 239, COLOR_G = 130, COLOR_B = 55;
 
     var CONFIG = {
@@ -133,9 +130,9 @@
         requestAnimationFrame(animar);
     }
 
-    // ===================================================================
-    //  ANIMACION DE ENTRADA CON STAGGER
-    // ===================================================================
+    
+    
+    
     function iniciarAnimaciones() {
         var card = document.getElementById('errorCard');
         if (!card) return;
@@ -150,9 +147,9 @@
         });
     }
 
-    // ===================================================================
-    //  INICIALIZACION
-    // ===================================================================
+    
+    
+    
     document.addEventListener('DOMContentLoaded', function () {
         initCanvas();
         iniciarAnimaciones();

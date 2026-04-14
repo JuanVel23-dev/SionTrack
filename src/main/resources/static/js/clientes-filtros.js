@@ -1,7 +1,4 @@
-/**
- * SionTrack - Filtros de Clientes
- * Búsqueda por texto + chips de filtro (tipo, notificaciones, vehículo)
- */
+
 (function() {
     'use strict';
 
@@ -13,13 +10,13 @@
 
         if (!rows.length) return;
 
-        // Inicializar chips de filtro
+        
         chips.forEach(function(chip) {
             chip.addEventListener('click', function() {
                 var grupo = this.dataset.filter;
                 var valor = this.dataset.value;
 
-                // Toggle para notif y vehiculo (clic de nuevo desactiva)
+                
                 if (grupo === 'notif' || grupo === 'vehiculo') {
                     if (filtrosActivos[grupo] === valor) {
                         filtrosActivos[grupo] = '';
@@ -31,7 +28,7 @@
 
                 filtrosActivos[grupo] = valor;
 
-                // Actualizar estado visual del grupo
+                
                 chips.forEach(function(c) {
                     if (c.dataset.filter === grupo) {
                         c.classList.toggle('active', c.dataset.value === valor);
@@ -44,19 +41,19 @@
 
         function aplicarFiltros() {
             rows.forEach(function(row) {
-                // Filtro por tipo
+                
                 var coincideTipo = true;
                 if (filtrosActivos.tipo) {
                     coincideTipo = (row.getAttribute('data-tipo') || '') === filtrosActivos.tipo;
                 }
 
-                // Filtro por notificaciones
+                
                 var coincideNotif = true;
                 if (filtrosActivos.notif) {
                     coincideNotif = (row.getAttribute('data-notif') || '') === filtrosActivos.notif;
                 }
 
-                // Filtro por vehículo
+                
                 var coincideVehiculo = true;
                 if (filtrosActivos.vehiculo) {
                     coincideVehiculo = (row.getAttribute('data-vehiculo') || '') === filtrosActivos.vehiculo;
@@ -86,7 +83,7 @@
             });
         }
 
-        // Formatear teléfonos visibles
+        
         SionUtils.formatearTelefonosVisibles('.contact-row span, .contact-row-email span');
     });
 })();

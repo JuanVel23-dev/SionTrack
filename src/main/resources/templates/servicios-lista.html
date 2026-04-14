@@ -6,7 +6,7 @@
 <th:block layout:fragment="customCSS"></th:block>
 
 <th:block layout:fragment="content">
-    <!-- Page Header -->
+    
     <div class="page-header animate-in">
         <div class="page-header-content">
             <h1 class="page-header-title">Servicios</h1>
@@ -21,7 +21,7 @@
         </a>
     </div>
 
-    <!-- Table Container -->
+    
     <div class="table-container animate-in delay-1">
         <div class="table-toolbar">
             <div class="table-toolbar-left">
@@ -46,7 +46,7 @@
             </div>
         </div>
 
-        <!-- Filtros rapidos -->
+        
         <div class="filter-chips" id="filterChips">
             <button type="button" class="filter-chip active" data-filter="tipo-servicio" data-value="">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
@@ -108,7 +108,7 @@
                     </td>
                     <td data-label="Acciones">
                         <div class="table-actions">
-                            <!-- Botón Ver (Ojo) -->
+                            
                             <button type="button"
                                     class="table-action-btn btn-view btn-ver-servicio"
                                     title="Ver detalle"
@@ -130,7 +130,7 @@
                                     <circle cx="12" cy="12" r="3"></circle>
                                 </svg>
                             </button>
-                            <!-- Botón Eliminar -->
+                            
                             <form th:action="@{/web/servicios/eliminar/{id}(id=${srv.servicio_id})}" method="post" style="display:inline;">
                                 <button type="submit"
                                    class="table-action-btn btn-delete"
@@ -149,10 +149,10 @@
             </tbody>
         </table>
 
-        <!-- Paginación -->
+        
         <div th:if="${page != null}" th:replace="~{fragments/paginacion :: paginacion(${page}, '/web/servicios', 'page', ${search != null ? '&amp;search=' + search : ''})}"></div>
 
-        <!-- Empty State -->
+        
         <div th:if="${servicios == null or servicios.empty}" class="table-empty">
             <div class="empty-state">
                 <div class="empty-state-icon">
@@ -175,12 +175,10 @@
         </div>
     </div>
 
-    <!-- ============================================
-         MODAL DE DETALLE DE SERVICIO
-         ============================================ -->
+    
     <div class="srv-modal-overlay" id="srv-modal-overlay">
         <div class="srv-modal">
-            <!-- Header -->
+            
             <div class="srv-modal-header">
                 <div class="srv-modal-header-left">
                     <div class="srv-modal-icon">
@@ -204,12 +202,12 @@
                 </div>
             </div>
 
-            <!-- Body -->
+            
             <div class="srv-modal-body" id="srv-modal-body">
-                <!-- Se llena dinámicamente por JS -->
+                
             </div>
 
-            <!-- Footer -->
+            
             <div class="srv-modal-footer">
                 <div class="srv-modal-footer-info">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>

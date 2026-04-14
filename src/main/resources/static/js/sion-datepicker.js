@@ -1,8 +1,4 @@
-/**
- * SionTrack - Datepicker personalizado
- * Calendario elegante con animaciones suaves
- * Se inicializa automaticamente en elementos .sion-datepicker
- */
+
 (function() {
     'use strict';
 
@@ -12,21 +8,21 @@
     ];
     var DIAS_SEMANA = ['Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa', 'Do'];
 
-    // Referencia al datepicker abierto actualmente
+    
     var dpAbierto = null;
 
     document.addEventListener('DOMContentLoaded', function() {
         var datepickers = document.querySelectorAll('.sion-datepicker');
         datepickers.forEach(function(dp) { inicializarDatepicker(dp); });
 
-        // Cerrar al hacer clic fuera
+        
         document.addEventListener('click', function(e) {
             if (dpAbierto && !dpAbierto.contains(e.target)) {
                 cerrarDatepicker(dpAbierto);
             }
         });
 
-        // Cerrar con ESC
+        
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape' && dpAbierto) {
                 cerrarDatepicker(dpAbierto);
@@ -41,14 +37,14 @@
 
         if (!btn || !inputHidden) return;
 
-        // Estado interno
+        
         var estado = {
             mesVisible: new Date().getMonth(),
             anioVisible: new Date().getFullYear(),
             fechaSeleccionada: null
         };
 
-        // Si el input ya tiene valor (edicion), establecerlo
+        
         if (inputHidden.value) {
             var partes = inputHidden.value.split('-');
             if (partes.length === 3) {
@@ -64,11 +60,11 @@
             }
         }
 
-        // Crear el dropdown del calendario
+        
         var dropdown = crearCalendarioDropdown();
         contenedor.appendChild(dropdown);
 
-        // Toggle al hacer clic en el boton
+        
         btn.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
@@ -76,7 +72,7 @@
             if (contenedor.classList.contains('abierto')) {
                 cerrarDatepicker(contenedor);
             } else {
-                // Cerrar otro datepicker abierto
+                
                 if (dpAbierto && dpAbierto !== contenedor) {
                     cerrarDatepicker(dpAbierto);
                 }
@@ -85,7 +81,7 @@
             }
         });
 
-        // Navegacion de meses
+        
         dropdown.querySelector('.sdp-nav-prev').addEventListener('click', function(e) {
             e.stopPropagation();
             estado.mesVisible--;
@@ -106,7 +102,7 @@
             renderizarMes(dropdown, estado, contenedor, inputHidden, textoSpan, btn);
         });
 
-        // Boton Hoy
+        
         dropdown.querySelector('.sdp-btn-hoy').addEventListener('click', function(e) {
             e.stopPropagation();
             var hoy = new Date();
@@ -118,7 +114,7 @@
             cerrarDatepicker(contenedor);
         });
 
-        // Boton Limpiar
+        
         dropdown.querySelector('.sdp-btn-limpiar').addEventListener('click', function(e) {
             e.stopPropagation();
             estado.fechaSeleccionada = null;
@@ -131,7 +127,7 @@
             btn.classList.remove('has-value');
             renderizarMes(dropdown, estado, contenedor, inputHidden, textoSpan, btn);
             cerrarDatepicker(contenedor);
-            // Disparar evento change
+            
             inputHidden.dispatchEvent(new Event('change', { bubbles: true }));
         });
     }
@@ -161,7 +157,7 @@
                 '<button type="button" class="sdp-footer-btn sdp-btn-hoy">Hoy</button>' +
             '</div>';
 
-        // Rellenar los dias de la semana
+        
         var semanaHeader = dropdown.querySelector('.sdp-semana-header');
         DIAS_SEMANA.forEach(function(dia) {
             var span = document.createElement('span');
@@ -181,36 +177,36 @@
         tituloMes.textContent = MESES[estado.mesVisible];
         tituloAnio.textContent = estado.anioVisible;
 
-        // Limpiar dias anteriores
+        
         diasContainer.innerHTML = '';
 
         var primerDia = new Date(estado.anioVisible, estado.mesVisible, 1);
         var ultimoDia = new Date(estado.anioVisible, estado.mesVisible + 1, 0);
 
-        // Dia de la semana del primer dia (Lunes=0, Domingo=6)
+        
         var diaSemanaInicio = (primerDia.getDay() + 6) % 7;
 
         var hoy = new Date();
         hoy.setHours(0, 0, 0, 0);
 
-        // Dias del mes anterior para rellenar
+        
         var diasMesAnterior = new Date(estado.anioVisible, estado.mesVisible, 0).getDate();
         for (var i = diaSemanaInicio - 1; i >= 0; i--) {
             var diaBtn = crearBotonDia(diasMesAnterior - i, true);
             diasContainer.appendChild(diaBtn);
         }
 
-        // Dias del mes actual
+        
         for (var d = 1; d <= ultimoDia.getDate(); d++) {
             var fecha = new Date(estado.anioVisible, estado.mesVisible, d);
             var diaBtn = crearBotonDia(d, false);
 
-            // Marcar hoy
+            
             if (fecha.getTime() === hoy.getTime()) {
                 diaBtn.classList.add('hoy');
             }
 
-            // Marcar seleccionado
+            
             if (estado.fechaSeleccionada &&
                 fecha.getFullYear() === estado.fechaSeleccionada.getFullYear() &&
                 fecha.getMonth() === estado.fechaSeleccionada.getMonth() &&
@@ -218,14 +214,14 @@
                 diaBtn.classList.add('seleccionado');
             }
 
-            // Evento clic
+            
             (function(f) {
                 diaBtn.addEventListener('click', function(e) {
                     e.stopPropagation();
                     estado.fechaSeleccionada = f;
                     aplicarSeleccion(inputHidden, textoSpan, btn, f);
                     renderizarMes(dropdown, estado, contenedor, inputHidden, textoSpan, btn);
-                    // Delay breve para mostrar la seleccion antes de cerrar
+                    
                     setTimeout(function() {
                         cerrarDatepicker(contenedor);
                     }, 150);
@@ -235,7 +231,7 @@
             diasContainer.appendChild(diaBtn);
         }
 
-        // Dias del mes siguiente para completar la grilla
+        
         var totalCeldas = diaSemanaInicio + ultimoDia.getDate();
         var celdasRestantes = totalCeldas % 7 === 0 ? 0 : 7 - (totalCeldas % 7);
         for (var x = 1; x <= celdasRestantes; x++) {
@@ -254,17 +250,17 @@
     }
 
     function aplicarSeleccion(inputHidden, textoSpan, btn, fecha) {
-        // Formato YYYY-MM-DD para el input
+        
         var anio = fecha.getFullYear();
         var mes = String(fecha.getMonth() + 1).padStart(2, '0');
         var dia = String(fecha.getDate()).padStart(2, '0');
         inputHidden.value = anio + '-' + mes + '-' + dia;
 
-        // Formato visual
+        
         actualizarTexto(textoSpan, fecha);
         btn.classList.add('has-value');
 
-        // Disparar evento change para validaciones
+        
         inputHidden.dispatchEvent(new Event('change', { bubbles: true }));
     }
 

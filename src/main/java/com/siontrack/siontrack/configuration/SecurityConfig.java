@@ -61,7 +61,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/css/**", "/js/**", "/images/**", "/img/**", "/webjars/**", "/login", "/error").permitAll()
                         .requestMatchers("/api/webhook", "/api/webhook/**").permitAll()
-                        // Restringir endpoints de Actuator
+                        .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/actuator/**").authenticated()
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().authenticated())

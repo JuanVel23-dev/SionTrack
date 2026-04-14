@@ -1,8 +1,4 @@
-/**
- * SionTrack - Servicios Detalle Modal
- * Modal de vista detallada al hacer clic en el ojo (btn-ver-servicio)
- * Lee data-attributes del botón y construye el contenido del modal
- */
+
 (function() {
     'use strict';
 
@@ -11,7 +7,7 @@
     var modalBadge = document.getElementById('srv-modal-badge');
     var modalCreado = document.getElementById('srv-modal-creado');
 
-    // Inicializar modal con patrón reutilizable
+    
     var modal = SionUtils.crearModal({
         overlayId: 'srv-modal-overlay',
         closeBtnIds: ['srv-modal-close', 'srv-modal-close-btn']
@@ -19,7 +15,7 @@
 
     if (!modal) return;
 
-    // ===== ABRIR MODAL =====
+    
     document.addEventListener('click', function(e) {
         var btn = e.target.closest('.btn-ver-servicio');
         if (!btn) return;
@@ -32,7 +28,7 @@
     function abrirModal(btn) {
         var servicioId = btn.dataset.id;
 
-        // Muestra el modal de inmediato con estado de carga
+        
         modalSubtitle.textContent = 'Servicio #' + (servicioId || '0');
         modalBadge.textContent = '...';
         modalBadge.className = 'badge badge-neutral';
@@ -40,7 +36,7 @@
         modalBody.innerHTML = '<div class="srv-detail-loading"><div class="srv-detail-spinner"></div><span>Cargando detalle...</span></div>';
         modal.abrir();
 
-        // Obtiene el detalle completo del servicio desde la API
+        
         fetch('/api/servicios/' + servicioId)
             .then(function(res) {
                 if (!res.ok) throw new Error('Error al obtener el servicio');
@@ -61,22 +57,22 @@
         };
         var tipoSrv = tipoServicioMap[srv.tipo_servicio] || { text: srv.tipo_servicio || '-', cls: 'badge-neutral' };
 
-        // Header
+        
         modalSubtitle.textContent = 'Servicio #' + srv.servicio_id;
         modalBadge.textContent = tipoSrv.text;
         modalBadge.className = 'badge ' + tipoSrv.cls;
 
-        // Footer
+        
         if (srv.creadoEn) {
             modalCreado.textContent = 'Creado: ' + formatearFechaHora(new Date(srv.creadoEn));
         } else {
             modalCreado.textContent = 'Creado: -';
         }
 
-        // ===== CONSTRUIR BODY =====
+        
         var html = '';
 
-        // --- Sección: Información General ---
+        
         html += '<div class="srv-detail-section">';
         html +=   '<div class="srv-detail-section-title">';
         html +=     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>';
@@ -90,7 +86,7 @@
         html +=   '</div>';
         html += '</div>';
 
-        // --- Sección: Cliente ---
+        
         var cli = srv.cliente || {};
         html += '<div class="srv-detail-section">';
         html +=   '<div class="srv-detail-section-title">';
@@ -104,7 +100,7 @@
         html +=   '</div>';
         html += '</div>';
 
-        // --- Sección: Vehículo ---
+        
         var veh = srv.vehiculo;
         html += '<div class="srv-detail-section">';
         html +=   '<div class="srv-detail-section-title">';
@@ -121,7 +117,7 @@
         }
         html += '</div>';
 
-        // --- Sección: Productos / Items ---
+        
         var detalles = srv.detalles || [];
         html += '<div class="srv-detail-section">';
         html +=   '<div class="srv-detail-section-title">';
@@ -151,7 +147,7 @@
         }
         html += '</div>';
 
-        // --- Sección: Observaciones ---
+        
         var obs = srv.observaciones || '';
         html += '<div class="srv-detail-section">';
         html +=   '<div class="srv-detail-section-title">';
@@ -168,7 +164,7 @@
         modalBody.innerHTML = html;
     }
 
-    // ===== HELPERS (delegados a SionUtils) =====
+    
 
     var esc = function(text) { return SionUtils.esc(text, '-'); };
     var formatearFecha = function(str) { return SionUtils.formatearFecha(str, '-'); };

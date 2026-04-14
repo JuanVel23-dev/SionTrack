@@ -6,7 +6,7 @@
 <th:block layout:fragment="customCSS"></th:block>
 
 <th:block layout:fragment="content">
-    <!-- Page Header -->
+    
     <div class="page-header animate-in">
         <div class="page-header-content">
             <h1 class="page-header-title">Notificaciones WhatsApp</h1>
@@ -21,10 +21,10 @@
         </a>
     </div>
 
-    <!-- Tabs Container -->
+    
     <div class="table-container animate-in delay-1" th:attr="data-tab-activo=${tabActivo}">
 
-        <!-- Tab Buttons -->
+        
         <div class="ntab-header">
             <button type="button" class="ntab-btn active" data-tab="promociones">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"></path><path d="M22 2L15 22L11 13L2 9L22 2Z"></path></svg>
@@ -43,13 +43,13 @@
             </button>
         </div>
 
-        <!-- Sliding Panels -->
+        
         <div class="ntab-viewport">
             <div class="ntab-track" id="ntab-track">
 
-                <!-- ===== PANEL: PROMOCIONES ===== -->
+                
                 <div class="ntab-panel" id="panel-promociones">
-                    <!-- Filtro de fechas Promociones -->
+                    
                     <form method="get" th:action="@{/web/notificaciones}" class="notif-filtro-form">
                         <div class="notif-filtro-grupo">
                             <label class="notif-filtro-label">Desde</label>
@@ -155,7 +155,7 @@
                         </tbody>
                     </table>
 
-                    <!-- Paginación Promociones -->
+                    
                     <div th:if="${pagePromo != null}" th:replace="~{fragments/paginacion :: paginacion(${pagePromo}, '/web/notificaciones', 'pagePromo', '&amp;pageRec=' + ${pageRec.number} + '&amp;desde=' + ${filtroDesde} + '&amp;hasta=' + ${filtroHasta})}"></div>
 
                     <div th:if="${promociones == null or promociones.isEmpty()}" class="table-empty">
@@ -173,9 +173,9 @@
                     </div>
                 </div>
 
-                <!-- ===== PANEL: RECORDATORIOS ===== -->
+                
                 <div class="ntab-panel" id="panel-recordatorios">
-                    <!-- Filtro de fechas Recordatorios -->
+                    
                     <form method="get" th:action="@{/web/notificaciones}" class="notif-filtro-form">
                         <input type="hidden" name="tab" value="recordatorios">
                         <div class="notif-filtro-grupo">
@@ -295,7 +295,7 @@
                         </tbody>
                     </table>
 
-                    <!-- Paginación Recordatorios -->
+                    
                     <div th:if="${pageRec != null}" th:replace="~{fragments/paginacion :: paginacion(${pageRec}, '/web/notificaciones', 'pageRec', '&amp;pagePromo=' + ${pagePromo.number} + '&amp;desde=' + ${filtroDesde} + '&amp;hasta=' + ${filtroHasta})}"></div>
 
                     <div th:if="${recordatorios == null or recordatorios.isEmpty()}" class="table-empty">
@@ -309,7 +309,7 @@
                     </div>
                 </div>
 
-                <!-- ===== PANEL: USUARIOS PENDIENTES ===== -->
+                
                 <div class="ntab-panel" id="panel-pendientes">
                     <div class="table-toolbar">
                         <div class="table-toolbar-left">
@@ -337,7 +337,7 @@
                         </div>
                     </div>
 
-                    <!-- Barra superior con contador y botón confirmar -->
+                    
                     <div id="pendientes-footer" class="pendientes-footer" style="display:none;">
                         <div class="pendientes-footer-info">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
@@ -349,13 +349,13 @@
                         </button>
                     </div>
 
-                    <!-- Estado de carga -->
+                    
                     <div id="pendientes-loading" class="clientes-loading" style="display:none;">
                         <div class="clientes-loading-spinner"></div>
                         <span>Cargando usuarios pendientes...</span>
                     </div>
 
-                    <!-- Tabla de pendientes (llenada por JS) -->
+                    
                     <div id="pendientes-tabla-wrap" style="display:none;">
                         <table class="table pend-table">
                             <thead>
@@ -373,7 +373,7 @@
                         </table>
                     </div>
 
-                    <!-- Sin usuarios pendientes -->
+                    
                     <div id="pendientes-vacio" class="table-empty" style="display:none;">
                         <div class="empty-state">
                             <div class="empty-state-icon">
@@ -390,10 +390,10 @@
         </div>
     </div>
 
-    <!-- Modal: confirmación de envío masivo de consentimiento -->
+    
     <div class="cli-modal-overlay" id="modalConsentimientoOverlay">
         <div class="cli-modal" style="max-width:480px;">
-            <!-- Header -->
+            
             <div class="cli-modal-header">
                 <div class="cli-modal-header-left">
                     <div class="cli-modal-icon" style="background:rgba(59,130,246,.12); border-color:rgba(59,130,246,.2); color:#3b82f6;">
@@ -417,7 +417,7 @@
                 </div>
             </div>
 
-            <!-- Body -->
+            
             <div class="cli-modal-body" style="padding:24px;">
                 <div style="display:flex; align-items:flex-start; gap:12px; padding:16px; background:var(--bg-elevated, rgba(255,255,255,.04)); border:1px solid var(--border-default); border-radius:12px; margin-bottom:20px;">
                     <div style="flex-shrink:0; margin-top:2px;">
@@ -446,7 +446,7 @@
                 </p>
             </div>
 
-            <!-- Footer -->
+            
             <div class="cli-modal-footer">
                 <button type="button" class="btn btn-secondary btn-sm" id="btn-cancelar-consent">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
@@ -462,10 +462,10 @@
         </div>
     </div>
 
-    <!-- Modal: cambiar fecha de envío de recordatorio -->
+    
     <div class="srv-modal-overlay" id="modalFechaOverlay" role="dialog" aria-modal="true" aria-labelledby="modalFechaTitulo">
         <div class="srv-modal mfecha-modal">
-            <!-- Header con icono y título alineados a la izquierda -->
+            
             <div class="srv-modal-header mfecha-header">
                 <div class="srv-modal-header-left">
                     <div class="srv-modal-icon">
@@ -486,9 +486,9 @@
                 </button>
             </div>
 
-            <!-- Contenido: campo + calendario lado a lado -->
+            
             <div class="mfecha-contenido">
-                <!-- Panel izquierdo: campo de fecha -->
+                
                 <div class="mfecha-panel-izq">
                     <div class="mfecha-campo">
                         <label class="form-label" for="inputNuevaFecha">
@@ -520,7 +520,7 @@
                     </div>
                 </div>
 
-                <!-- Panel derecho: calendario (aparece al lado) -->
+                
                 <div class="mfecha-panel-der" id="mfechaCalendario">
                     <div class="mfecha-cal-inner">
                         <div class="mfecha-cal-nav">
@@ -546,7 +546,7 @@
                 </div>
             </div>
 
-            <!-- Footer con botones centrados -->
+            
             <div class="srv-modal-footer mfecha-footer">
                 <div class="srv-modal-footer-info">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
@@ -563,7 +563,7 @@
                 </div>
             </div>
 
-            <!-- Alerta de confirmación dentro del modal -->
+            
             <div class="mfecha-alerta" id="alertaFechaExito">
                 <div class="mfecha-alerta-contenido">
                     <div class="mfecha-alerta-icono">
@@ -576,7 +576,7 @@
             </div>
         </div>
     </div>
-    <!-- Contenedor para mensajes flash (leídos por JS externo) -->
+    
     <div id="flashMessages"
          th:if="${successMessage != null or errorMessage != null}"
          th:attr="data-success=${successMessage},data-error=${errorMessage}"

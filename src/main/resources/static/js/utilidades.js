@@ -1,19 +1,11 @@
-/**
- * SionTrack - Utilidades compartidas
- * Funciones reutilizables para todo el frontend
- */
+
 var SionUtils = (function() {
     'use strict';
 
-    // ============================================
-    // ESCAPE HTML (prevención XSS)
-    // ============================================
-    /**
-     * Escapa texto para inserción segura en HTML
-     * @param {*} texto - Texto a escapar
-     * @param {string} [vacio='—'] - Valor por defecto si el texto es nulo/vacío
-     * @returns {string}
-     */
+    
+    
+    
+    
     function esc(texto, vacio) {
         if (texto === null || texto === undefined) return vacio !== undefined ? vacio : '\u2014';
         var str = '' + texto;
@@ -23,11 +15,7 @@ var SionUtils = (function() {
         return div.innerHTML;
     }
 
-    /**
-     * Escapa texto para uso seguro en atributos HTML
-     * @param {string} texto
-     * @returns {string}
-     */
+    
     function escAttr(texto) {
         if (!texto) return '';
         return texto

@@ -27,6 +27,18 @@ import com.siontrack.siontrack.repository.DetalleServicioRepository;
 import com.siontrack.siontrack.repository.ProductosRepository;
 import com.siontrack.siontrack.repository.ProveedoresRepository;
 
+/**
+ * Gestiona el catálogo de productos, su inventario y las alertas de stock.
+ *
+ * <p>El mapeo base de {@link Productos} → {@link ProductosResponseDTO} lo hace ModelMapper,
+ * pero los campos de inventario ({@code cantidad_disponible}, {@code stock_minimo}) y el
+ * flag {@code alerta_stock} se resuelven manualmente porque ModelMapper en modo STRICT
+ * no navega la relación {@code producto → inventario → campo}.
+ *
+ * <p>Las alertas de stock se calculan cruzando los productos con stock bajo contra el
+ * ranking de popularidad para producir una prioridad compuesta que ordena la lista
+ * por urgencia de reabastecimiento.
+ */
 @Service
 public class ProductosServicios {
 
@@ -42,36 +54,35 @@ public class ProductosServicios {
     @Autowired
     private DetalleServicioRepository detalleServicioRepository;
 
+    /**
+     * Devuelve la lista completa de productos con sus datos de inventario y alerta de stock.
+     *
+     * @return lista de todos los productos mapeados a DTO
+     */
     @Transactional(readOnly = true)
     public List<ProductosResponseDTO> obtenerListaProductos() {
         return productosRepository.findAll().stream()
                 .map(producto -> {
-                // 1. Mapeo automático de campos base
-                ProductosResponseDTO dto = modelMapper.map(producto, ProductosResponseDTO.class);
-                
-                // 2. Lógica manual para Inventario y Alertas
-                // Verificamos si el producto tiene inventario asociado
-                if (producto.getInventario() != null) {
-                    
-                    // Aseguramos el mapeo de datos (por si ModelMapper falló con los anidados)
-                    dto.setCantidad_disponible(producto.getInventario().getCantidad_disponible());
-                    dto.setStock_minimo(producto.getInventario().getStock_minimo());
-
-                    // --- CÁLCULO DE LA ALERTA ---
-                    // Si hay stock mínimo definido y la cantidad actual es menor o igual
-                    if (dto.getStock_minimo() != null && dto.getCantidad_disponible() != null 
-                        && dto.getCantidad_disponible() <= dto.getStock_minimo()) {
-                        
-                        dto.setAlerta_stock(true); // ¡ACTIVAR ALERTA!
-                    } else {
-                        dto.setAlerta_stock(false);
+                    ProductosResponseDTO dto = modelMapper.map(producto, ProductosResponseDTO.class);
+                    if (producto.getInventario() != null) {
+                        dto.setCantidad_disponible(producto.getInventario().getCantidad_disponible());
+                        dto.setStock_minimo(producto.getInventario().getStock_minimo());
+                        dto.setAlerta_stock(
+                            dto.getStock_minimo() != null && dto.getCantidad_disponible() != null
+                            && dto.getCantidad_disponible() <= dto.getStock_minimo());
                     }
-                }
-                return dto;
-            })
-            .collect(Collectors.toList());
+                    return dto;
+                })
+                .collect(Collectors.toList());
     }
 
+    /**
+     * Devuelve los productos paginados, con búsqueda opcional por nombre o código.
+     *
+     * @param pageable  configuración de paginación y orden
+     * @param busqueda  término de búsqueda (puede ser nulo o vacío para listar todos)
+     * @return página de productos mapeados a DTO
+     */
     @Transactional(readOnly = true)
     public Page<ProductosResponseDTO> obtenerListaProductosPaginado(Pageable pageable, String busqueda) {
         Page<Productos> page;
@@ -80,23 +91,26 @@ public class ProductosServicios {
         } else {
             page = productosRepository.findAllOrderByIdDesc(pageable);
         }
-        return page
-                .map(producto -> {
-                    ProductosResponseDTO dto = modelMapper.map(producto, ProductosResponseDTO.class);
-                    if (producto.getInventario() != null) {
-                        dto.setCantidad_disponible(producto.getInventario().getCantidad_disponible());
-                        dto.setStock_minimo(producto.getInventario().getStock_minimo());
-                        if (dto.getStock_minimo() != null && dto.getCantidad_disponible() != null
-                            && dto.getCantidad_disponible() <= dto.getStock_minimo()) {
-                            dto.setAlerta_stock(true);
-                        } else {
-                            dto.setAlerta_stock(false);
-                        }
-                    }
-                    return dto;
-                });
+        return page.map(producto -> {
+            ProductosResponseDTO dto = modelMapper.map(producto, ProductosResponseDTO.class);
+            if (producto.getInventario() != null) {
+                dto.setCantidad_disponible(producto.getInventario().getCantidad_disponible());
+                dto.setStock_minimo(producto.getInventario().getStock_minimo());
+                dto.setAlerta_stock(
+                    dto.getStock_minimo() != null && dto.getCantidad_disponible() != null
+                    && dto.getCantidad_disponible() <= dto.getStock_minimo());
+            }
+            return dto;
+        });
     }
 
+    /**
+     * Obtiene un producto por su ID, incluyendo sus datos de inventario y alerta de stock.
+     *
+     * @param id ID del producto
+     * @return DTO del producto
+     * @throws RuntimeException si el producto no existe
+     */
     @Transactional(readOnly = true)
     public ProductosResponseDTO obtenerProductoByID(Integer id) {
         Productos producto = productosRepository.findById(id)
@@ -104,51 +118,58 @@ public class ProductosServicios {
 
         ProductosResponseDTO dto = modelMapper.map(producto, ProductosResponseDTO.class);
 
-        // Aplicar la misma lógica para el producto individual
         if (producto.getInventario() != null) {
             dto.setCantidad_disponible(producto.getInventario().getCantidad_disponible());
             dto.setStock_minimo(producto.getInventario().getStock_minimo());
-
-            if (dto.getStock_minimo() != null && dto.getCantidad_disponible() != null 
+            if (dto.getStock_minimo() != null && dto.getCantidad_disponible() != null
                 && dto.getCantidad_disponible() <= dto.getStock_minimo()) {
                 dto.setAlerta_stock(true);
             }
         }
-        
+
         return dto;
     }
 
+    /**
+     * Crea un nuevo producto con su inventario inicial.
+     * Si el DTO no incluye {@code cantidad_disponible} ni {@code stock_minimo},
+     * no se crea el registro de inventario.
+     *
+     * @param dto datos del producto a crear
+     * @return DTO del producto creado
+     * @throws RuntimeException si el proveedor indicado no existe
+     */
     @Transactional
     public ProductosResponseDTO crearProducto(ProductosRequestDTO dto) {
         Proveedores proveedor = proveedorRepository.findById(dto.getProveedor_id())
                 .orElseThrow(() -> new RuntimeException("Proveedor no encontrado con ID: " + dto.getProveedor_id()));
 
         Productos producto = modelMapper.map(dto, Productos.class);
-
         producto.setProveedor(proveedor);
 
         if (dto.getCantidad_disponible() != null || dto.getStock_minimo() != null) {
             Inventario inventario = new Inventario();
             inventario.setCantidad_disponible(dto.getCantidad_disponible() != null ? dto.getCantidad_disponible() : 0);
             inventario.setStock_minimo(dto.getStock_minimo() != null ? dto.getStock_minimo() : 10);
-
             inventario.setProducto(producto);
             producto.setInventario(inventario);
         }
         proveedor.getProductos().add(producto);
 
         Productos savedProducto = productosRepository.save(producto);
-
         return modelMapper.map(savedProducto, ProductosResponseDTO.class);
     }
 
     /**
-     * Upsert: si el producto ya existe (por código o nombre) lo actualiza,
-     * si no existe lo crea. Devuelve true si fue actualización, false si fue creación.
+     * Crea o actualiza un producto según si ya existe en la base de datos.
+     * La búsqueda prioriza el código de producto; si no hay código, busca por nombre.
+     *
+     * @param dto datos del producto
+     * @return {@code true} si fue una actualización, {@code false} si fue una creación
+     * @throws RuntimeException si el proveedor indicado no existe
      */
     @Transactional
     public boolean upsertProducto(ProductosRequestDTO dto) {
-        // Buscar producto existente por código primero, luego por nombre
         Optional<Productos> existente = Optional.empty();
 
         if (dto.getCodigo_producto() != null && !dto.getCodigo_producto().isBlank()) {
@@ -159,7 +180,6 @@ public class ProductosServicios {
         }
 
         if (existente.isPresent()) {
-            // Actualizar campos del producto existente
             Productos producto = existente.get();
 
             if (dto.getPrecio_compra() != null) producto.setPrecio_compra(dto.getPrecio_compra());
@@ -171,8 +191,7 @@ public class ProductosServicios {
                 producto.setProveedor(proveedor);
             }
 
-            // Actualizar inventario si se proporcionan datos de stock
-            if (dto.getCantidad_disponible() != null || dto.getStock_minimo() != null ) {
+            if (dto.getCantidad_disponible() != null || dto.getStock_minimo() != null) {
                 Inventario inventario = producto.getInventario();
                 if (inventario == null) {
                     inventario = new Inventario();
@@ -186,14 +205,23 @@ public class ProductosServicios {
             }
 
             productosRepository.save(producto);
-            return true; // fue actualización
+            return true;
         }
 
         // No existe → crear nuevo
         crearProducto(dto);
-        return false; // fue creación
+        return false;
     }
 
+    /**
+     * Actualiza todos los campos de un producto existente.
+     * Si el DTO no incluye {@code fecha_compra}, se conserva la fecha actual del producto.
+     *
+     * @param id  ID del producto a actualizar
+     * @param dto datos nuevos del producto
+     * @return DTO del producto actualizado
+     * @throws RuntimeException si el producto o el proveedor no existen
+     */
     @Transactional
     public ProductosResponseDTO actualizarProducto(Integer id, ProductosRequestDTO dto) {
 
@@ -234,15 +262,21 @@ public class ProductosServicios {
             if (dto.getStock_minimo() != null) {
                 inventario.setStock_minimo(dto.getStock_minimo());
             }
-            
         }
 
         System.out.println("ID before save: " + productoExistente.getProducto_id());
         Productos productoActualizado = productosRepository.save(productoExistente);
-
         return modelMapper.map(productoActualizado, ProductosResponseDTO.class);
     }
 
+    /**
+     * Actualiza únicamente el stock disponible de un producto.
+     * Si el producto no tiene inventario, se crea el registro.
+     *
+     * @param id       ID del producto
+     * @param cantidad nueva cantidad disponible en inventario
+     * @throws RuntimeException si el producto no existe
+     */
     @Transactional
     public void actualizarSoloStock(Integer id, Integer cantidad) {
         Productos producto = productosRepository.findById(id)
@@ -258,6 +292,12 @@ public class ProductosServicios {
         productosRepository.save(producto);
     }
 
+    /**
+     * Elimina un producto por su ID.
+     *
+     * @param id ID del producto a eliminar
+     * @throws RuntimeException si el producto no existe
+     */
     @Transactional
     public void borrarProducto(Integer id) {
         if (!productosRepository.existsById(id)) {
@@ -266,6 +306,14 @@ public class ProductosServicios {
         productosRepository.deleteById(id);
     }
 
+    /**
+     * Devuelve los productos más vendidos en el período indicado, ordenados por cantidad.
+     *
+     * @param limite  número máximo de productos a retornar
+     * @param periodo período de análisis: {@code "semana"}, {@code "mes"},
+     *                {@code "trimestre"}, {@code "anio"} o {@code "general"}
+     * @return lista de DTOs con nombre, categoría y total vendido
+     */
     @Transactional
     public List<ProductoPopularDTO> obtenerListaPopulares(int limite, String periodo){
 
@@ -273,34 +321,45 @@ public class ProductosServicios {
         LocalDate fechaInicio;
         LocalDate hoy = LocalDate.now();
 
-        // Calculamos la fecha de corte según lo que pida el usuario
         switch (periodo.toLowerCase()) {
             case "semana":
-                fechaInicio = hoy.minusWeeks(1); // Últimos 7 días
+                fechaInicio = hoy.minusWeeks(1);
                 break;
             case "mes":
-                fechaInicio = hoy.minusMonths(1); // Último mes
+                fechaInicio = hoy.minusMonths(1);
                 break;
             case "trimestre":
-                fechaInicio = hoy.minusMonths(3); // Últimos 3 meses
+                fechaInicio = hoy.minusMonths(3);
                 break;
             case "anio":
-                fechaInicio = hoy.minusYears(1); // Último año
+                fechaInicio = hoy.minusYears(1);
                 break;
             case "general":
             default:
-                // Para "general", ponemos una fecha muy antigua (ej. año 2000)
+                // Para el histórico general se usa una fecha de inicio muy antigua
                 fechaInicio = LocalDate.of(2000, 1, 1);
                 break;
         }
 
         return detalleServicioRepository.encontrarProductsoPopulares(fechaInicio, pageable);
     }
- 
+
+    /**
+     * Devuelve las alertas de stock para los productos con inventario bajo, ordenadas
+     * por prioridad compuesta descendente.
+     *
+     * <p>La prioridad compuesta se calcula así:
+     * <ul>
+     *   <li>Base por nivel de alerta: AGOTADO=40, CRÍTICO=30, BAJO=20, ADVERTENCIA=10.</li>
+     *   <li>Bonus por popularidad: +50 si es top 1–2, +40 si es top 3, +30 si es top 4–5.</li>
+     * </ul>
+     * Dentro del mismo nivel de prioridad, se ordena por cantidad disponible ascendente.
+     *
+     * @return lista completa de alertas de stock ordenada por urgencia
+     */
     @Transactional(readOnly = true)
     public List<AlertaStockDTO> obtenerAlertasStock() {
 
-        // 1. Obtener top 5 productos populares (periodo general)
         Pageable top5 = PageRequest.of(0, 5);
         LocalDate fechaInicio = LocalDate.of(2000, 1, 1);
         List<ProductoPopularDTO> populares = detalleServicioRepository
@@ -312,7 +371,6 @@ public class ProductosServicios {
             popularMap.put(p.getProductoId(), new int[]{ i + 1, p.getTotalVendido().intValue() });
         }
 
-        // 2. Obtener solo productos con stock bajo (query eficiente en vez de findAll)
         return productosRepository.findProductosNecesitanRestock().stream()
             .map(producto -> {
                 Inventario inv = producto.getInventario();
@@ -320,9 +378,8 @@ public class ProductosServicios {
                 int minimo = inv.getStock_minimo();
                 int necesita = Math.max(minimo - cantidad, 0);
 
-                // --- Determinar nivel de alerta ---
                 String nivel;
-                int nivelNumerico; // Para ordenamiento: mayor = más urgente
+                int nivelNumerico;
 
                 if (cantidad == 0) {
                     nivel = "AGOTADO";
@@ -334,13 +391,11 @@ public class ProductosServicios {
                     nivel = "BAJO";
                     nivelNumerico = 20;
                 } else {
-                    // cantidad > minimo && cantidad <= minimo * 1.5
                     nivel = "ADVERTENCIA";
                     nivelNumerico = 10;
-                    necesita = 0; // Aún no necesita reabastecimiento urgente
+                    necesita = 0;
                 }
 
-                // --- Cruce con popularidad ---
                 boolean esPopular = popularMap.containsKey(producto.getProducto_id());
                 Integer ranking = null;
                 Long totalVendido = null;
@@ -351,9 +406,9 @@ public class ProductosServicios {
                     totalVendido = (long) data[1];
                 }
 
-                // Prioridad compuesta:
-                // Base: nivelNumerico (10-40)
-                // Bonus popularidad: +50 si es top 1-2, +40 si es top 3, +30 si es top 4-5
+                // Prioridad compuesta: base del nivel + bonus por popularidad
+                // Base: AGOTADO=40, CRÍTICO=30, BAJO=20, ADVERTENCIA=10
+                // Bonus: +50 si top 1–2, +40 si top 3, +30 si top 4–5
                 int prioridad = nivelNumerico;
                 if (esPopular && ranking != null) {
                     if (ranking <= 2) prioridad += 50;
@@ -361,7 +416,6 @@ public class ProductosServicios {
                     else prioridad += 30;
                 }
 
-                // --- Construir DTO ---
                 AlertaStockDTO dto = new AlertaStockDTO();
                 dto.setProductoId(producto.getProducto_id());
                 dto.setNombre(producto.getNombre());
@@ -376,7 +430,6 @@ public class ProductosServicios {
                 dto.setTotalVendido(totalVendido);
                 dto.setPrioridadCompuesta(prioridad);
 
-                // Datos del proveedor
                 if (producto.getProveedor() != null) {
                     var prov = producto.getProveedor();
                     dto.setProveedorId(prov.getProveedor_id());
@@ -398,8 +451,12 @@ public class ProductosServicios {
     }
 
     /**
-     * Versión paginada de alertas de stock.
-     * Retorna un Page con el subconjunto solicitado de la lista ordenada.
+     * Versión paginada de {@link #obtenerAlertasStock()}.
+     * Obtiene la lista completa ordenada y devuelve el subconjunto solicitado.
+     *
+     * @param page número de página (base 0)
+     * @param size tamaño de la página
+     * @return página con el subconjunto de alertas ordenadas
      */
     @Transactional(readOnly = true)
     public Page<AlertaStockDTO> obtenerAlertasStockPaginado(int page, int size) {

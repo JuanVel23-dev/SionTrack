@@ -1,19 +1,10 @@
-/* ============================================
-   SIONTRACK v2.0 - ESTRUCTURA
-   Layout principal, sidebar y header
-   ============================================ */
 
-/* ============================================
-   LAYOUT PRINCIPAL
-   ============================================ */
+
 .app-layout {
   display: flex;
   min-height: 100vh;
 }
 
-/* ============================================
-   SIDEBAR
-   ============================================ */
 .sidebar {
   position: fixed;
   top: 0;
@@ -249,9 +240,6 @@
   display: inline-flex;
 }
 
-/* ============================================
-   CONTENEDOR PRINCIPAL
-   ============================================ */
 .main-wrapper {
   flex: 1;
   display: flex;
@@ -261,9 +249,6 @@
   transition: margin-left var(--duration-normal) var(--ease-out);
 }
 
-/* ============================================
-   HEADER
-   ============================================ */
 .main-header {
   position: sticky;
   top: 0;
@@ -372,9 +357,6 @@
   transform: rotate(0) scale(1);
 }
 
-/* ============================================
-   CONTENIDO PRINCIPAL
-   ============================================ */
 .main-content {
   flex: 1;
   padding: var(--space-6);
@@ -410,9 +392,6 @@
   margin: 0;
 }
 
-/* ============================================
-   OVERLAY SIDEBAR (móvil)
-   ============================================ */
 .sidebar-overlay {
   display: none;
   position: fixed;
@@ -432,9 +411,6 @@
   opacity: 1;
 }
 
-/* ============================================
-   RESPONSIVE
-   ============================================ */
 @media (max-width: 1024px) {
   .sidebar {
     transform: translateX(-100%);

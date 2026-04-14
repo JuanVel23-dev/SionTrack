@@ -38,6 +38,20 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
+/**
+ * Genera reportes en formato PDF usando la librería iText 8.
+ *
+ * <p>Cada reporte sigue la misma estructura visual:
+ * <ol>
+ *   <li>Barra dorada superior con marca de la empresa.</li>
+ *   <li>Encabezado con título, rango de fechas y conteo de registros.</li>
+ *   <li>Tabla de datos con filas alternadas en blanco y gris.</li>
+ *   <li>Pie de página con número de página y texto de confidencialidad.</li>
+ * </ol>
+ *
+ * <p>Todos los métodos públicos están anotados con {@code @Transactional(readOnly = true)}
+ * para garantizar consistencia en la lectura de colecciones lazy.
+ */
 @Service
 public class ReporteService {
 
@@ -48,23 +62,22 @@ public class ReporteService {
     private final ProveedoresRepository proveedoresRepository;
     private final ProductosServicios productosServicios;
 
-    // Paleta minimalista
-    private static final DeviceRgb BLANCO = new DeviceRgb(255, 255, 255);
-    private static final DeviceRgb GRIS_98 = new DeviceRgb(250, 250, 250);
-    private static final DeviceRgb GRIS_95 = new DeviceRgb(243, 244, 246);
-    private static final DeviceRgb GRIS_BORDE = new DeviceRgb(229, 231, 235);
-    private static final DeviceRgb GRIS_TEXTO = new DeviceRgb(55, 65, 81);
-    private static final DeviceRgb GRIS_SUTIL = new DeviceRgb(107, 114, 128);
-    private static final DeviceRgb GRIS_CLARO = new DeviceRgb(156, 163, 175);
-    private static final DeviceRgb NEGRO_TITULO = new DeviceRgb(17, 24, 39);
-    private static final DeviceRgb ACENTO = new DeviceRgb(202, 164, 38);
-    private static final DeviceRgb ACENTO_OSCURO = new DeviceRgb(161, 131, 30);
-    private static final DeviceRgb VERDE = new DeviceRgb(22, 163, 74);
-    private static final DeviceRgb ROJO = new DeviceRgb(220, 38, 38);
-    private static final DeviceRgb AZUL = new DeviceRgb(37, 99, 235);
-    private static final DeviceRgb NARANJA = new DeviceRgb(234, 88, 12);
+    private static final DeviceRgb BLANCO        = new DeviceRgb(255, 255, 255);
+    private static final DeviceRgb GRIS_98        = new DeviceRgb(250, 250, 250);
+    private static final DeviceRgb GRIS_95        = new DeviceRgb(243, 244, 246);
+    private static final DeviceRgb GRIS_BORDE     = new DeviceRgb(229, 231, 235);
+    private static final DeviceRgb GRIS_TEXTO     = new DeviceRgb(55, 65, 81);
+    private static final DeviceRgb GRIS_SUTIL     = new DeviceRgb(107, 114, 128);
+    private static final DeviceRgb GRIS_CLARO     = new DeviceRgb(156, 163, 175);
+    private static final DeviceRgb NEGRO_TITULO   = new DeviceRgb(17, 24, 39);
+    private static final DeviceRgb ACENTO         = new DeviceRgb(202, 164, 38);
+    private static final DeviceRgb ACENTO_OSCURO  = new DeviceRgb(161, 131, 30);
+    private static final DeviceRgb VERDE          = new DeviceRgb(22, 163, 74);
+    private static final DeviceRgb ROJO           = new DeviceRgb(220, 38, 38);
+    private static final DeviceRgb AZUL           = new DeviceRgb(37, 99, 235);
+    private static final DeviceRgb NARANJA        = new DeviceRgb(234, 88, 12);
 
-    private static final DateTimeFormatter FMT_FECHA = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    private static final DateTimeFormatter FMT_FECHA      = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private static final DateTimeFormatter FMT_FECHA_HORA = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
     public ReporteService(ClienteRepository clienteRepository,
@@ -81,14 +94,20 @@ public class ReporteService {
         this.productosServicios = productosServicios;
     }
 
-    // =============================================
-    // REPORTES
-    // =============================================
-
+    /**
+     * Genera un PDF con el listado de clientes registrados en el rango de fechas indicado.
+     *
+     * <p>Se ejecutan dos queries separadas para evitar {@code MultipleBagFetchException}
+     * (teléfonos y correos son colecciones {@code List}). Hibernate fusiona ambas colecciones
+     * vía caché L1 dentro de la misma transacción.
+     *
+     * @param fechaInicio inicio del rango de fechas de registro (inclusive)
+     * @param fechaFin    fin del rango de fechas de registro (inclusive)
+     * @return bytes del PDF generado
+     * @throws Exception si ocurre un error durante la generación del documento
+     */
     @Transactional(readOnly = true)
     public byte[] generarReporteClientes(LocalDate fechaInicio, LocalDate fechaFin) throws Exception {
-        // Dos queries separadas para evitar MultipleBagFetchException (telefonos + correos son List)
-        // Hibernate fusiona ambas colecciones vía caché L1 dentro de la misma transacción
         List<Clientes> clientes = clienteRepository.findParaReporteConTelefonosPorFechas(fechaInicio, fechaFin);
         clienteRepository.findParaReporteConCorreosPorFechas(fechaInicio, fechaFin);
 
@@ -127,6 +146,15 @@ public class ReporteService {
         return baos.toByteArray();
     }
 
+    /**
+     * Genera un PDF con el catálogo de productos comprados en el rango de fechas indicado.
+     * Resalta en rojo las filas de productos cuyo stock está en o por debajo del mínimo.
+     *
+     * @param fechaInicio inicio del rango de fechas de compra (inclusive)
+     * @param fechaFin    fin del rango de fechas de compra (inclusive)
+     * @return bytes del PDF generado
+     * @throws Exception si ocurre un error durante la generación del documento
+     */
     @Transactional(readOnly = true)
     public byte[] generarReporteProductos(LocalDate fechaInicio, LocalDate fechaFin) throws Exception {
         List<Productos> productos = productosRepository.findAllParaReportePorFechas(fechaInicio, fechaFin);
@@ -173,9 +201,19 @@ public class ReporteService {
         return baos.toByteArray();
     }
 
+    /**
+     * Genera un PDF con los proveedores que tienen productos comprados en el rango de fechas.
+     *
+     * <p>Los proveedores no tienen campo de fecha propio; el filtro se aplica
+     * a través de los productos asociados ({@code fecha_compra}).
+     *
+     * @param fechaInicio inicio del rango de fechas (inclusive)
+     * @param fechaFin    fin del rango de fechas (inclusive)
+     * @return bytes del PDF generado
+     * @throws Exception si ocurre un error durante la generación del documento
+     */
     @Transactional(readOnly = true)
     public byte[] generarReporteProveedores(LocalDate fechaInicio, LocalDate fechaFin) throws Exception {
-        // Proveedores no tiene campo de fecha propio; se filtran por productos comprados en el rango
         List<Proveedores> proveedores = proveedoresRepository.findProveedoresConProductosEnRango(fechaInicio, fechaFin);
 
         PdfFont fontBase = PdfFontFactory.createFont(StandardFonts.HELVETICA);
@@ -210,6 +248,14 @@ public class ReporteService {
         return baos.toByteArray();
     }
 
+    /**
+     * Genera un PDF con el historial de servicios prestados en el rango de fechas indicado.
+     *
+     * @param fechaInicio inicio del rango de fechas del servicio (inclusive)
+     * @param fechaFin    fin del rango de fechas del servicio (inclusive)
+     * @return bytes del PDF generado
+     * @throws Exception si ocurre un error durante la generación del documento
+     */
     @Transactional(readOnly = true)
     public byte[] generarReporteServicios(LocalDate fechaInicio, LocalDate fechaFin) throws Exception {
         List<Servicios> servicios = serviciosRepository.findAllParaReportePorFechas(fechaInicio, fechaFin);
@@ -247,6 +293,15 @@ public class ReporteService {
         return baos.toByteArray();
     }
 
+    /**
+     * Genera un PDF con el historial de notificaciones (promociones y recordatorios)
+     * en el rango de fechas indicado, presentadas en dos secciones separadas.
+     *
+     * @param fechaInicio inicio del rango (inclusive)
+     * @param fechaFin    fin del rango (inclusive)
+     * @return bytes del PDF generado
+     * @throws Exception si ocurre un error durante la generación del documento
+     */
     @Transactional(readOnly = true)
     public byte[] generarReporteNotificaciones(LocalDate fechaInicio, LocalDate fechaFin) throws Exception {
         LocalDateTime desde = fechaInicio.atStartOfDay();
@@ -269,7 +324,7 @@ public class ReporteService {
         agregarEncabezado(doc, "Notificaciones", descripcion,
                 promociones.size() + recordatorios.size(), fontBase, fontBold);
 
-        // Seccion: Promociones
+        // Sección: Promociones
         if (!promociones.isEmpty()) {
             agregarTituloSeccion(doc, "Promociones", promociones.size(), fontBold);
 
@@ -290,7 +345,7 @@ public class ReporteService {
             doc.add(t);
         }
 
-        // Seccion: Recordatorios
+        // Sección: Recordatorios
         if (!recordatorios.isEmpty()) {
             agregarTituloSeccion(doc, "Recordatorios", recordatorios.size(), fontBold);
 
@@ -316,16 +371,25 @@ public class ReporteService {
         return baos.toByteArray();
     }
 
+    /**
+     * Genera un PDF con el ranking de los productos más vendidos en el período indicado.
+     * Incluye un podio visual con los tres primeros puestos y una tabla completa del ranking.
+     *
+     * @param periodo período de análisis: {@code "semana"}, {@code "mes"}, {@code "trimestre"},
+     *                {@code "anio"} o {@code "general"}
+     * @return bytes del PDF generado
+     * @throws Exception si ocurre un error durante la generación del documento
+     */
     @Transactional(readOnly = true)
     public byte[] generarReporteProductosPopulares(String periodo) throws Exception {
         List<ProductoPopularDTO> populares = productosServicios.obtenerListaPopulares(50, periodo);
 
         String periodoTexto = switch (periodo.toLowerCase()) {
-            case "semana" -> "Última Semana";
-            case "mes" -> "Último Mes";
+            case "semana"    -> "Última Semana";
+            case "mes"       -> "Último Mes";
             case "trimestre" -> "Último Trimestre";
-            case "anio" -> "Último Año";
-            default -> "Histórico General";
+            case "anio"      -> "Último Año";
+            default          -> "Histórico General";
         };
 
         PdfFont fontBase = PdfFontFactory.createFont(StandardFonts.HELVETICA);
@@ -346,7 +410,7 @@ public class ReporteService {
                     .setFont(fontBase).setFontSize(10).setFontColor(GRIS_SUTIL)
                     .setMarginTop(30).setTextAlignment(TextAlignment.CENTER));
         } else {
-            // Top 3 destacado
+            // Podio: top 3 con tarjeta de color por posición
             if (populares.size() >= 3) {
                 Table top = new Table(UnitValue.createPercentArray(new float[]{1f, 1f, 1f}))
                         .useAllAvailableWidth().setMarginBottom(20);
@@ -381,7 +445,7 @@ public class ReporteService {
                 doc.add(top);
             }
 
-            // Tabla completa
+            // Tabla completa del ranking
             agregarTituloSeccion(doc, "Ranking Completo", populares.size(), fontBold);
 
             String[] enc = {"#", "Producto", "Categoría", "Unidades Vendidas"};
@@ -405,18 +469,14 @@ public class ReporteService {
         return baos.toByteArray();
     }
 
-    // =============================================
-    // CONSTRUCCIÓN DEL DOCUMENTO
-    // =============================================
+    // ---- Construcción del documento ----
 
     private void agregarEncabezado(Document doc, String titulo, String descripcion,
                                    int totalRegistros, PdfFont fontBase, PdfFont fontBold) {
-        // Línea dorada superior
         Table linea = new Table(UnitValue.createPercentArray(1)).useAllAvailableWidth();
         linea.addCell(new Cell().setHeight(2.5f).setBackgroundColor(ACENTO).setBorder(Border.NO_BORDER));
         doc.add(linea);
 
-        // Header layout
         Table header = new Table(UnitValue.createPercentArray(new float[]{1f, 1f}))
                 .useAllAvailableWidth().setMarginTop(14).setMarginBottom(6);
 
@@ -439,12 +499,10 @@ public class ReporteService {
 
         doc.add(header);
 
-        // Línea separadora fina
         Table sep = new Table(UnitValue.createPercentArray(1)).useAllAvailableWidth();
         sep.addCell(new Cell().setHeight(0.5f).setBackgroundColor(GRIS_BORDE).setBorder(Border.NO_BORDER));
         doc.add(sep);
 
-        // Subtítulo
         Table sub = new Table(UnitValue.createPercentArray(new float[]{1f, 1f}))
                 .useAllAvailableWidth().setMarginTop(8).setMarginBottom(14);
 
@@ -469,9 +527,7 @@ public class ReporteService {
         doc.add(sec);
     }
 
-    // =============================================
-    // TABLA Y CELDAS
-    // =============================================
+    // ---- Tabla y celdas ----
 
     private Table crearTabla(float[] anchos, String[] encabezados, PdfFont fontBold) {
         Table tabla = new Table(UnitValue.createPercentArray(anchos)).useAllAvailableWidth();
@@ -520,30 +576,36 @@ public class ReporteService {
         tabla.addCell(cell);
     }
 
+    /**
+     * Agrega una celda de estado con color semántico: verde (enviado), naranja (pendiente),
+     * rojo (fallido), gris claro (sin consentimiento).
+     */
     private void agregarCeldaEstado(Table tabla, String estado, boolean par, PdfFont fontBase) {
         DeviceRgb color = switch (estado != null ? estado.toLowerCase() : "") {
-            case "enviado" -> VERDE;
-            case "pendiente" -> NARANJA;
-            case "fallido" -> ROJO;
+            case "enviado"            -> VERDE;
+            case "pendiente"          -> NARANJA;
+            case "fallido"            -> ROJO;
             case "sin_consentimiento" -> GRIS_CLARO;
-            default -> GRIS_SUTIL;
+            default                   -> GRIS_SUTIL;
         };
 
         String texto = switch (estado != null ? estado.toLowerCase() : "") {
-            case "enviado" -> "Enviado";
-            case "pendiente" -> "Pendiente";
-            case "fallido" -> "Fallido";
+            case "enviado"            -> "Enviado";
+            case "pendiente"          -> "Pendiente";
+            case "fallido"            -> "Fallido";
             case "sin_consentimiento" -> "Sin consentimiento";
-            default -> safe(estado);
+            default                   -> safe(estado);
         };
 
         agregarCeldaColor(tabla, texto, par, color, fontBase);
     }
 
-    // =============================================
-    // PIE DE PÁGINA
-    // =============================================
+    // ---- Pie de página ----
 
+    /**
+     * Handler de iText que se ejecuta al finalizar cada página e imprime
+     * el texto de confidencialidad y el número de página.
+     */
     private static class PiePaginaHandler implements IEventHandler {
         private final PdfFont font;
 
@@ -587,9 +649,7 @@ public class ReporteService {
         }
     }
 
-    // =============================================
-    // HELPERS
-    // =============================================
+    // ---- Helpers de formato ----
 
     private String safe(String valor) {
         return valor != null && !valor.trim().isEmpty() ? valor : "—";
@@ -618,5 +678,4 @@ public class ReporteService {
         if (correos == null || correos.isEmpty()) return "—";
         return correos.get(0).getCorreo();
     }
-
 }

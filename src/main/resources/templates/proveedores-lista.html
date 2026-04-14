@@ -4,7 +4,7 @@
       layout:decorate="~{layout/base}">
 
 <th:block layout:fragment="content">
-    <!-- Page Header -->
+    
     <div class="page-header animate-in">
         <div class="page-header-content">
             <h1 class="page-header-title">Proveedores</h1>
@@ -19,7 +19,7 @@
         </a>
     </div>
 
-    <!-- Table Container -->
+    
     <div class="table-container animate-in delay-1">
         <div class="table-toolbar">
             <div class="table-toolbar-left">
@@ -116,10 +116,10 @@
             </tbody>
         </table>
 
-        <!-- Paginación -->
+        
         <div th:if="${page != null}" th:replace="~{fragments/paginacion :: paginacion(${page}, '/web/proveedores', 'page', ${search != null ? '&amp;search=' + search : ''})}"></div>
 
-        <!-- Empty State -->
+        
         <div th:if="${proveedores == null or proveedores.empty}" class="table-empty">
             <div class="empty-state">
                 <div class="empty-state-icon">

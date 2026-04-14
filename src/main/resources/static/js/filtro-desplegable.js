@@ -1,31 +1,8 @@
-/**
- * SionTrack - Filtro Desplegable Reutilizable
- * Dropdown personalizado para filtrar tablas por categoría/estado
- *
- * Uso:
- *   FiltroDesplegable.inicializar({
- *       dropdownId: 'filterDropdown',
- *       menuId: 'filterMenu',
- *       botonId: 'filterBtn',
- *       textoId: 'filterTexto',
- *       hiddenId: 'filterTipo',
- *       onCambio: function(valor) { ... }
- *   });
- */
+
 var FiltroDesplegable = (function() {
     'use strict';
 
-    /**
-     * Inicializa un filtro desplegable
-     * @param {Object} config
-     * @param {string} config.dropdownId - ID del contenedor
-     * @param {string} config.menuId - ID del menú de opciones
-     * @param {string} config.botonId - ID del botón que abre el menú
-     * @param {string} config.textoId - ID del span con el texto visible
-     * @param {string} config.hiddenId - ID del input hidden con el valor
-     * @param {Function} [config.onCambio] - Callback al seleccionar opción
-     * @returns {Object|null} Instancia del filtro o null si no se encontraron elementos
-     */
+    
     function inicializar(config) {
         var dropdown = document.getElementById(config.dropdownId);
         var menu = document.getElementById(config.menuId);
@@ -35,7 +12,7 @@ var FiltroDesplegable = (function() {
 
         if (!dropdown || !menu || !boton) return null;
 
-        // Abrir/cerrar
+        
         boton.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
@@ -47,7 +24,7 @@ var FiltroDesplegable = (function() {
             }
         });
 
-        // Seleccionar opciones
+        
         var opciones = menu.querySelectorAll('.filter-option:not(.disabled)');
         opciones.forEach(function(opcion) {
             opcion.addEventListener('click', function(e) {
@@ -73,12 +50,12 @@ var FiltroDesplegable = (function() {
             });
         });
 
-        // Cerrar al clic fuera
+        
         document.addEventListener('click', function(e) {
             if (!dropdown.contains(e.target)) cerrar();
         });
 
-        // Cerrar con Escape
+        
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') cerrar();
         });
@@ -105,10 +82,7 @@ var FiltroDesplegable = (function() {
             }, 120);
         }
 
-        /**
-         * Obtiene el valor seleccionado actualmente
-         * @returns {string}
-         */
+        
         function obtenerValor() {
             return hidden ? hidden.value : '';
         }

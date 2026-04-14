@@ -13,6 +13,27 @@ import com.siontrack.siontrack.models.Clientes;
 import com.siontrack.siontrack.models.Detalle_Servicio;
 import com.siontrack.siontrack.models.Productos;
 
+/**
+ * Configuración central de ModelMapper con estrategia STRICT.
+ *
+ * <p>La estrategia STRICT requiere que los nombres de getter/setter coincidan exactamente,
+ * lo que evita mapeos incorrectos entre campos con nombres similares pero semánticamente
+ * distintos. Como consecuencia, los campos que no coinciden por nombre deben mapearse
+ * de forma explícita aquí o manualmente en los servicios.
+ *
+ * <p>Mappings registrados:
+ * <ul>
+ *   <li>{@link ProductosRequestDTO} → {@link Productos}: salta {@code producto_id} y
+ *       mapea {@code codigo_producto} → {@code codigoProducto}.</li>
+ *   <li>{@link Detalle_Servicio} → {@link DetalleServicioResponseDTO}: mapea el nombre
+ *       del producto desde la relación {@code detalle → producto → nombre}.</li>
+ *   <li>{@link Productos} → {@link ProductosResponseDTO}: mapea {@code inventario.cantidad_disponible}
+ *       y {@code codigoProducto} → {@code codigo_producto}.</li>
+ *   <li>{@link ClienteRequestDTO} → {@link Clientes}: salta las colecciones de contacto
+ *       (teléfonos, correos, direcciones, vehículos) y {@code recibe_notificaciones} para
+ *       que se gestionen manualmente en {@code ClienteServicios}.</li>
+ * </ul>
+ */
 @Configuration
 public class AppConfig {
 
@@ -31,7 +52,6 @@ public class AppConfig {
         modelMapper.createTypeMap(Detalle_Servicio.class, DetalleServicioResponseDTO.class)
                 .addMappings(mapper -> {
                     mapper.map(src -> src.getProducto().getNombre(), DetalleServicioResponseDTO::setNombre_producto);
-
                 });
 
         modelMapper.createTypeMap(Productos.class, ProductosResponseDTO.class)
@@ -41,21 +61,18 @@ public class AppConfig {
                     mapper.map(Productos::getCodigoProducto, ProductosResponseDTO::setCodigo_producto);
                 });
 
-        
         modelMapper.createTypeMap(ClienteRequestDTO.class, Clientes.class)
             .addMappings(mapper -> {
-                mapper.skip(Clientes::setCliente_id); 
-               
+                mapper.skip(Clientes::setCliente_id);
                 mapper.skip(Clientes::setTelefonos);
                 mapper.skip(Clientes::setCorreos);
                 mapper.skip(Clientes::setDirecciones);
                 mapper.skip(Clientes::setVehiculos);
-                // Skip recibe_notificaciones — lo manejamos manualmente en el servicio
+                // recibe_notificaciones se asigna manualmente en ClienteServicios
+                // para evitar conflictos entre getRecibeNotificaciones() y setRecibe_notificaciones()
                 mapper.skip(Clientes::setRecibe_notificaciones);
             });
 
         return modelMapper;
-
     }
-
 }

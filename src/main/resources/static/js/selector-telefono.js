@@ -1,10 +1,4 @@
-/**
- * SionTrack - Selector de Teléfono con País
- * Módulo unificado para clientes y proveedores
- * Formato: "+57 3183260547"
- *
- * Uso: SelectorTelefono.inicializarFilas('.telefono-fila')
- */
+
 var SelectorTelefono = (function() {
     'use strict';
 
@@ -36,7 +30,7 @@ var SelectorTelefono = (function() {
         { grupo: 'Europa', codigo: '+351', nombre: 'Portugal' }
     ];
 
-    // Códigos ordenados de mayor a menor longitud para matching correcto
+    
     var CODIGOS = PAISES.map(function(p) { return p.codigo.replace('+', ''); })
         .filter(function(v, i, a) { return a.indexOf(v) === i; })
         .sort(function(a, b) { return b.length - a.length; });
@@ -44,20 +38,20 @@ var SelectorTelefono = (function() {
     var ICONO_ELIMINAR = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
         '<line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
 
-    // ============================================
-    // PARSEO DE TELÉFONO
-    // ============================================
+    
+    
+    
     function parsearTelefono(val) {
         if (!val) return null;
         val = val.trim();
 
-        // Formato con espacio: "+57 3183252987"
+        
         if (val.indexOf(' ') > 0) {
             var partes = val.split(' ');
             return { codigo: partes[0], numero: partes.slice(1).join('') };
         }
 
-        // Formato con +: "+573183252987"
+        
         if (val.charAt(0) === '+') {
             var sinPlus = val.substring(1);
             for (var i = 0; i < CODIGOS.length; i++) {
@@ -68,7 +62,7 @@ var SelectorTelefono = (function() {
             return null;
         }
 
-        // Formato BD puro: "573183252987"
+        
         if (/^\d+$/.test(val)) {
             for (var j = 0; j < CODIGOS.length; j++) {
                 if (val.indexOf(CODIGOS[j]) === 0 && val.length > CODIGOS[j].length) {
@@ -80,9 +74,9 @@ var SelectorTelefono = (function() {
         return null;
     }
 
-    // ============================================
-    // GENERACIÓN DE HTML
-    // ============================================
+    
+    
+    
     function generarListaHTML(codigoSeleccionado) {
         var html = '';
         var grupoActual = '';
@@ -114,9 +108,9 @@ var SelectorTelefono = (function() {
         return null;
     }
 
-    // ============================================
-    // FILTRADO DE LISTA
-    // ============================================
+    
+    
+    
     function filtrarLista(lista, termino) {
         termino = termino.toLowerCase();
         lista.querySelectorAll('.pais-opcion').forEach(function(op) {
@@ -142,9 +136,9 @@ var SelectorTelefono = (function() {
         });
     }
 
-    // ============================================
-    // INICIALIZACIÓN DE FILA
-    // ============================================
+    
+    
+    
     function inicializarFila(fila) {
         var selector = fila.querySelector('.pais-selector');
         var boton = fila.querySelector('.pais-boton');
@@ -162,13 +156,13 @@ var SelectorTelefono = (function() {
 
         lista.innerHTML = generarListaHTML(codigoActual);
 
-        // Parsear valor existente
+        
         var parsed = parsearTelefono(numeroInput.value);
         if (parsed) {
             var nombrePais = buscarNombrePais(parsed.codigo);
             if (nombrePais) {
                 codigoActual = parsed.codigo;
-                // Soportar ambos formatos de botón (clientes y proveedores)
+                
                 var textoSpan = boton.querySelector('.pais-texto');
                 var codigoSpan = boton.querySelector('.codigo-mostrar');
                 var nombreSpan = boton.querySelector('.pais-nombre-mostrar');
@@ -196,7 +190,7 @@ var SelectorTelefono = (function() {
             numeroInput.value = parsed.numero;
         }
 
-        // Obtener código final (usado en submit)
+        
         fila.getCodigoFinal = function() {
             if (esOtro || (valorInput && valorInput.value === 'otro')) {
                 return prefijoInput ? prefijoInput.value.trim() || '+' : '+';
@@ -204,7 +198,7 @@ var SelectorTelefono = (function() {
             return valorInput ? valorInput.value : codigoActual;
         };
 
-        // Botón volver (solo proveedores)
+        
         var btnVolver = fila.querySelector('.btn-volver-pais');
         if (btnVolver) {
             btnVolver.addEventListener('click', function(e) {
@@ -222,7 +216,7 @@ var SelectorTelefono = (function() {
             });
         }
 
-        // Abrir/cerrar dropdown
+        
         boton.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
@@ -245,7 +239,7 @@ var SelectorTelefono = (function() {
             }
         });
 
-        // Búsqueda
+        
         if (busqueda) {
             busqueda.addEventListener('input', function() {
                 filtrarLista(lista, this.value);
@@ -255,7 +249,7 @@ var SelectorTelefono = (function() {
             });
         }
 
-        // Seleccionar país
+        
         lista.addEventListener('click', function(e) {
             var opcion = e.target.closest('.pais-opcion');
             if (!opcion) return;
@@ -299,7 +293,7 @@ var SelectorTelefono = (function() {
             boton.classList.remove('activo');
         });
 
-        // Cerrar al clic fuera
+        
         document.addEventListener('click', function(e) {
             if (!selector.contains(e.target)) {
                 selector.classList.remove('abierto');
@@ -307,7 +301,7 @@ var SelectorTelefono = (function() {
             }
         });
 
-        // Escape
+        
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape' && selector.classList.contains('abierto')) {
                 selector.classList.remove('abierto');
@@ -315,7 +309,7 @@ var SelectorTelefono = (function() {
             }
         });
 
-        // Validar prefijo personalizado
+        
         if (prefijoInput) {
             prefijoInput.addEventListener('input', function() {
                 var v = this.value;
@@ -332,7 +326,7 @@ var SelectorTelefono = (function() {
             });
         }
 
-        // Solo números en teléfono
+        
         numeroInput.addEventListener('input', function() {
             var nums = this.value.replace(/[^0-9]/g, '');
             if (nums.startsWith('0')) nums = nums.substring(1);
@@ -347,23 +341,16 @@ var SelectorTelefono = (function() {
         });
     }
 
-    // ============================================
-    // INICIALIZACIÓN MÚLTIPLE
-    // ============================================
+    
+    
+    
 
-    /**
-     * Inicializa todas las filas de teléfono que coincidan con el selector
-     * @param {string} selector - Selector CSS (ej: '.telefono-fila')
-     */
+    
     function inicializarFilas(selector) {
         document.querySelectorAll(selector || '.telefono-fila').forEach(inicializarFila);
     }
 
-    /**
-     * Crea el HTML de una nueva fila de teléfono
-     * @param {string} nombreCampo - Nombre del campo para el binding (ej: 'telefonos[0].telefono')
-     * @returns {HTMLElement}
-     */
+    
     function crearFila(nombreCampo) {
         var fila = document.createElement('div');
         fila.className = 'telefono-fila';
@@ -389,11 +376,7 @@ var SelectorTelefono = (function() {
         return fila;
     }
 
-    /**
-     * Formatea todos los teléfonos de un formulario antes del submit
-     * @param {string} selector - Selector de filas de teléfono
-     * @returns {boolean} true si todos son válidos
-     */
+    
     function formatearParaSubmit(selector) {
         var ok = true;
         document.querySelectorAll(selector || '.telefono-fila').forEach(function(fila) {
@@ -415,9 +398,9 @@ var SelectorTelefono = (function() {
         return ok;
     }
 
-    // ============================================
-    // API PÚBLICA
-    // ============================================
+    
+    
+    
     return {
         inicializarFila: inicializarFila,
         inicializarFilas: inicializarFilas,

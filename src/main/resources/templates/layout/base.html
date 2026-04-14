@@ -7,13 +7,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="SionTrack - Sistema de Gestión Empresarial">
-    <!-- CSRF token para requests AJAX -->
+    
     <meta name="_csrf" th:content="${_csrf.token}"/>
     <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
     <link rel="icon" type="image/png" th:href="@{/img/LOGOSION.png}">
     <title th:text="${pageTitle != null ? pageTitle + ' - SionTrack' : 'SionTrack'}">SionTrack</title>
 
-    <!-- Stylesheets consolidados -->
+    
     <link rel="stylesheet" th:href="@{/css/nucleo.css}">
     <link rel="stylesheet" th:href="@{/css/estructura.css}">
     <link rel="stylesheet" th:href="@{/css/componentes.css}">
@@ -24,7 +24,7 @@
 </head>
 <body>
     <div class="app-layout">
-        <!-- Sidebar -->
+        
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <div class="sidebar-logo">
@@ -156,12 +156,12 @@
             </div>
         </aside>
 
-        <!-- Overlay for mobile -->
+        
         <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
-        <!-- Main Content Wrapper -->
+        
         <div class="main-wrapper">
-            <!-- Header -->
+            
             <header class="main-header">
                 <div class="header-left">
                     <button class="icon-btn menu-toggle" id="menu-toggle" aria-label="Abrir menú">
@@ -175,7 +175,7 @@
                 </div>
 
                 <div class="header-right">
-                    <!-- TEMA CLARO / OSCURO -->
+                    
                     <button class="icon-btn theme-toggle" id="theme-toggle" title="Cambiar tema">
                         <svg class="icon-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="12" cy="12" r="5"></circle>
@@ -193,7 +193,7 @@
                         </svg>
                     </button>
 
-                    <!-- CAMPANA DE NOTIFICACIONES -->
+                    
                     <div class="notification-bell" id="notification-bell">
                         <button class="icon-btn" id="notif-toggle" title="Notificaciones">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -240,9 +240,9 @@
                 </div>
             </header>
 
-            <!-- Main Content -->
+            
             <main class="main-content">
-                <!-- Alerts: Éxito -->
+                
                 <div th:if="${successMessage}" class="alert alert-success animate-in">
                     <span class="alert-icon">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -256,7 +256,7 @@
                     </div>
                 </div>
 
-                <!-- Alerts: Error -->
+                
                 <div th:if="${errorMessage}" class="alert alert-error animate-in">
                     <span class="alert-icon">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -271,7 +271,7 @@
                     </div>
                 </div>
 
-                <!-- Alerts: Eliminación -->
+                
                 <div th:if="${deleteMessage}" class="alert alert-delete animate-in">
                     <span class="alert-icon">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -285,16 +285,16 @@
                     </div>
                 </div>
 
-                <!-- Page Content -->
+                
                 <div layout:fragment="content"></div>
             </main>
         </div>
     </div>
 
-    <!-- Toast Container -->
+    
     <div class="toast-container" id="toast-container"></div>
 
-    <!-- Modal Reabastecimiento -->
+    
     <div class="restock-overlay" id="restock-overlay">
         <div class="restock-modal">
             <div class="restock-modal-header">
@@ -324,7 +324,7 @@
         </div>
     </div>
 
-    <!-- Scripts: módulos compartidos -->
+    
     <script th:src="@{/js/utilidades.js}"></script>
     <script th:src="@{/js/main.js}"></script>
     <script th:src="@{/js/number-input.js}"></script>
@@ -333,7 +333,7 @@
     <script th:src="@{/js/alertas-stock.js}"></script>
     <script th:src="@{/js/tabla-ordenar.js}"></script>
 
-    <!-- Navegación activa -->
+    
     <script>
         (function() {
             var path = window.location.pathname;

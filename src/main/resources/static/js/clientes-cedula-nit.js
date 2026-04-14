@@ -1,12 +1,4 @@
-/**
- * SionTrack - Cédula / NIT dinámico
- *
- * Reglas Colombia:
- * - Persona Natural: Cédula de ciudadanía, 6-10 dígitos, solo números, SIN guión.
- * - Empresa (Persona Jurídica): NIT = 9 dígitos + guión + dígito de verificación (DV).
- *   El DV es un solo dígito del 0 al 9, asignado por la DIAN.
- *   Formato final: 900123456-7
- */
+
 (function() {
     'use strict';
 
@@ -22,9 +14,9 @@
 
         if (!tipoHidden || !campoCedula || !campoNit || !hiddenField) return;
 
-        // =============================================
-        // CAMBIAR ENTRE CÉDULA Y NIT
-        // =============================================
+        
+        
+        
         function actualizarCampo() {
             var tipo = tipoHidden.value;
 
@@ -33,7 +25,7 @@
                 campoNit.style.display = '';
                 label.textContent = 'NIT';
 
-                // Si hay valor existente con guión, parsear
+                
                 var val = hiddenField.value || '';
                 if (val.indexOf('-') !== -1) {
                     var partes = val.split('-');
@@ -63,9 +55,9 @@
             sincronizarHidden();
         }
 
-        // =============================================
-        // SINCRONIZAR VALOR AL HIDDEN
-        // =============================================
+        
+        
+        
         function sincronizarHidden() {
             var tipo = tipoHidden.value;
             if (tipo === 'Empresa') {
@@ -81,9 +73,9 @@
             }
         }
 
-        // =============================================
-        // CÉDULA: solo números, 6-10 dígitos
-        // =============================================
+        
+        
+        
         cedulaInput.addEventListener('input', function() {
             this.value = this.value.replace(/[^0-9]/g, '');
             if (this.value.length > 10) this.value = this.value.substring(0, 10);
@@ -95,9 +87,9 @@
             if (!/[0-9]/.test(String.fromCharCode(e.which))) e.preventDefault();
         });
 
-        // =============================================
-        // NIT: 9 dígitos
-        // =============================================
+        
+        
+        
         nitNumero.addEventListener('input', function() {
             this.value = this.value.replace(/[^0-9]/g, '');
             if (this.value.length > 9) this.value = this.value.substring(0, 9);
@@ -109,7 +101,7 @@
             if (!/[0-9]/.test(String.fromCharCode(e.which))) e.preventDefault();
         });
 
-        // Auto-focus al DV cuando se completan los 9 dígitos
+        
         nitNumero.addEventListener('input', function() {
             if (this.value.length === 9 && nitDv) {
                 nitDv.focus();
@@ -117,9 +109,9 @@
             }
         });
 
-        // =============================================
-        // DV: un solo dígito 0-9
-        // =============================================
+        
+        
+        
         nitDv.addEventListener('input', function() {
             this.value = this.value.replace(/[^0-9]/g, '');
             if (this.value.length > 1) this.value = this.value.substring(0, 1);
@@ -129,35 +121,35 @@
 
         nitDv.addEventListener('keypress', function(e) {
             if (!/[0-9]/.test(String.fromCharCode(e.which))) e.preventDefault();
-            // Si ya tiene un dígito, reemplazar
+            
             if (this.value.length >= 1) {
                 this.value = '';
             }
         });
 
-        // Backspace en DV vacío → volver al NIT
+        
         nitDv.addEventListener('keydown', function(e) {
             if (e.key === 'Backspace' && this.value === '') {
                 e.preventDefault();
                 nitNumero.focus();
-                // Poner cursor al final
+                
                 var len = nitNumero.value.length;
                 nitNumero.setSelectionRange(len, len);
             }
         });
 
-        // =============================================
-        // DETECTAR CAMBIO DE TIPO DE CLIENTE
-        // =============================================
+        
+        
+        
         tipoHidden.addEventListener('change', actualizarCampo);
 
-        // Observar cambios en el valor del hidden (asignados por JS del custom select)
+        
         var observer = new MutationObserver(function() {
             actualizarCampo();
         });
         observer.observe(tipoHidden, { attributes: true, attributeFilter: ['value'] });
 
-        // Interceptar asignaciones directas a .value
+        
         var descriptor = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
         Object.defineProperty(tipoHidden, 'value', {
             get: function() { return descriptor.get.call(this); },
@@ -167,9 +159,9 @@
             }
         });
 
-        // =============================================
-        // VALIDACIÓN AL SUBMIT
-        // =============================================
+        
+        
+        
         var form = document.getElementById('clienteForm');
         if (form) {
             form.addEventListener('submit', function(e) {
@@ -224,9 +216,9 @@
             });
         }
 
-        // =============================================
-        // INICIALIZACIÓN
-        // =============================================
+        
+        
+        
         if (tipoHidden.value) {
             actualizarCampo();
         } else {

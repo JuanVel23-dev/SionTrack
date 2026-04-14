@@ -13,6 +13,13 @@ import org.springframework.stereotype.Service;
 import com.siontrack.siontrack.models.Usuarios;
 import com.siontrack.siontrack.repository.UsuariosRepository;
 
+/**
+ * Implementación de {@link UserDetailsService} para la autenticación con Spring Security.
+ *
+ * <p>Carga el usuario por nombre de usuario, verifica que esté activo y
+ * actualiza su campo {@code ultimoAcceso} en cada inicio de sesión exitoso.
+ * El rol del usuario se expone como una autoridad con el prefijo {@code ROLE_}.
+ */
 @Service
 public class UsuariosService implements UserDetailsService {
 
@@ -22,6 +29,13 @@ public class UsuariosService implements UserDetailsService {
         this.usuariosRepository = usuariosRepository;
     }
 
+    /**
+     * Carga un usuario por su nombre de usuario para el proceso de autenticación.
+     *
+     * @param username nombre de usuario ingresado en el formulario de login
+     * @return {@link UserDetails} con credenciales y autoridades del usuario
+     * @throws UsernameNotFoundException si el usuario no existe o está desactivado
+     */
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         Usuarios usuario = usuariosRepository.findByNombreusuario(username)
@@ -31,7 +45,6 @@ public class UsuariosService implements UserDetailsService {
             throw new UsernameNotFoundException("Usuario desactivado: " + username);
         }
 
-        // Actualizar último acceso
         usuario.setUltimoAcceso(LocalDateTime.now());
         usuariosRepository.save(usuario);
 
@@ -40,6 +53,5 @@ public class UsuariosService implements UserDetailsService {
                 usuario.getContrasena(),
                 Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + usuario.getRol()))
         );
-        
     }
 }

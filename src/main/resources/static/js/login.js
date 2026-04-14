@@ -1,13 +1,10 @@
-/**
- * SionTrack v2.0 - Login
- * Sistema de particulas, animaciones condicionales y UX interactiva
- */
+
 (function () {
     'use strict';
 
-    // ===================================================================
-    //  SISTEMA DE PARTICULAS EN CANVAS
-    // ===================================================================
+    
+    
+    
     var canvas = document.getElementById('loginCanvas');
     var ctx = canvas ? canvas.getContext('2d') : null;
     var particulas = [];
@@ -123,10 +120,10 @@
         rafId = requestAnimationFrame(animar);
     }
 
-    // ===================================================================
-    //  ANIMACION DE ENTRADA (condicional)
-    //  Solo se ejecuta en carga limpia o logout, NO en error/expired
-    // ===================================================================
+    
+    
+    
+    
     function iniciarAnimacionesEntrada() {
         var card = document.getElementById('loginCard');
         if (!card) return;
@@ -136,7 +133,7 @@
         var tieneExpired = params.has('expired');
         var tieneLogout = params.has('logout');
 
-        // Si viene con alerta (error, expired, logout), mostrar todo de inmediato
+        
         if (tieneError || tieneExpired || tieneLogout) {
             if (tieneError) {
                 sacudirForm();
@@ -144,7 +141,7 @@
             return;
         }
 
-        // Solo carga limpia (sin params): activar animacion completa
+        
         card.classList.add('animating');
 
         card.addEventListener('animationend', function handler(e) {
@@ -155,9 +152,9 @@
         });
     }
 
-    // ===================================================================
-    //  TOGGLE PASSWORD
-    // ===================================================================
+    
+    
+    
     function initTogglePassword() {
         var toggleBtn = document.getElementById('togglePassword');
         var passwordInput = document.getElementById('password');
@@ -178,9 +175,9 @@
         });
     }
 
-    // ===================================================================
-    //  EFECTOS DE FOCUS EN INPUTS
-    // ===================================================================
+    
+    
+    
     function initFocusEffects() {
         var inputs = document.querySelectorAll('.login-form .input-field');
         inputs.forEach(function (input) {
@@ -205,9 +202,9 @@
         });
     }
 
-    // ===================================================================
-    //  VALIDACION Y ENVIO DEL FORMULARIO
-    // ===================================================================
+    
+    
+    
     function initFormValidation() {
         var form = document.getElementById('loginForm');
         var loginBtn = document.getElementById('loginBtn');
@@ -248,11 +245,11 @@
         }, 500);
     }
 
-    // Sacude todo el formulario al recibir error de credenciales
+    
     function sacudirForm() {
         var form = document.getElementById('loginForm');
         if (!form) return;
-        // Pequeño delay para que se vea despues de que la pagina renderiza
+        
         setTimeout(function () {
             form.classList.add('login-form-shake');
             form.addEventListener('animationend', function handler() {
@@ -262,9 +259,9 @@
         }, 150);
     }
 
-    // ===================================================================
-    //  ENTER EN USERNAME NAVEGA A PASSWORD
-    // ===================================================================
+    
+    
+    
     function initEnterNavigation() {
         var usernameInput = document.getElementById('username');
         var passwordInput = document.getElementById('password');
@@ -278,9 +275,9 @@
         });
     }
 
-    // ===================================================================
-    //  AUTO-OCULTAR ALERTAS (con animacion de salida)
-    // ===================================================================
+    
+    
+    
     function initAutoHideAlerts() {
         var alerts = document.querySelectorAll('.login-alert');
         alerts.forEach(function (alerta) {
@@ -294,9 +291,9 @@
         });
     }
 
-    // ===================================================================
-    //  INICIALIZACION
-    // ===================================================================
+    
+    
+    
     document.addEventListener('DOMContentLoaded', function () {
         initCanvas();
         iniciarAnimacionesEntrada();

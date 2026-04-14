@@ -1,8 +1,4 @@
-/**
- * SionTrack - Promociones Form
- * Custom select, custom calendar, precio formateado, preview de mensaje,
- * selección de clientes con carga AJAX y contador en tiempo real.
- */
+
 (function() {
     'use strict';
 
@@ -26,7 +22,7 @@
         fechaFin: null,
         calInicioMes: null, calInicioAnio: null,
         calFinMes: null, calFinAnio: null,
-        // Lista de clientes cargados desde la API
+        
         clientes: []
     };
 
@@ -40,7 +36,7 @@
         var previewContainer = document.getElementById('promo-preview-content');
         var hoy = new Date();
 
-        // ===== SELECTOR DE PRODUCTO CON BUSQUEDA AJAX =====
+        
         var prodSearchInput = document.getElementById('producto_search');
         var prodDropdown = document.getElementById('productoDropdown');
         var prodToggle = document.getElementById('productoToggle');
@@ -99,7 +95,7 @@
                     return;
                 }
 
-                // Header con contador y boton cerrar
+                
                 if (!append) {
                     var header = document.createElement('div');
                     header.className = 'ajax-select-dropdown-header';
@@ -170,7 +166,7 @@
             prodSelected.style.display = 'none';
             cerrarDropdown(prodDropdown, prodToggle);
             actualizarPreview();
-            // Ocultar seccion de clientes
+            
             var seccion = document.getElementById('clientes-preview-section');
             var divider = document.getElementById('divider-clientes');
             if (seccion) seccion.style.display = 'none';
@@ -222,14 +218,14 @@
             prodClear.addEventListener('click', limpiarProducto);
         }
 
-        // Cerrar dropdown al clic fuera
+        
         document.addEventListener('click', function(e) {
             if (prodDropdown && !e.target.closest('#productoSelectWrap')) {
                 cerrarDropdown(prodDropdown, prodToggle);
             }
         });
 
-        // ===== PRECIO =====
+        
         if (precioDisplay) {
             precioDisplay.addEventListener('input', function() {
                 var raw = this.value.replace(/[^0-9]/g, '');
@@ -246,7 +242,7 @@
             });
         }
 
-        // ===== CALENDAR =====
+        
         var now = new Date();
         state.calInicioMes = now.getMonth(); state.calInicioAnio = now.getFullYear();
         state.calFinMes = now.getMonth(); state.calFinAnio = now.getFullYear();
@@ -304,9 +300,9 @@
                 var isToday = d === hoy.getDate() && mes === hoy.getMonth() && anio === hoy.getFullYear();
                 var isSel = sel && d === sel.day && mes === sel.month && anio === sel.year;
                 var isDis = false;
-                // No permitir fechas pasadas
+                
                 if (fechaDia < hoyInicio) isDis = true;
-                // En fecha fin, no permitir antes de fecha inicio
+                
                 if (tipo === 'fin' && state.fechaInicio) {
                     if (fechaDia < new Date(state.fechaInicio.year,state.fechaInicio.month,state.fechaInicio.day)) isDis = true;
                 }
@@ -382,7 +378,7 @@
                 : fi.day+' de '+MESES[fi.month]+' al '+ff.day+' de '+MESES[ff.month];
         }
 
-        // ===== PREVIEW DEL MENSAJE =====
+        
         function actualizarPreview() {
             if (!previewContainer) return;
             var producto = state.productoNombre||'', promo = promocionInput?promocionInput.value.trim():'',
@@ -398,7 +394,7 @@
         if (promocionInput) promocionInput.addEventListener('input', actualizarPreview);
         actualizarPreview();
 
-        // ===== CARGA DE CLIENTES VÍA AJAX =====
+        
         function cargarClientesPreview(productoId) {
             var seccion     = document.getElementById('clientes-preview-section');
             var loading     = document.getElementById('clientes-loading');
@@ -406,14 +402,14 @@
             var vacio       = document.getElementById('clientes-vacio');
             var divider     = document.getElementById('divider-clientes');
 
-            // Muestra la sección y el spinner
+            
             seccion.style.display = 'block';
             loading.style.display = 'flex';
             tablaWrap.style.display = 'none';
             vacio.style.display = 'none';
             divider.style.display = 'block';
 
-            // Anima la aparición de la sección
+            
             requestAnimationFrame(function() { seccion.classList.add('visible'); });
 
             fetch('/api/promociones/preview?productoId=' + productoId)
@@ -439,7 +435,7 @@
                 });
         }
 
-        // Construye las filas de la tabla de clientes
+        
         function renderizarTablaClientes(clientes) {
             var tbody = document.getElementById('clientes-tbody');
             var html = '';
@@ -449,7 +445,7 @@
                 var checked = elegible && !c.contactadoRecientemente;
                 var rowClass = c.contactadoRecientemente ? 'fila-reciente' : '';
 
-                // Badge de estado
+                
                 var badge = '';
                 if (!c.tieneConsentimiento) {
                     badge = '<span class="cliente-badge badge-sin-consentimiento">Sin consentimiento</span>';
@@ -482,7 +478,7 @@
 
             tbody.innerHTML = html;
 
-            // Eventos de los checkboxes individuales
+            
             tbody.querySelectorAll('.cliente-check').forEach(function(chk) {
                 chk.addEventListener('change', function() {
                     actualizarContador();
@@ -493,7 +489,7 @@
             sincronizarCheckMaestro();
         }
 
-        // ===== CONTADOR EN TIEMPO REAL =====
+        
         function actualizarContador() {
             var checks = document.querySelectorAll('#clientes-tbody .cliente-check:checked');
             var total = checks.length;
@@ -510,13 +506,13 @@
                     : total + ' mensajes a enviar';
             }
 
-            // Cambia el color del badge según la cantidad
+            
             if (badge) {
                 badge.classList.remove('badge-cero', 'badge-normal');
                 badge.classList.add(total === 0 ? 'badge-cero' : 'badge-normal');
             }
 
-            // Actualiza el texto del botón de envío
+            
             if (btnTexto) {
                 btnTexto.textContent = total === 0
                     ? 'Enviar Promoción'
@@ -524,7 +520,7 @@
             }
         }
 
-        // Sincroniza el checkbox maestro del thead con el estado de los individuales
+        
         function sincronizarCheckMaestro() {
             var checkMaestro = document.getElementById('check-maestro');
             if (!checkMaestro) return;
@@ -534,7 +530,7 @@
             checkMaestro.indeterminate = marcados.length > 0 && marcados.length < todos.length;
         }
 
-        // Checkbox maestro — selecciona o deselecciona todos los habilitados
+        
         document.addEventListener('change', function(e) {
             if (e.target && e.target.id === 'check-maestro') {
                 var marcado = e.target.checked;
@@ -545,7 +541,7 @@
             }
         });
 
-        // Botones de selección rápida con animación en cascada
+        
         var btnTodos = document.getElementById('btn-seleccionar-todos');
         var btnNinguno = document.getElementById('btn-deseleccionar-todos');
 
@@ -553,12 +549,12 @@
             checks.forEach(function(c, i) {
                 setTimeout(function() {
                     c.checked = marcar;
-                    // Efecto de escala breve al marcar
+                    
                     c.style.transform = 'scale(1.25)';
                     setTimeout(function() { c.style.transform = ''; }, 150);
                 }, i * 20);
             });
-            // Actualizar contador al final de la animación
+            
             setTimeout(function() {
                 actualizarContador();
                 sincronizarCheckMaestro();
@@ -578,13 +574,13 @@
             });
         }
 
-        // ===== SUBMIT VÍA API REST =====
+        
         var btnEnviar = document.getElementById('btn-enviar-promo');
         if (btnEnviar) {
             btnEnviar.addEventListener('click', function(e) {
                 e.preventDefault();
 
-                // Validaciones del formulario
+                
                 var err = [];
                 if (!productoHidden.value) err.push('Selecciona un producto');
                 if (!promocionInput || !promocionInput.value.trim()) err.push('Describe la promoción');
@@ -592,7 +588,7 @@
                 if (!state.fechaInicio) err.push('Selecciona fecha de inicio');
                 if (!state.fechaFin) err.push('Selecciona fecha de fin');
 
-                // Valida que haya al menos un cliente seleccionado
+                
                 var checksSeleccionados = document.querySelectorAll('#clientes-tbody .cliente-check:checked');
                 if (checksSeleccionados.length === 0 && state.clientes.length > 0) {
                     err.push('Selecciona al menos un destinatario');
@@ -605,7 +601,7 @@
 
                 updRango();
 
-                // Recopila los IDs seleccionados
+                
                 var idsSeleccionados = [];
                 checksSeleccionados.forEach(function(c) {
                     idsSeleccionados.push(parseInt(c.dataset.id));
@@ -623,7 +619,7 @@
                         clientesSeleccionados: idsSeleccionados
                     };
 
-                    // Estado de carga en el botón
+                    
                     btnEnviar.disabled = true;
                     var btnTexto = document.getElementById('btn-enviar-texto');
                     if (btnTexto) btnTexto.textContent = 'Enviando...';
@@ -638,7 +634,7 @@
                         return res.json();
                     })
                     .then(function(resultado) {
-                        // Redirige con mensaje flash construido en el frontend como parámetro de URL
+                        
                         var enviados = resultado.enviados || 0;
                         var clientes = resultado.clientesEncontrados || 0;
                         var fallidos = resultado.fallidos || 0;
@@ -657,7 +653,7 @@
                             if (sinCons > 0) msg += ' Sin consentimiento: ' + sinCons + '.';
                         }
 
-                        // Guarda el mensaje en sessionStorage para mostrarlo al llegar al listado
+                        
                         try { sessionStorage.setItem('promoToast', JSON.stringify({ tipo: tipo, msg: msg })); } catch(e) {}
                         window.location.href = '/web/notificaciones';
                     })

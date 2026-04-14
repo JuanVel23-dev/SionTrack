@@ -1,16 +1,10 @@
-/**
- * SionTrack - Teléfono de Clientes
- * Gestión de teléfonos, direcciones y correos en el formulario de clientes
- *
- * Dependencias: selector-telefono.js, utilidades.js
- * NOTA: La validación de cédula/NIT se maneja en clientes-cedula-nit.js
- */
+
 (function() {
     'use strict';
 
-    // ============================================
-    // SELECT PERSONALIZADO (tipo de cliente)
-    // ============================================
+    
+    
+    
     function initCustomSelect(selectId) {
         var container = document.getElementById(selectId);
         if (!container) return;
@@ -21,7 +15,7 @@
         var hiddenInput = container.querySelector('input[type="hidden"]');
         var textoSpan = btn.querySelector('.select-texto');
 
-        // Verificar valor inicial de Thymeleaf
+        
         var valorInicial = hiddenInput.value;
         if (valorInicial) {
             opciones.forEach(function(op) {
@@ -81,9 +75,9 @@
 
     window.initCustomSelect = initCustomSelect;
 
-    // ============================================
-    // INICIALIZACIÓN
-    // ============================================
+    
+    
+    
     document.addEventListener('DOMContentLoaded', function() {
         var telContainer = document.getElementById('telefonos-container');
         var dirContainer = document.getElementById('direcciones-container');
@@ -93,10 +87,10 @@
         var dirIdx = dirContainer ? dirContainer.querySelectorAll('.dynamic-field').length : 0;
         var corIdx = corContainer ? corContainer.querySelectorAll('.dynamic-field').length : 0;
 
-        // Inicializar filas existentes con módulo compartido
+        
         SelectorTelefono.inicializarFilas('.telefono-fila');
 
-        // Eliminar campos (delegación de eventos)
+        
         document.addEventListener('click', function(e) {
             var btn = e.target.closest('.btn-remove');
             if (btn) {
@@ -110,7 +104,7 @@
             }
         });
 
-        // Añadir teléfono
+        
         var btnTel = document.getElementById('add-telefono-btn');
         if (btnTel) {
             btnTel.addEventListener('click', function(e) {
@@ -123,7 +117,7 @@
             });
         }
 
-        // Añadir dirección
+        
         var btnDir = document.getElementById('add-direccion-btn');
         if (btnDir) {
             btnDir.addEventListener('click', function(e) {
@@ -139,7 +133,7 @@
             });
         }
 
-        // Añadir correo
+        
         var btnCor = document.getElementById('add-correo-btn');
         if (btnCor) {
             btnCor.addEventListener('click', function(e) {
@@ -155,10 +149,10 @@
             });
         }
 
-        // Inicializar select de tipo de cliente
+        
         initCustomSelect('tipo-cliente-select');
 
-        // Validar correos
+        
         document.addEventListener('blur', function(e) {
             if (e.target.classList.contains('input-correo')) {
                 var val = e.target.value.trim();
@@ -173,13 +167,13 @@
             }
         }, true);
 
-        // Submit: formatear teléfonos y validar correos
+        
         var form = document.getElementById('clienteForm');
         if (form) {
             form.addEventListener('submit', function(e) {
                 var ok = SelectorTelefono.formatearParaSubmit('.telefono-fila');
 
-                // Validar correos
+                
                 document.querySelectorAll('.input-correo').forEach(function(inp) {
                     var val = inp.value.trim();
                     if (val && !val.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {

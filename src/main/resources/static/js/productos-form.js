@@ -1,7 +1,4 @@
-/**
- * SionTrack - Productos Form
- * Selector de proveedor con busqueda AJAX paginada en /api/proveedores/buscar
- */
+
 (function() {
     'use strict';
 
@@ -47,13 +44,13 @@
         var provPage = 0;
         var provQuery = '';
 
-        // Si hay un proveedor pre-seleccionado (edicion), cargar su nombre
+        
         if (provHidden && provHidden.value) {
             cargarProveedorExistente(provHidden.value);
         }
 
         function cargarProveedorExistente(id) {
-            // Buscar el proveedor por ID para obtener su nombre
+            
             fetch('/api/proveedores/buscar?q=&page=0&size=1000', {
                 headers: { 'Accept': 'application/json' }
             })
@@ -106,7 +103,7 @@
                     return;
                 }
 
-                // Header
+                
                 if (!append) {
                     var header = document.createElement('div');
                     header.className = 'ajax-select-dropdown-header';
@@ -136,7 +133,7 @@
                     provDropdown.appendChild(div);
                 });
 
-                // Boton "cargar mas"
+                
                 var existingMore = provDropdown.querySelector('.ajax-select-more');
                 if (existingMore) existingMore.remove();
 
@@ -218,7 +215,7 @@
             provClear.addEventListener('click', limpiarProveedor);
         }
 
-        // Cerrar dropdown al clic fuera
+        
         document.addEventListener('click', function(e) {
             if (provDropdown && !e.target.closest('#proveedorSelectWrap')) {
                 cerrarDropdown(provDropdown, provToggle);

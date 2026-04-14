@@ -1,7 +1,4 @@
-/**
- * SionTrack - Búsqueda de vehículos por placa
- * Permite buscar vehículos por placa y ver/eliminar desde un modal
- */
+
 (function() {
     'use strict';
 
@@ -22,7 +19,7 @@
         var estadoActual = 'inicial';
         var transicionEnCurso = false;
 
-        // Abrir modal
+        
         btnAbrir.addEventListener('click', function() {
             overlay.classList.add('open');
             setTimeout(function() {
@@ -30,7 +27,7 @@
             }, 350);
         });
 
-        // Cerrar modal
+        
         function cerrarModal() {
             overlay.classList.remove('open');
             setTimeout(function() {
@@ -53,7 +50,7 @@
             }
         });
 
-        // Mapa de secciones
+        
         function obtenerElemento(nombre) {
             switch(nombre) {
                 case 'inicial': return estadoInicial;
@@ -63,7 +60,7 @@
             }
         }
 
-        // Mostrar estado sin animación (para reset)
+        
         function mostrarEstadoInmediato(nombre) {
             transicionEnCurso = false;
             estadoActual = nombre;
@@ -76,7 +73,7 @@
             });
         }
 
-        // Transición suave entre estados
+        
         function mostrarEstado(nombre) {
             if (nombre === estadoActual) return;
 
@@ -85,7 +82,7 @@
             var anterior = estadoActual;
             estadoActual = nombre;
 
-            // Si hay una transición en curso, cortar de inmediato
+            
             if (transicionEnCurso) {
                 ['inicial', 'resultados', 'vacio', 'cargando'].forEach(function(n) {
                     var el = obtenerElemento(n);
@@ -98,33 +95,33 @@
 
             transicionEnCurso = true;
 
-            // Fade out del saliente
+            
             if (saliente && saliente.style.display !== 'none') {
                 saliente.style.transition = 'opacity 0.15s ease';
                 saliente.style.opacity = '0';
             }
 
-            // Esperar a que salga, luego mostrar entrante
+            
             setTimeout(function() {
-                // Ocultar saliente
+                
                 if (saliente) saliente.style.display = 'none';
 
-                // Verificar que sigue siendo el estado actual
+                
                 if (estadoActual !== nombre) {
                     transicionEnCurso = false;
                     return;
                 }
 
-                // Preparar entrante
+                
                 entrante.style.transition = 'none';
                 entrante.style.opacity = '0';
                 entrante.style.transform = 'translateY(6px)';
                 entrante.style.display = '';
 
-                // Forzar reflow
+                
                 void entrante.offsetHeight;
 
-                // Animar entrada
+                
                 entrante.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
                 entrante.style.opacity = '1';
                 entrante.style.transform = 'translateY(0)';
@@ -135,7 +132,7 @@
             }, 160);
         }
 
-        // Búsqueda sensible desde 1 carácter
+        
         inputPlaca.addEventListener('input', SionUtils.debounce(function() {
             var placa = inputPlaca.value.trim();
 
@@ -167,7 +164,7 @@
                 });
         }, 250));
 
-        // Renderizar lista de resultados
+        
         function renderizarResultados(data) {
             var html = '<div class="placa-result-list">';
 
@@ -199,7 +196,7 @@
             resultados.innerHTML = html;
         }
 
-        // Eliminar vehículo: cierra todo y recarga
+        
         function eliminarVehiculo(vehiculoId) {
             SionUtils.fetchSeguro('/api/vehiculos/' + vehiculoId, { method: 'DELETE' })
                 .then(function(res) {
@@ -218,7 +215,7 @@
                 });
         }
 
-        // Delegación de eventos para eliminar
+        
         resultados.addEventListener('click', function(e) {
             var btnDelete = e.target.closest('.placa-btn-delete');
             if (!btnDelete) return;
@@ -226,7 +223,7 @@
             var vehiculoId = btnDelete.getAttribute('data-vehiculo-id');
             var placaText = btnDelete.getAttribute('data-placa');
 
-            // Cerrar panel antes de mostrar confirmación
+            
             overlay.classList.remove('open');
 
             setTimeout(function() {

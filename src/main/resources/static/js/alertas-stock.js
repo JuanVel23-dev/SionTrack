@@ -1,13 +1,10 @@
-/**
- * SionTrack — Alertas de Stock: Campana + Modal de Reabastecimiento
- * Maneja el dropdown de notificaciones en el header y el modal de restock.
- */
+
 (function () {
     'use strict';
 
     var alertasData = [];
 
-    // Claves de localStorage / sessionStorage
+    
     var STORAGE_READ = 'siontrack_notif_read';
     var STORAGE_DISMISSED = 'siontrack_notif_dismissed';
     var STORAGE_SESSION = 'siontrack_session_active';
@@ -22,18 +19,14 @@
         fetchAlertasData();
     }
 
-    /**
-     * Detecta si el usuario acaba de iniciar sesión.
-     * Si viene desde /login (referrer) o no hay sesión marcada,
-     * limpia los estados de notificaciones para mostrar todo fresco.
-     */
+    
     function detectarInicioSesion() {
         var referrer = document.referrer || '';
         var esNuevaSesion = !sessionStorage.getItem(STORAGE_SESSION);
         var vieneDeLogin = referrer.indexOf('/login') !== -1;
 
         if (esNuevaSesion || vieneDeLogin) {
-            // Limpiar estados — las alertas deben mostrarse frescas al entrar
+            
             localStorage.removeItem(STORAGE_READ);
             localStorage.removeItem(STORAGE_DISMISSED);
             sessionStorage.removeItem(STORAGE_SHOW_ALL);
@@ -41,9 +34,9 @@
         }
     }
 
-    // =========================================
-    // MODAL DE REABASTECIMIENTO — Setup
-    // =========================================
+    
+    
+    
     function initRestockModal() {
         var openBtn = document.getElementById('open-restock-modal');
         var overlay = document.getElementById('restock-overlay');
@@ -71,9 +64,9 @@
         });
     }
 
-    // =========================================
-    // CAMPANA DE NOTIFICACIONES
-    // =========================================
+    
+    
+    
     function initNotificationBell() {
         var bellContainer = document.getElementById('notification-bell');
         var toggleBtn = document.getElementById('notif-toggle');
@@ -81,31 +74,31 @@
 
         if (!bellContainer || !toggleBtn || !dropdown) return;
 
-        // Abrir/cerrar dropdown
+        
         toggleBtn.addEventListener('click', function (e) {
             e.stopPropagation();
             dropdown.classList.toggle('open');
         });
 
-        // Cerrar al clic fuera
+        
         document.addEventListener('click', function (e) {
             if (!bellContainer.contains(e.target)) {
                 dropdown.classList.remove('open');
             }
         });
 
-        // Cerrar con Escape
+        
         document.addEventListener('keydown', function (e) {
             if (e.key === 'Escape') dropdown.classList.remove('open');
         });
 
-        // Botón "Marcar leídas"
+        
         var markReadBtn = document.getElementById('notif-mark-read');
         if (markReadBtn) {
             markReadBtn.addEventListener('click', marcarTodasLeidas);
         }
 
-        // Botón "Limpiar todo"
+        
         var clearAllBtn = document.getElementById('notif-clear-all');
         if (clearAllBtn) {
             clearAllBtn.addEventListener('click', limpiarTodas);
@@ -117,10 +110,10 @@
             .then(function (r) { return r.ok ? r.json() : []; })
             .then(function (data) {
                 alertasData = data;
-                // Limpiar estados obsoletos cuando el stock cambió
+                
                 invalidarEstadosObsoletos();
                 renderNotificationList();
-                // Mostrar alertas urgentes proactivamente
+                
                 mostrarAlertasProactivas();
             })
             .catch(function () {
@@ -129,16 +122,16 @@
             });
     }
 
-    // =========================================
-    // GESTIÓN DE ESTADOS (leído/descartado)
-    // Guarda {productoId: cantidadDisponible}
-    // Si el stock baja, el estado se invalida
-    // y la alerta reaparece como nueva.
-    // =========================================
+    
+    
+    
+    
+    
+    
     function getStorageMap(key) {
         try {
             var data = JSON.parse(localStorage.getItem(key) || '{}');
-            // Migrar formato viejo (array de IDs) a nuevo (mapa)
+            
             if (Array.isArray(data)) {
                 var map = {};
                 data.forEach(function (id) { map[id] = -1; });
@@ -152,11 +145,7 @@
         localStorage.setItem(key, JSON.stringify(map));
     }
 
-    /**
-     * Invalida estados de leído/descartado cuando el stock bajó.
-     * Si un producto fue descartado con stock=5 pero ahora tiene stock=3,
-     * significa que se usó en un servicio → la alerta debe reaparecer.
-     */
+    
     function invalidarEstadosObsoletos() {
         var readMap = getStorageMap(STORAGE_READ);
         var dismissedMap = getStorageMap(STORAGE_DISMISSED);
@@ -166,13 +155,13 @@
             var id = a.productoId;
             var stockActual = a.cantidadDisponible || 0;
 
-            // Si fue leído pero el stock bajó → marcar como no leído
+            
             if (readMap[id] !== undefined && readMap[id] !== -1 && stockActual < readMap[id]) {
                 delete readMap[id];
                 changed = true;
             }
 
-            // Si fue descartado pero el stock bajó → reaparece la alerta
+            
             if (dismissedMap[id] !== undefined && dismissedMap[id] !== -1 && stockActual < dismissedMap[id]) {
                 delete dismissedMap[id];
                 changed = true;
@@ -182,7 +171,7 @@
         if (changed) {
             saveStorageMap(STORAGE_READ, readMap);
             saveStorageMap(STORAGE_DISMISSED, dismissedMap);
-            // Stock cambió → habilitar vista de todos los niveles (bajo, casi al mín.)
+            
             sessionStorage.setItem(STORAGE_SHOW_ALL, '1');
         }
     }
@@ -209,9 +198,9 @@
         saveStorageMap(STORAGE_DISMISSED, map);
     }
 
-    // =========================================
-    // RENDERIZAR LISTA DE NOTIFICACIONES
-    // =========================================
+    
+    
+    
     function renderNotificationList() {
         var listEl = document.getElementById('notif-list');
         var badgeEl = document.getElementById('notif-badge');
@@ -221,11 +210,11 @@
 
         if (!listEl) return;
 
-        // Filtrar alertas según contexto de sesión
+        
         var mostrarTodos = sessionStorage.getItem(STORAGE_SHOW_ALL) === '1';
         var alertas = alertasData.filter(function (a) {
             if (estaDescartado(a.productoId)) return false;
-            // En login solo mostrar críticos y priorizados
+            
             if (!mostrarTodos) {
                 var clase = getNivelClassUI(a.nivelAlerta, a.esPopular);
                 if (clase !== 'critico' && clase !== 'priorizar' && clase !== 'agotado') return false;
@@ -233,7 +222,7 @@
             return true;
         });
 
-        // Ordenar por prioridad combinada (popular+nivel+ranking)
+        
         alertas.sort(function (a, b) {
             return getPrioridadCombinada(a) - getPrioridadCombinada(b);
         });
@@ -242,7 +231,7 @@
             return !estaLeido(a.productoId);
         }).length;
 
-        // Actualizar badge
+        
         if (badgeEl) {
             if (unreadCount > 0) {
                 badgeEl.textContent = unreadCount > 99 ? '99+' : unreadCount;
@@ -252,16 +241,16 @@
             }
         }
 
-        // Actualizar contador
+        
         if (countLabel) {
             countLabel.textContent = alertas.length + ' alerta' + (alertas.length !== 1 ? 's' : '');
         }
 
-        // Mostrar/ocultar botones de acción
+        
         if (markReadBtn) markReadBtn.style.display = unreadCount > 0 ? '' : 'none';
         if (clearAllBtn) clearAllBtn.style.display = alertas.length > 0 ? '' : 'none';
 
-        // Sin alertas → estado vacío
+        
         if (alertas.length === 0) {
             listEl.innerHTML =
                 '<div class="notif-empty">' +
@@ -277,7 +266,7 @@
             return;
         }
 
-        // Construir lista de items
+        
         var html = '';
         alertas.forEach(function (a) {
             var badgeClass = getNivelClassUI(a.nivelAlerta, a.esPopular);
@@ -319,7 +308,7 @@
 
         listEl.innerHTML = html;
 
-        // Marcar como leída al hacer clic en el item — con animación suave
+        
         listEl.querySelectorAll('.notif-item').forEach(function (item) {
             item.addEventListener('click', function (e) {
                 if (e.target.closest('.notif-dismiss')) return;
@@ -338,7 +327,7 @@
             });
         });
 
-        // Descartar notificación individual
+        
         listEl.querySelectorAll('.notif-dismiss').forEach(function (btn) {
             btn.addEventListener('click', function (e) {
                 e.stopPropagation();
@@ -365,14 +354,14 @@
         var items = listEl.querySelectorAll('.notif-item.unread');
         if (!items.length) return;
 
-        // Animar cada item con un delay escalonado
+        
         items.forEach(function (item, i) {
             setTimeout(function () {
                 item.classList.add('marking-read');
             }, i * 60);
         });
 
-        // Después de la animación, actualizar estado solo de los visibles
+        
         setTimeout(function () {
             items.forEach(function (item) {
                 var id = parseInt(item.dataset.productoId);
@@ -394,14 +383,14 @@
         var items = listEl.querySelectorAll('.notif-item');
         if (!items.length) return;
 
-        // Animar cada item saliendo con delay escalonado
+        
         items.forEach(function (item, i) {
             setTimeout(function () {
                 item.classList.add('clearing');
             }, i * 50);
         });
 
-        // Después de la animación, descartar solo los visibles y re-renderizar
+        
         setTimeout(function () {
             items.forEach(function (item) {
                 var id = parseInt(item.dataset.productoId);
@@ -412,10 +401,7 @@
         }, items.length * 50 + 400);
     }
 
-    /**
-     * Actualiza badge y contadores sin re-renderizar toda la lista.
-     * Usado tras animaciones de marcar leído para mantener fluidez.
-     */
+    
     function actualizarContadores() {
         var listEl = document.getElementById('notif-list');
         var badgeEl = document.getElementById('notif-badge');
@@ -446,9 +432,9 @@
         }
     }
 
-    // =========================================
-    // ANIMACIONES
-    // =========================================
+    
+    
+    
     function animateStockItems() {
         var items = document.querySelectorAll('.stock-item[data-cantidad]');
         if (!items.length) return;
@@ -475,9 +461,9 @@
         items.forEach(function (item) { observer.observe(item); });
     }
 
-    // =========================================
-    // MENSAJES DE RESTOCK (hover)
-    // =========================================
+    
+    
+    
     function generateRestockMessages() {
         document.querySelectorAll('.stock-item[data-cantidad]').forEach(function (item) {
             var el = item.querySelector('.stock-restock');
@@ -517,16 +503,13 @@
         });
     }
 
-    /**
-     * Detecta el nivel de alerta de un item del DOM.
-     * Primero intenta data-nivel, luego lee las clases CSS.
-     */
+    
     function detectNivel(item) {
-        // Preferir data-nivel si existe
+        
         if (item.dataset.nivel) {
             return item.dataset.nivel.toLowerCase();
         }
-        // Fallback: leer de las clases CSS
+        
         if (item.classList.contains('agotado')) return 'agotado';
         if (item.classList.contains('critico')) return 'critico';
         if (item.classList.contains('bajo')) return 'bajo';
@@ -534,10 +517,10 @@
         return 'bajo';
     }
 
-    // =========================================
-    // MODAL DE REABASTECIMIENTO
-    // =========================================
-    // Estado de paginación del modal
+    
+    
+    
+    
     var restockPaginaActual = 0;
     var restockTotalPages = 0;
 
@@ -546,10 +529,7 @@
         cargarPaginaRestock(0);
     }
 
-    /**
-     * Carga una página de productos en el modal de reabastecimiento.
-     * Usa el endpoint paginado /api/alertas/stock?page=X&size=20
-     */
+    
     function cargarPaginaRestock(pagina) {
         var overlay = document.getElementById('restock-overlay');
         var body = document.getElementById('restock-body');
@@ -647,7 +627,7 @@
                         '</div>';
                 });
 
-                // Controles de paginación si hay más de 1 página
+                
                 if (restockTotalPages > 1) {
                     html += renderPaginacionModal(pageData);
                 }
@@ -662,9 +642,7 @@
             });
     }
 
-    /**
-     * Genera el HTML de los controles de paginación dentro del modal.
-     */
+    
     function renderPaginacionModal(pageData) {
         var current = pageData.number;
         var total = pageData.totalPages;
@@ -677,14 +655,14 @@
         html += '<div class="pagination-info">Mostrando <strong>' + desde + '</strong> a <strong>' + hasta + '</strong> de <strong>' + totalEl + '</strong></div>';
         html += '<div class="pagination-controls">';
 
-        // Primera
+        
         html += '<a class="pagination-btn' + (current === 0 ? ' disabled' : '') + '" data-restock-page="0" title="Primera página">' +
             '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/></svg></a>';
-        // Anterior
+        
         html += '<a class="pagination-btn' + (current === 0 ? ' disabled' : '') + '" data-restock-page="' + (current - 1) + '" title="Anterior">' +
             '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></a>';
 
-        // Ventana de 5 números de página
+        
         var startPage = current - 2 > 0 ? current - 2 : 0;
         var endPage = startPage + 4 < total - 1 ? startPage + 4 : total - 1;
         var adjustedStart = endPage - 4 > 0 ? endPage - 4 : 0;
@@ -695,10 +673,10 @@
         }
         if (endPage < total - 1) html += '<span class="pagination-btn disabled">...</span>';
 
-        // Siguiente
+        
         html += '<a class="pagination-btn' + (current === total - 1 ? ' disabled' : '') + '" data-restock-page="' + (current + 1) + '" title="Siguiente">' +
             '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>';
-        // Última
+        
         html += '<a class="pagination-btn' + (current === total - 1 ? ' disabled' : '') + '" data-restock-page="' + (total - 1) + '" title="Última página">' +
             '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg></a>';
 
@@ -706,9 +684,7 @@
         return html;
     }
 
-    /**
-     * Vincula los eventos click a los botones de paginación del modal.
-     */
+    
     function bindPaginacionModal(container) {
         container.querySelectorAll('[data-restock-page]').forEach(function (btn) {
             if (btn.classList.contains('disabled') || btn.classList.contains('active')) return;
@@ -722,10 +698,7 @@
         });
     }
 
-    /**
-     * Bind accordion click handlers on freshly injected content.
-     * Uses direct event listeners on each header with stopPropagation.
-     */
+    
     function bindAccordion(container) {
         var headers = container.querySelectorAll('.restock-product-header');
         headers.forEach(function (header) {
@@ -734,11 +707,11 @@
                 var product = header.closest('.restock-product');
                 if (!product) return;
                 var wasExpanded = product.classList.contains('expanded');
-                // Close all
+                
                 container.querySelectorAll('.restock-product.expanded').forEach(function (p) {
                     p.classList.remove('expanded');
                 });
-                // Toggle
+                
                 if (!wasExpanded) {
                     product.classList.add('expanded');
                 }
@@ -816,7 +789,7 @@
         var overlay = document.getElementById('restock-overlay');
         if (!overlay) return;
         overlay.classList.remove('open');
-        // Resetear scroll y cerrar acordeones para que al reabrir empiece desde el inicio
+        
         var body = document.getElementById('restock-body');
         if (body) {
             body.scrollTop = 0;
@@ -836,26 +809,17 @@
         }
     }
 
-    /**
-     * Calcula la prioridad combinada: nivel + popularidad + ranking.
-     * Popular + urgente es lo más crítico. Dentro de misma urgencia,
-     * Top 1 va antes que Top 2.
-     */
+    
     function getPrioridadCombinada(a) {
         var nivelBase = getNivelPriority(a.nivelAlerta);
-        // Productos populares van antes dentro del mismo nivel
+        
         var popularBonus = a.esPopular ? -0.5 : 0;
-        // Ranking más bajo (top 1) = más prioritario
+        
         var rankingFactor = a.esPopular && a.rankingPopular ? (a.rankingPopular * 0.01) : 0;
         return nivelBase + popularBonus + rankingFactor;
     }
 
-    /**
-     * Devuelve la etiqueta UI del nivel según popularidad.
-     * - Popular + AGOTADO/CRITICO → "Crítico"
-     * - Popular + BAJO → "Priorizar"
-     * - No popular → nivel original en español
-     */
+    
     function getNivelLabelUI(nivel, esPopular) {
         var n = (nivel || '').toUpperCase();
         if (esPopular && (n === 'AGOTADO' || n === 'CRITICO')) return 'Crítico';
@@ -869,9 +833,7 @@
         }
     }
 
-    /**
-     * Devuelve la clase CSS del badge según popularidad.
-     */
+    
     function getNivelClassUI(nivel, esPopular) {
         var n = (nivel || '').toUpperCase();
         if (esPopular && (n === 'AGOTADO' || n === 'CRITICO')) return 'critico';
@@ -899,25 +861,25 @@
         }
     }
 
-    // =========================================
-    // ALERTAS PROACTIVAS — Toast + animación campana
-    // Muestra un resumen de alertas urgentes/críticas
-    // al cargar la página si hay pendientes no leídas.
-    // =========================================
+    
+    
+    
+    
+    
     var STORAGE_TOAST_SHOWN = 'siontrack_toast_shown';
 
     function mostrarAlertasProactivas() {
         if (!alertasData.length) return;
         if (typeof showToast !== 'function') return;
 
-        // Filtrar solo alertas urgentes no leídas ni descartadas
+        
         var urgentes = alertasData.filter(function (a) {
             var nivel = (a.nivelAlerta || '').toUpperCase();
             var esUrgente = nivel === 'AGOTADO' || nivel === 'CRITICO';
             return esUrgente && !estaLeido(a.productoId) && !estaDescartado(a.productoId);
         });
 
-        // Incluir también productos populares con stock bajo (prioritarios)
+        
         var prioritarios = alertasData.filter(function (a) {
             var nivel = (a.nivelAlerta || '').toUpperCase();
             var esBajoPopular = (nivel === 'BAJO') && a.esPopular;
@@ -930,24 +892,24 @@
 
         if (total === 0) return;
 
-        // Evitar mostrar el toast repetidamente en la misma sesión
-        // Solo mostrar si es nueva sesión o si hay nuevas alertas
+        
+        
         var toastKey = total + '_' + alertasData.length;
         var lastToast = sessionStorage.getItem(STORAGE_TOAST_SHOWN);
         if (lastToast === toastKey) return;
         sessionStorage.setItem(STORAGE_TOAST_SHOWN, toastKey);
 
-        // Animar la campana
+        
         var bellContainer = document.getElementById('notification-bell');
         if (bellContainer) {
             bellContainer.classList.add('bell-ring');
-            // Remover la clase después de las animaciones
+            
             setTimeout(function () {
                 bellContainer.classList.remove('bell-ring');
             }, 6500);
         }
 
-        // Construir mensaje del toast
+        
         var mensaje = '';
         if (totalUrgentes > 0 && totalPrioritarios > 0) {
             mensaje = totalUrgentes + ' producto' + (totalUrgentes !== 1 ? 's' : '') +
@@ -967,7 +929,7 @@
             }
         }
 
-        // Mostrar toast con un pequeño delay para que la página termine de cargar
+        
         setTimeout(function () {
             showToast(mensaje, 'error', 6000);
         }, 800);

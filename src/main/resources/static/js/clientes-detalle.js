@@ -1,10 +1,4 @@
-/**
- * SionTrack - Clientes Detalle Modal
- * Modal de vista detallada al hacer clic en el ojo (btn-ver-cliente)
- * 
- * Carga los datos completos via fetch a /api/clientes/{id}
- * para obtener teléfonos, correos, direcciones y vehículos como JSON limpio.
- */
+
 (function() {
     'use strict';
 
@@ -13,7 +7,7 @@
     var modalBadge = document.getElementById('cli-modal-badge');
     var modalFecha = document.getElementById('cli-modal-fecha');
 
-    // Inicializar modal con patrón reutilizable
+    
     var modal = SionUtils.crearModal({
         overlayId: 'cli-modal-overlay',
         closeBtnIds: ['cli-modal-close', 'cli-modal-close-btn']
@@ -21,7 +15,7 @@
 
     if (!modal) return;
 
-    // ===== ABRIR MODAL =====
+    
     document.addEventListener('click', function(e) {
         var btn = e.target.closest('.btn-ver-cliente');
         if (!btn) return;
@@ -36,7 +30,7 @@
     });
 
     function cargarCliente(clienteId) {
-        // Mostrar loading
+        
         modalSubtitle.textContent = 'Cargando...';
         modalBadge.textContent = '';
         modalBadge.className = 'badge';
@@ -49,7 +43,7 @@
 
         modal.abrir();
 
-        // Fetch datos completos del cliente
+        
         fetch('/api/clientes/' + clienteId, {
             headers: { 'Accept': 'application/json' }
         })
@@ -71,10 +65,10 @@
     }
 
     function renderizarCliente(c) {
-        // Header
+        
         modalSubtitle.textContent = c.nombre || 'Cliente';
 
-        // Badge tipo cliente
+        
         var tipoMap = {
             'Persona Natural': { text: 'Persona Natural', cls: 'badge-success' },
             'Empresa':         { text: 'Empresa', cls: 'badge-info' }
@@ -83,15 +77,15 @@
         modalBadge.textContent = tipo.text;
         modalBadge.className = 'badge ' + tipo.cls;
 
-        // Footer
+        
         modalFecha.textContent = c.fecha_registro
             ? 'Registrado: ' + formatearFecha(c.fecha_registro)
             : 'Registrado: —';
 
-        // ===== CONSTRUIR BODY =====
+        
         var html = '';
 
-        // --- Sección: Información Básica ---
+        
         html += seccionInicio(svgUser(), 'Información Básica');
         html += '<div class="cli-detail-info-list">';
         html +=   infoRow(svgIdCard(), 'Nombre', c.nombre);
@@ -101,7 +95,7 @@
         html +=   infoRow(svgClock(), 'Última Modificación', c.fecha_modificacion ? formatearFecha(c.fecha_modificacion) : 'Sin modificaciones');
         html += '</div>';
 
-        // Notificaciones
+        
         var notifActivo = c.recibe_notificaciones;
         html += '<div class="cli-detail-notif-row ' + (notifActivo ? 'active' : 'inactive') + '">';
         html +=   '<div class="cli-detail-notif-icon-wrap ' + (notifActivo ? 'active' : 'inactive') + '">' + svgBell() + '</div>';
@@ -115,7 +109,7 @@
         html += '</div>';
         html += seccionFin();
 
-        // --- Sección: Teléfonos ---
+        
         var telefonos = c.telefonos || [];
         html += seccionInicio(svgPhone(), 'Teléfonos (' + telefonos.length + ')');
         if (telefonos.length > 0) {
@@ -129,7 +123,7 @@
         }
         html += seccionFin();
 
-        // --- Sección: Correos ---
+        
         var correos = c.correos || [];
         html += seccionInicio(svgMail(), 'Correos Electrónicos (' + correos.length + ')');
         if (correos.length > 0) {
@@ -143,7 +137,7 @@
         }
         html += seccionFin();
 
-        // --- Sección: Direcciones ---
+        
         var direcciones = c.direcciones || [];
         html += seccionInicio(svgMapPin(), 'Direcciones (' + direcciones.length + ')');
         if (direcciones.length > 0) {
@@ -158,7 +152,7 @@
         }
         html += seccionFin();
 
-        // --- Sección: Vehículos ---
+        
         var vehiculos = c.vehiculos || [];
         html += seccionInicio(svgCar(), 'Vehículos (' + vehiculos.length + ')');
         if (vehiculos.length > 0) {
@@ -189,7 +183,7 @@
         modalBody.innerHTML = html;
     }
 
-    // ===== HELPERS =====
+    
 
     var esc = SionUtils.esc;
     var formatearFecha = SionUtils.formatearFecha;
@@ -202,7 +196,7 @@
 
     function seccionFin() { return '</div>'; }
 
-    // Fila de información básica (icono + label + valor)
+    
     function infoRow(icon, label, valor) {
         return '<div class="cli-detail-info-row">' +
             '<div class="cli-detail-info-icon">' + icon + '</div>' +
@@ -213,7 +207,7 @@
         '</div>';
     }
 
-    // Item genérico de lista (teléfono, correo, vehículo)
+    
     function itemRow(tipo, icon, texto, subtexto) {
         return '<div class="cli-detail-item">' +
             '<div class="cli-detail-item-icon ' + tipo + '">' + icon + '</div>' +
@@ -224,7 +218,7 @@
         '</div>';
     }
 
-    // Item con enlace externo (direcciones → Maps)
+    
     function itemRowLink(tipo, icon, texto, subtexto, url) {
         return '<a href="' + url + '" target="_blank" rel="noopener" class="cli-detail-item cli-detail-item-link">' +
             '<div class="cli-detail-item-icon ' + tipo + '">' + icon + '</div>' +
@@ -236,7 +230,7 @@
         '</a>';
     }
 
-    // Estado vacío con icono
+    
     function emptyState(icon, texto) {
         return '<div class="cli-detail-empty-state">' +
             '<div class="cli-detail-empty-icon">' + icon + '</div>' +
@@ -250,7 +244,7 @@
         return num.toLocaleString('es-CO') + ' km';
     }
 
-    // ===== SVG ICONS =====
+    
     function svgUser() {
         return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
     }

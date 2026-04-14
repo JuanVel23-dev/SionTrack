@@ -1,21 +1,15 @@
-/**
- * SionTrack v2.0 - Dashboard
- * Animaciones y lógica del dashboard
- */
+
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Animar contadores
+  
   animateCounters();
   
-  // Inicializar Lucide icons si está disponible
+  
   if (typeof lucide !== 'undefined') {
     lucide.createIcons();
   }
 });
 
-/**
- * Anima los números en las stat cards
- */
 function animateCounters() {
   const counters = document.querySelectorAll('.stat-card-value');
   
@@ -42,7 +36,7 @@ function animateCounters() {
       }
     };
     
-    // Iniciar animación cuando el elemento sea visible
+    
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {

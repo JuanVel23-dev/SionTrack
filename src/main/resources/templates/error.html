@@ -5,22 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SionTrack - Error</title>
 
-    <!-- Fonts -->
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- Stylesheets -->
+    
     <link rel="stylesheet" th:href="@{/css/nucleo.css}">
     <link rel="stylesheet" th:href="@{/css/componentes.css}">
     <link rel="stylesheet" th:href="@{/css/paginas.css}">
 </head>
 <body class="error-page">
 
-    <!-- Canvas de particulas (red tecnologica) -->
+    
     <canvas id="errorCanvas" class="error-canvas"></canvas>
 
-    <!-- Fondo con capas -->
+    
     <div class="error-bg">
         <div class="error-bg-gradient"></div>
         <div class="error-bg-grid"></div>
@@ -28,32 +28,32 @@
     </div>
 
     <div class="error-container">
-        <!-- Card de Error -->
+        
         <div class="error-card" id="errorCard">
-            <!-- Linea de escaneo decorativa -->
+            
             <div class="error-scanline"></div>
 
-            <!-- Borde con glow -->
+            
             <div class="error-card-glow"></div>
 
-            <!-- Icono con anillos orbitales -->
+            
             <div class="error-icon-wrap" data-stagger="1">
                 <div class="error-orbit error-orbit-1"></div>
                 <div class="error-orbit error-orbit-2"></div>
                 <div class="error-orbit error-orbit-3"></div>
                 <div class="error-icon-core">
-                    <!-- 404: Lupa -->
+                    
                     <svg th:if="${status == 404}" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="11" cy="11" r="8"></circle>
                         <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                         <line x1="8" y1="11" x2="14" y2="11"></line>
                     </svg>
-                    <!-- 403: Candado -->
+                    
                     <svg th:if="${status == 403}" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                         <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
                         <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
                     </svg>
-                    <!-- Otros: Alerta triangulo -->
+                    
                     <svg th:unless="${status == 404 or status == 403}" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
                         <line x1="12" y1="9" x2="12" y2="13"></line>
@@ -63,10 +63,10 @@
                 <div class="error-icon-pulse"></div>
             </div>
 
-            <!-- Codigo de error -->
+            
             <div class="error-code" data-stagger="2" th:text="${status ?: '500'}">500</div>
 
-            <!-- Titulo -->
+            
             <h1 class="error-title" data-stagger="3">
                 <span th:if="${status == 404}">Pagina no encontrada</span>
                 <span th:if="${status == 403}">Acceso denegado</span>
@@ -74,7 +74,7 @@
                 <span th:unless="${status == 404 or status == 403 or status == 500}">Algo salio mal</span>
             </h1>
 
-            <!-- Mensaje descriptivo -->
+            
             <p class="error-message" data-stagger="4">
                 <span th:if="${status == 404}">La pagina que buscas no existe o fue movida a otra ubicacion.</span>
                 <span th:if="${status == 403}">No tienes permisos para acceder a este recurso.</span>
@@ -82,7 +82,7 @@
                 <span th:unless="${status == 404 or status == 403 or status == 500}">Ha ocurrido un error inesperado. Por favor intenta de nuevo.</span>
             </p>
 
-            <!-- Botones de accion -->
+            
             <div class="error-actions" data-stagger="5">
                 <a th:href="@{/web/dashboard}" class="error-btn error-btn-primary">
                     <span class="error-btn-bg"></span>
@@ -103,14 +103,14 @@
                 </button>
             </div>
 
-            <!-- Footer -->
+            
             <div class="error-footer" data-stagger="6">
                 <div class="error-footer-line"></div>
                 <p>Sistema de Gestion Empresarial</p>
             </div>
         </div>
 
-        <!-- Version -->
+        
         <div class="error-version" data-stagger="7">
             <span class="error-version-dot"></span>
             SionTrack

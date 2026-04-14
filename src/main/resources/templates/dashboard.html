@@ -6,7 +6,7 @@
 <th:block layout:fragment="customCSS"></th:block>
 
 <th:block layout:fragment="content">
-    <!-- Page Header -->
+    
     <div class="page-header animate-in">
         <div class="page-header-content">
             <h1 class="page-header-title">Bienvenido a SionTrack</h1>
@@ -14,7 +14,7 @@
         </div>
     </div>
 
-    <!-- Stats Grid -->
+    
     <div class="stats-grid">
         <div class="stat-card animate-in delay-1" data-accent="gold">
             <div class="stat-card-header">
@@ -110,7 +110,7 @@
         </div>
     </div>
 
-    <!-- Quick Actions Card -->
+    
     <div class="card animate-in" style="animation-delay: 500ms;">
         <div class="card-header">
             <h3 class="card-title">
@@ -171,17 +171,14 @@
         </div>
     </div>
 
-    <!-- Productos Populares -->
+    
     <section id="popular-productos" class="animate-in" style="animation-delay: 550ms;"></section>
 
-    <!-- ============================================
-         PRODUCTOS QUE NECESITAN REABASTECIMIENTO — v6
-         Nombres intuitivos, colores claros, animaciones fluidas
-         ============================================ -->
+    
     <div class="stock-card animate-in" style="animation-delay:600ms"
          th:if="${totalAlertas != null AND totalAlertas > 0}">
 
-        <!-- HEADER -->
+        
         <div class="stock-card-header">
             <div class="stock-header-left">
                 <div class="stock-header-icon"
@@ -194,7 +191,7 @@
                          th:text="${totalAlertas + ' producto' + (totalAlertas == 1 ? ' necesita' : 's necesitan') + ' compra'}"></div>
                 </div>
             </div>
-            <!-- Chips con mismos nombres que los badges — orden de prioridad -->
+            
             <th:block th:with="
                 chipCritico=${countAgotado + countCritico},
                 chipPriorizar=${countPopulares != null ? countPopulares : 0},
@@ -222,7 +219,7 @@
                     <span class="stock-chip-dot"></span>
                     <span th:text="${chipCasiAlMin + ' Casi al mín.'}"></span>
                 </div>
-                <!-- Botón reabastecer -->
+                
                 <button class="stock-restock-btn" id="open-restock-modal">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
                     <span>Reabastecer</span>
@@ -233,7 +230,7 @@
 
         <div class="stock-list">
 
-            <!-- SEPARADOR: Compra inmediata (solo si la página actual tiene items no-ADVERTENCIA) -->
+            
             <div class="stock-separator urgente"
                  th:if="${not #lists.isEmpty(alertasStock.?[nivelAlerta != 'ADVERTENCIA'])}">
                 <div class="stock-separator-icon">
@@ -243,7 +240,7 @@
                 <div class="stock-separator-line"></div>
             </div>
 
-            <!-- Items AGOTADO, CRITICO, BAJO -->
+            
             <th:block th:each="alerta, stat : ${alertasStock}">
                 <div th:if="${alerta.nivelAlerta != 'ADVERTENCIA'}"
                      class="stock-item"
@@ -276,7 +273,7 @@
                     <div class="stock-info">
                         <div class="stock-name">
                             <span th:text="${alerta.nombre}">Producto</span>
-                            <!-- Estrella simple para productos populares -->
+                            
                             <span th:if="${alerta.esPopular}" class="stock-star"
                                   th:title="'Top ' + ${alerta.rankingPopular} + ' más vendido'">
                                 <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
@@ -313,7 +310,7 @@
                         </div>
                     </div>
 
-                    <!-- Badge de estado — prioridad basada en popularidad + nivel -->
+                    
                     <div class="stock-badges-wrap">
                         <span class="stock-badge"
                               th:classappend="${alerta.esPopular and (alerta.nivelAlerta == 'AGOTADO' or alerta.nivelAlerta == 'CRITICO') ? 'critico' : (alerta.esPopular and alerta.nivelAlerta == 'BAJO' ? 'priorizar' : alerta.nivelAlerta.toLowerCase())}"
@@ -328,7 +325,7 @@
                 </div>
             </th:block>
 
-            <!-- SEPARADOR: Revisar pronto (solo si la página actual tiene items ADVERTENCIA) -->
+            
             <div class="stock-separator advertencia"
                  th:if="${not #lists.isEmpty(alertasStock.?[nivelAlerta == 'ADVERTENCIA'])}">
                 <div class="stock-separator-icon">
@@ -338,7 +335,7 @@
                 <div class="stock-separator-line"></div>
             </div>
 
-            <!-- Items ADVERTENCIA -->
+            
             <th:block th:each="alerta, stat : ${alertasStock}">
                 <div th:if="${alerta.nivelAlerta == 'ADVERTENCIA'}"
                      class="stock-item advertencia"
@@ -412,10 +409,10 @@
             </th:block>
         </div>
 
-        <!-- Paginación -->
+        
         <div th:if="${pageAlertasStock != null}" th:replace="~{fragments/paginacion :: paginacion(${pageAlertasStock}, '/web/dashboard', 'pageStock', '')}"></div>
 
-        <!-- FOOTER -->
+        
         <div class="stock-card-footer">
             <div></div>
             <a th:href="@{/web/productos}" class="stock-footer-link">

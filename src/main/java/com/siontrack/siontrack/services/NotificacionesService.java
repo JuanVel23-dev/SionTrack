@@ -33,6 +33,21 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * Gestiona el envío de notificaciones por WhatsApp a los clientes.
+ *
+ * <p>Soporta tres tipos de notificación:
+ * <ul>
+ *   <li><b>RECORDATORIO_SERVICIO</b>: programado automáticamente al crear un servicio.
+ *       Se envía cada miércoles al mediodía a los clientes con recordatorios pendientes.</li>
+ *   <li><b>CONSENTIMIENTO</b>: solicitud de opt-in enviada masivamente a clientes que aún
+ *       no han respondido si desean recibir notificaciones.</li>
+ *   <li><b>PROMOCION</b>: envío puntual a los clientes que hayan usado un producto específico,
+ *       con posibilidad de selección manual desde el frontend.</li>
+ * </ul>
+ *
+ * <p>Cada envío queda registrado en la tabla de notificaciones con su estado y resultado.
+ */
 @Service
 public class NotificacionesService {
 
@@ -56,19 +71,20 @@ public class NotificacionesService {
         this.clienteRepository = clienteRepository;
     }
 
-    // =============================================
-    // RECORDATORIOS PROGRAMADOS (sin cambios)
-    // =============================================
-
+    /**
+     * Job programado que se ejecuta todos los miércoles al mediodía.
+     * Recupera los recordatorios pendientes cuya fecha ya venció y los envía por WhatsApp.
+     * Actualiza el estado de cada notificación según el resultado del envío.
+     */
     @Scheduled(cron = "0 0 12 * * WED")
     @Transactional
     public void enviarNotificacionesProgramadas() {
-        log.info("🔔 Enviando recordatorios programados...");
+        log.info("Enviando recordatorios programados...");
 
         Timestamp ahora = Timestamp.valueOf(LocalDateTime.now());
         List<Notificaciones> pendientes = notificacionesRepository.findNotificacionesPendientes(ahora);
 
-        log.info("📋 Pendientes: {}", pendientes.size());
+        log.info("Pendientes: {}", pendientes.size());
 
         int enviados = 0, fallidos = 0;
 
@@ -81,24 +97,28 @@ public class NotificacionesService {
             if (resultado == ResultadoEnvioMensaje.ENVIADO) {
                 notificacion.setEstado("enviado");
                 enviados++;
-                log.info("✅ Recordatorio enviado: {}", notificacion.getNombreServicio());
+                log.info("Recordatorio enviado: {}", notificacion.getNombreServicio());
             } else {
                 notificacion.setEstado("fallido");
                 fallidos++;
-                log.warn("❌ Falló definitivamente: {}", notificacion.getNombreServicio());
+                log.warn("Falló definitivamente: {}", notificacion.getNombreServicio());
             }
 
             notificacionesRepository.save(notificacion);
         }
 
-        log.info("✅ Completado - Enviados: {}, Fallidos: {}", enviados, fallidos);
+        log.info("Completado — Enviados: {}, Fallidos: {}", enviados, fallidos);
     }
 
+    /**
+     * Envía el mensaje de recordatorio de servicio para una notificación concreta.
+     * Devuelve {@link ResultadoEnvioMensaje#NUMERO_INVALIDO} si el cliente no tiene teléfono.
+     */
     private ResultadoEnvioMensaje enviarNotificacion(Notificaciones notificacion) {
         var cliente = notificacion.getClientes();
 
         if (cliente.getTelefonos() == null || cliente.getTelefonos().isEmpty()) {
-            log.warn("⚠️ Cliente {} sin teléfono", cliente.getNombre());
+            log.warn("Cliente {} sin teléfono", cliente.getNombre());
             return ResultadoEnvioMensaje.NUMERO_INVALIDO;
         }
 
@@ -120,7 +140,13 @@ public class NotificacionesService {
                 kilometraje);
     }
 
-    // 1. Método para alimentar la lista del Frontend
+    /**
+     * Devuelve la lista completa de clientes que aún no han respondido la solicitud
+     * de consentimiento para recibir notificaciones.
+     *
+     * @return lista de mapas con los campos {@code id}, {@code nombre}, {@code cedula},
+     *         {@code telefono} y {@code fechaCreacion}
+     */
     @Transactional(readOnly = true)
     public List<Map<String, Object>> obtenerClientesPendientesConsentimiento() {
         return clienteRepository.findClientesPendientesDeConsentimiento().stream()
@@ -140,6 +166,14 @@ public class NotificacionesService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Versión paginada de {@link #obtenerClientesPendientesConsentimiento()}.
+     * Acepta un término de búsqueda opcional para filtrar por nombre o cédula.
+     *
+     * @param pageable  configuración de paginación y orden
+     * @param busqueda  término de búsqueda (puede ser nulo o vacío)
+     * @return página de mapas con los datos del cliente
+     */
     @Transactional(readOnly = true)
     public Page<Map<String, Object>> obtenerClientesPendientesPaginado(Pageable pageable, String busqueda) {
         Page<Clientes> page;
@@ -163,19 +197,30 @@ public class NotificacionesService {
                 });
     }
 
+    /**
+     * Devuelve el conteo total de clientes pendientes de consentimiento.
+     *
+     * @return número de clientes sin respuesta de consentimiento
+     */
     @Transactional(readOnly = true)
     public long contarClientesPendientesConsentimiento() {
         return clienteRepository.countClientesPendientesDeConsentimiento();
     }
 
-    // 2. Método actualizado para recibir únicamente los IDs seleccionados
+    /**
+     * Envía la solicitud de consentimiento por WhatsApp únicamente a los clientes
+     * cuyos IDs fueron seleccionados manualmente en el frontend.
+     *
+     * @param idsSeleccionados lista de IDs de clientes a los que se enviará el mensaje
+     * @return mapa con los contadores {@code totalProcesados}, {@code enviados},
+     *         {@code fallidos} y {@code sinTelefono}
+     */
     @Transactional
     public Map<String, Object> enviarConsentimientoMasivo(List<Integer> idsSeleccionados) {
-        log.info("📢 Iniciando envío masivo para {} clientes seleccionados...", idsSeleccionados.size());
+        log.info("Iniciando envío masivo para {} clientes seleccionados...", idsSeleccionados.size());
 
-        // Busca solo los clientes que el usuario marcó en el HTML
         List<Clientes> clientesATrabajar = clienteRepository.findAllById(idsSeleccionados);
-        
+
         int enviados = 0, fallidos = 0, sinTelefono = 0;
         Map<String, Object> resumen = new HashMap<>();
 
@@ -201,16 +246,18 @@ public class NotificacionesService {
         resumen.put("enviados", enviados);
         resumen.put("fallidos", fallidos);
         resumen.put("sinTelefono", sinTelefono);
-        
+
         return resumen;
     }
 
-    // 3. Método auxiliar para guardar en el historial
+    /**
+     * Persiste una notificación de tipo {@code CONSENTIMIENTO} en el historial.
+     */
     private void guardarNotificacion(Clientes cliente, String mensaje, String estado, String resultadoEnvio) {
         Notificaciones n = new Notificaciones();
         n.setClientes(cliente);
         n.setCanal("whatsapp");
-        n.setTipoNotificacion("CONSENTIMIENTO"); // Para distinguirlo de PROMOCION y RECORDATORIO
+        n.setTipoNotificacion("CONSENTIMIENTO");
         n.setMensaje_enviado(mensaje);
         n.setEstado(estado);
         n.setResultadoEnvio(resultadoEnvio);
@@ -218,15 +265,16 @@ public class NotificacionesService {
         n.setIntentosEnvio(1);
         notificacionesRepository.save(n);
     }
-    // =============================================
-    // PROMOCIONES
-    // =============================================
 
     /**
-     * Retorna la lista de clientes elegibles para una promoción de un producto
-     * dado,
-     * incluyendo el estado de contacto reciente para mostrar advertencias en el
-     * frontend.
+     * Devuelve la lista de clientes elegibles para una promoción del producto indicado,
+     * enriquecida con el estado de contacto reciente para mostrar advertencias en el frontend.
+     *
+     * <p>Un cliente se considera "contactado recientemente" si recibió una promoción
+     * enviada exitosamente en los últimos 30 días.
+     *
+     * @param productoId ID del producto sobre el que se quiere lanzar la promoción
+     * @return lista de {@link ClientePreviewDTO} con datos del cliente y advertencias
      */
     @Transactional(readOnly = true)
     public List<ClientePreviewDTO> obtenerPreviewClientes(Integer productoId) {
@@ -244,7 +292,6 @@ public class NotificacionesService {
                 clientesUnicos.add(c);
         }
 
-        // Obtiene la fecha de la última promoción enviada exitosamente por cliente
         List<Integer> ids = clientesUnicos.stream()
                 .map(Clientes::getCliente_id).collect(Collectors.toList());
 
@@ -280,6 +327,17 @@ public class NotificacionesService {
         }).collect(Collectors.toList());
     }
 
+    /**
+     * Envía una promoción por WhatsApp a los clientes que han usado el producto indicado.
+     * Si el DTO incluye {@code clientesSeleccionados}, el envío se limita a esos IDs.
+     *
+     * <p>Los clientes sin consentimiento o sin teléfono no reciben el mensaje pero
+     * quedan registrados en el historial con el estado correspondiente.
+     *
+     * @param dto datos de la promoción: producto, texto, precio oferta y rango de fechas
+     * @return mapa con los contadores {@code producto}, {@code clientesEncontrados},
+     *         {@code enviados}, {@code fallidos}, {@code sinTelefono} y {@code sinConsentimiento}
+     */
     @Transactional
     public Map<String, Object> enviarPromocion(PromocionesRequestDTO dto) {
         Optional<Productos> productoOpt = productosRepository.findById(dto.getProductoId());
@@ -287,7 +345,7 @@ public class NotificacionesService {
         Map<String, Object> resumen = new HashMap<>();
 
         if (productoOpt.isEmpty()) {
-            log.warn("⚠️ Producto con ID {} no encontrado", dto.getProductoId());
+            log.warn("Producto con ID {} no encontrado", dto.getProductoId());
             resumen.put("clientesEncontrados", 0);
             resumen.put("enviados", 0);
             resumen.put("fallidos", 0);
@@ -297,10 +355,10 @@ public class NotificacionesService {
         }
 
         Productos producto = productoOpt.get();
-        log.info("📢 Enviando promoción para producto: {}", producto.getNombre());
+        log.info("Enviando promoción para producto: {}", producto.getNombre());
 
         List<Detalle_Servicio> detalles = detalleServicioRepository.findByProductoId(dto.getProductoId());
-        log.info("🔍 Detalles de servicio encontrados: {}", detalles.size());
+        log.info("Detalles de servicio encontrados: {}", detalles.size());
 
         Set<Integer> clientesVistos = new HashSet<>();
         List<Clientes> clientesUnicos = new ArrayList<>();
@@ -316,17 +374,16 @@ public class NotificacionesService {
             }
         }
 
-        // Filtra por selección manual si el usuario eligió clientes específicos
         List<Integer> seleccionados = dto.getClientesSeleccionados();
         if (seleccionados != null && !seleccionados.isEmpty()) {
             Set<Integer> idsSeleccionados = new HashSet<>(seleccionados);
             clientesUnicos = clientesUnicos.stream()
                     .filter(c -> idsSeleccionados.contains(c.getCliente_id()))
                     .collect(Collectors.toList());
-            log.info("🎯 Clientes filtrados por selección manual: {}", clientesUnicos.size());
+            log.info("Clientes filtrados por selección manual: {}", clientesUnicos.size());
         }
 
-        log.info("👥 Clientes únicos encontrados: {}", clientesUnicos.size());
+        log.info("Clientes únicos encontrados: {}", clientesUnicos.size());
 
         int enviados = 0, fallidos = 0, sinTelefono = 0, sinConsentimiento = 0;
 
@@ -371,6 +428,9 @@ public class NotificacionesService {
         return resumen;
     }
 
+    /**
+     * Persiste una notificación de tipo {@code PROMOCION} en el historial.
+     */
     private void guardarNotificacionPromocion(Clientes cliente,
             String mensajePromo, String estado,
             String resultadoEnvio) {
@@ -386,44 +446,81 @@ public class NotificacionesService {
         notificacionesRepository.save(n);
     }
 
-    // =============================================
-    // CONSULTAS PARA LAS VISTAS
-    // Retorna directamente List<Notificaciones>
-    // sin DTOs intermedios
-    // =============================================
-
+    /**
+     * Devuelve todas las notificaciones de tipo {@code PROMOCION} ordenadas.
+     *
+     * @return lista completa de promociones registradas
+     */
     @Transactional(readOnly = true)
     public List<Notificaciones> obtenerPromocionesEnviadas() {
         return notificacionesRepository.findByTipoNotificacionOrdenado("PROMOCION");
     }
 
+    /**
+     * Versión paginada de {@link #obtenerPromocionesEnviadas()}.
+     *
+     * @param pageable configuración de paginación y orden
+     * @return página de notificaciones de tipo {@code PROMOCION}
+     */
     @Transactional(readOnly = true)
     public Page<Notificaciones> obtenerPromocionesEnviadasPaginado(Pageable pageable) {
         return notificacionesRepository.findByTipoNotificacionPaginado("PROMOCION", pageable);
     }
 
+    /**
+     * Devuelve las promociones paginadas filtradas por rango de fechas de envío.
+     *
+     * @param pageable configuración de paginación
+     * @param desde    inicio del rango (inclusive)
+     * @param hasta    fin del rango (inclusive)
+     * @return página de notificaciones de tipo {@code PROMOCION} en el rango
+     */
     @Transactional(readOnly = true)
     public Page<Notificaciones> obtenerPromocionesPorFechaPaginado(Pageable pageable,
             java.time.LocalDateTime desde, java.time.LocalDateTime hasta) {
         return notificacionesRepository.findByTipoNotificacionYFechaPaginado("PROMOCION", desde, hasta, pageable);
     }
 
+    /**
+     * Devuelve todos los recordatorios de servicio ordenados.
+     *
+     * @return lista completa de recordatorios registrados
+     */
     @Transactional(readOnly = true)
     public List<Notificaciones> obtenerRecordatorios() {
         return notificacionesRepository.findRecordatoriosOrdenados();
     }
 
+    /**
+     * Versión paginada de {@link #obtenerRecordatorios()}.
+     *
+     * @param pageable configuración de paginación y orden
+     * @return página de recordatorios
+     */
     @Transactional(readOnly = true)
     public Page<Notificaciones> obtenerRecordatoriosPaginado(Pageable pageable) {
         return notificacionesRepository.findRecordatoriosPaginados(pageable);
     }
 
+    /**
+     * Devuelve los recordatorios paginados filtrados por rango de fechas programadas.
+     *
+     * @param pageable configuración de paginación
+     * @param desde    inicio del rango (inclusive)
+     * @param hasta    fin del rango (inclusive)
+     * @return página de recordatorios en el rango
+     */
     @Transactional(readOnly = true)
     public Page<Notificaciones> obtenerRecordatoriosPorFechaPaginado(Pageable pageable,
             java.time.LocalDateTime desde, java.time.LocalDateTime hasta) {
         return notificacionesRepository.findRecordatoriosPaginadosPorFecha(desde, hasta, pageable);
     }
 
+    /**
+     * Devuelve la lista de productos disponibles para seleccionar en el formulario de promociones.
+     *
+     * @return productos ordenados alfabéticamente por nombre
+     */
     @Transactional(readOnly = true)
     public List<Productos> obtenerProductosDisponibles() {
         return productosRepository.findAll().stream()
@@ -432,7 +529,14 @@ public class NotificacionesService {
                 .collect(Collectors.toList());
     }
 
-    // Actualiza únicamente la fecha de envío de un recordatorio pendiente
+    /**
+     * Actualiza la fecha programada de un recordatorio pendiente.
+     * Solo se permite modificar recordatorios en estado {@code "pendiente"}.
+     *
+     * @param id         ID del recordatorio a modificar
+     * @param nuevaFecha nueva fecha de envío programado
+     * @throws RuntimeException si el recordatorio no existe o no está en estado pendiente
+     */
     @Transactional
     public void actualizarFechaProgramada(Integer id, java.time.LocalDate nuevaFecha) {
         Notificaciones notificacion = notificacionesRepository.findById(id)
@@ -444,6 +548,6 @@ public class NotificacionesService {
 
         notificacion.setFecha_programada(Timestamp.valueOf(nuevaFecha.atTime(12, 0)));
         notificacionesRepository.save(notificacion);
-        log.info("📅 Fecha de recordatorio {} actualizada a {}", id, nuevaFecha);
+        log.info("Fecha de recordatorio {} actualizada a {}", id, nuevaFecha);
     }
 }

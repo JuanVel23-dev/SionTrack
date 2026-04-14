@@ -27,6 +27,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.siontrack.siontrack.repository.*;
 
+/**
+ * Gestiona el ciclo de vida de los clientes y sus datos de contacto asociados:
+ * teléfonos, correos, direcciones y vehículos.
+ *
+ * <p>Al crear un cliente con teléfono, se envía automáticamente la solicitud de
+ * consentimiento por WhatsApp. El resultado del envío se registra en el log pero
+ * no bloquea la creación del cliente si el servicio de mensajería falla.
+ *
+ * <p>La actualización de colecciones de contacto (teléfonos, correos, direcciones)
+ * usa una estrategia de sincronización: se eliminan los que ya no están en el DTO
+ * y se agregan los nuevos, sin modificar los que coinciden.
+ */
 @Service
 public class ClienteServicios {
 
@@ -52,15 +64,22 @@ public class ClienteServicios {
         this.direccionesRepository = direccionesRepository;
     }
 
+    /**
+     * Elimina todos los caracteres no numéricos de un número de teléfono.
+     * Ejemplo: {@code "+57 318-325 2987"} → {@code "573183252987"}.
+     */
     private String limpiarTelefono(String telefono) {
         if (telefono == null) return null;
         return telefono.replaceAll("[^0-9]", "");
     }
 
     /**
-     * Mapea Clientes → ClienteResponseDTO con resolución manual de recibe_notificaciones.
-     * ModelMapper STRICT no puede mapear getRecibeNotificaciones() → setRecibe_notificaciones()
-     * porque los nombres no coinciden (camelCase vs snake_case).
+     * Mapea {@link Clientes} → {@link ClienteResponseDTO} con resolución manual del campo
+     * {@code recibe_notificaciones}.
+     *
+     * <p>ModelMapper en modo STRICT no puede mapear {@code getRecibeNotificaciones()} →
+     * {@code setRecibe_notificaciones()} porque los nombres no coinciden
+     * (camelCase vs snake_case), por lo que la asignación se hace manualmente.
      */
     private ClienteResponseDTO mapearClienteADTO(Clientes cliente) {
         ClienteResponseDTO dto = modelMapper.map(cliente, ClienteResponseDTO.class);
@@ -68,6 +87,16 @@ public class ClienteServicios {
         return dto;
     }
 
+    /**
+     * Crea un nuevo cliente con todos sus datos de contacto.
+     *
+     * <p>Si el DTO incluye al menos un teléfono, se intenta enviar la solicitud de
+     * consentimiento por WhatsApp al primer número de la lista. El resultado se registra
+     * en el log; cualquier fallo en el envío se ignora para no afectar la creación.
+     *
+     * @param dto datos del cliente a crear
+     * @return DTO del cliente creado con su ID generado
+     */
     @Transactional
     public ClienteResponseDTO crearCliente(ClienteRequestDTO dto) {
 
@@ -101,20 +130,20 @@ public class ClienteServicios {
                         .enviarSolicitudConsentimiento(numeroPrincipal, cliente.getNombre());
 
                 switch (resultado) {
-                    case ENVIADO -> log.info("✅ WhatsApp enviado a {}", cliente.getNombre());
-                    case SIN_WHATSAPP -> {
-                        log.warn("📵 {} no tiene WhatsApp", numeroPrincipal);
+                    case ENVIADO       -> log.info("WhatsApp enviado a {}", cliente.getNombre());
+                    case SIN_WHATSAPP  -> {
+                        log.warn("{} no tiene WhatsApp", numeroPrincipal);
                         telefonoRepository.save(telefonos.get(0));
                     }
                     case NUMERO_INVALIDO -> {
-                        log.warn("🚫 Número inválido: {}", numeroPrincipal);
+                        log.warn("Número inválido: {}", numeroPrincipal);
                         telefonoRepository.save(telefonos.get(0));
                     }
-                    default -> log.warn("⚠️ No se pudo enviar WhatsApp: {}", resultado);
+                    default -> log.warn("No se pudo enviar WhatsApp: {}", resultado);
                 }
 
             } catch (Exception e) {
-                log.error("⚠️ Cliente creado, pero falló el envío de WhatsApp: {}", e.getMessage());
+                log.error("Cliente creado, pero falló el envío de WhatsApp: {}", e.getMessage());
             }
         }
 
@@ -160,6 +189,13 @@ public class ClienteServicios {
         return mapearClienteADTO(cliente);
     }
 
+    /**
+     * Obtiene un cliente por su ID.
+     *
+     * @param id ID del cliente
+     * @return DTO con los datos completos del cliente
+     * @throws RuntimeException si el cliente no existe
+     */
     @Transactional(readOnly = true)
     public ClienteResponseDTO obtenerClientePorId(Integer id) {
         Clientes cliente = clienteRepository.findById(id)
@@ -167,6 +203,11 @@ public class ClienteServicios {
         return mapearClienteADTO(cliente);
     }
 
+    /**
+     * Devuelve la lista completa de clientes sin paginación.
+     *
+     * @return lista de todos los clientes mapeados a DTO
+     */
     @Transactional(readOnly = true)
     public List<ClienteResponseDTO> obtenerListaClientes() {
         return clienteRepository.findAll().stream()
@@ -174,6 +215,13 @@ public class ClienteServicios {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Devuelve la lista de clientes paginada, con búsqueda opcional por nombre o cédula.
+     *
+     * @param pageable  configuración de paginación y orden
+     * @param busqueda  término de búsqueda (puede ser nulo o vacío para listar todos)
+     * @return página de clientes mapeados a DTO
+     */
     @Transactional(readOnly = true)
     public Page<ClienteResponseDTO> obtenerListaClientesPaginado(Pageable pageable, String busqueda) {
         if (busqueda != null && !busqueda.trim().isEmpty()) {
@@ -184,6 +232,19 @@ public class ClienteServicios {
                 .map(this::mapearClienteADTO);
     }
 
+    /**
+     * Actualiza los datos de un cliente existente.
+     *
+     * <p>La sincronización de colecciones (correos, teléfonos, direcciones) elimina
+     * los registros que ya no están en el DTO y agrega los nuevos, sin afectar los
+     * que coinciden por valor. Las colecciones nulas en el DTO se interpretan como
+     * "limpiar la colección".
+     *
+     * @param clienteId ID del cliente a actualizar
+     * @param dto       datos nuevos del cliente
+     * @return DTO del cliente actualizado
+     * @throws RuntimeException si el cliente no existe o si la cédula/RUC ya pertenece a otro
+     */
     @Transactional
     public ClienteResponseDTO actualizarCliente(Integer clienteId, ClienteRequestDTO dto) {
 
@@ -192,7 +253,6 @@ public class ClienteServicios {
 
         modelMapper.map(dto, clienteExistente);
 
-        // Manejar recibe_notificaciones manualmente
         if (dto.getRecibe_notificaciones() != null) {
             clienteExistente.setRecibe_notificaciones(dto.getRecibe_notificaciones());
         } else {
@@ -208,7 +268,6 @@ public class ClienteServicios {
             clienteExistente.setCedula_ruc(nuevaCedulaRuc);
         }
 
-        // CORREOS
         List<Cliente_Correos> correosExistentes = clienteExistente.getCorreos();
         List<CorreosRequestDTO> nuevosCorreosDto = (dto.getCorreos() == null) ? new ArrayList<>()
                 : dto.getCorreos().stream()
@@ -228,7 +287,6 @@ public class ClienteServicios {
             }
         }
 
-        // TELÉFONOS
         List<Cliente_Telefonos> telefonosExistentes = clienteExistente.getTelefonos();
         List<TelefonosRequestDTO> nuevosTelefonosDto = (dto.getTelefonos() == null) ? new ArrayList<>()
                 : dto.getTelefonos().stream()
@@ -251,7 +309,6 @@ public class ClienteServicios {
             }
         }
 
-        // DIRECCIONES
         List<Cliente_Direcciones> direccionesExistentes = clienteExistente.getDirecciones();
         List<DireccionesRequestDTO> nuevasDireccionesDto = (dto.getDirecciones() == null) ? new ArrayList<>()
                 : dto.getDirecciones().stream()
@@ -278,6 +335,12 @@ public class ClienteServicios {
         return mapearClienteADTO(clienteActualizado);
     }
 
+    /**
+     * Elimina un cliente y sus datos asociados.
+     *
+     * @param id ID del cliente a eliminar
+     * @throws RuntimeException si el cliente no existe
+     */
     @Transactional
     public void deleteCliente(Integer id) {
         if (!clienteRepository.existsById(id)) {
@@ -286,6 +349,13 @@ public class ClienteServicios {
         clienteRepository.deleteById(id);
     }
 
+    /**
+     * Agrega un nuevo vehículo a un cliente existente.
+     *
+     * @param dto       datos del vehículo a crear
+     * @param clienteId ID del cliente al que se asociará el vehículo
+     * @throws RuntimeException si el cliente no existe
+     */
     @Transactional
     public void crearVehiculoParaCliente(VehiculosRequestDTO dto, Integer clienteId) {
         Clientes clienteExistente = clienteRepository.findById(clienteId)

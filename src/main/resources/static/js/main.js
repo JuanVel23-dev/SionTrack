@@ -1,15 +1,10 @@
-/**
- * SionTrack v2.0 - Main JavaScript
- */
+
 
 var CONFIG = {
   themeStorageKey: 'siontrack_theme',
   toastDuration: 4000
 };
 
-// ============================================
-// TOAST NOTIFICATIONS
-// ============================================
 function showToast(message, type, duration) {
   type = type || 'success';
   duration = duration || CONFIG.toastDuration;
@@ -28,7 +23,7 @@ function showToast(message, type, duration) {
     error: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>'
   };
 
-  // Sanitizar mensaje para prevenir XSS (fallback seguro si SionUtils no esta disponible)
+  
   var msgSeguro;
   if (typeof SionUtils !== 'undefined') {
     msgSeguro = SionUtils.esc(message, message);
@@ -99,9 +94,6 @@ function showToast(message, type, duration) {
   return toast;
 }
 
-// ============================================
-// THEME MANAGER
-// ============================================
 var ThemeManager = {
   init: function() {
     var saved = localStorage.getItem(CONFIG.themeStorageKey);
@@ -128,9 +120,6 @@ var ThemeManager = {
   }
 };
 
-// ============================================
-// SIDEBAR MANAGER
-// ============================================
 var SidebarManager = {
   init: function() {
     this.sidebar = document.getElementById('sidebar');
@@ -160,14 +149,11 @@ var SidebarManager = {
   }
 };
 
-// ============================================
-// CONVERTIR ALERTAS THYMELEAF A TOASTS
-// ============================================
 function convertAlertsToToasts() {
   var mainContent = document.querySelector('.main-content');
   if (!mainContent) return;
   
-  // Mapeo: clase CSS de alerta → tipo de toast
+  
   var alertTypes = [
     { selector: '.alert.alert-success', toastType: 'success' },
     { selector: '.alert.alert-delete',  toastType: 'delete' },
@@ -191,9 +177,6 @@ function convertAlertsToToasts() {
   });
 }
 
-// ============================================
-// CONFIRM MODAL
-// ============================================
 function confirmAction(message, onConfirm, options) {
   options = options || {};
   var esc = typeof SionUtils !== 'undefined' ? SionUtils.esc : function(t) { return t; };
@@ -234,9 +217,6 @@ function confirmAction(message, onConfirm, options) {
   });
 }
 
-// ============================================
-// DELETE CONFIRMATIONS
-// ============================================
 function setupDeleteConfirmations() {
   var btns = document.querySelectorAll('.btn-delete, .btn-confirm-delete, [data-confirm]');
   btns.forEach(function(btn) {
@@ -257,9 +237,6 @@ function setupDeleteConfirmations() {
   });
 }
 
-// ============================================
-// FORM VALIDATION
-// ============================================
 function setupFormValidation() {
   var forms = document.querySelectorAll('form[data-validate]');
   forms.forEach(function(form) {
@@ -281,9 +258,6 @@ function setupFormValidation() {
   });
 }
 
-// ============================================
-// INIT
-// ============================================
 document.addEventListener('DOMContentLoaded', function() {
   ThemeManager.init();
   SidebarManager.init();

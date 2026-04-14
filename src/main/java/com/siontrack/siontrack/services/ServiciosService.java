@@ -30,6 +30,20 @@ import com.siontrack.siontrack.repository.VehiculosRepository;
 
 import jakarta.transaction.Transactional;
 
+/**
+ * Gestiona el ciclo de vida de los servicios prestados a los clientes.
+ *
+ * <p>Al crear un servicio:
+ * <ul>
+ *   <li>Se validan las entidades relacionadas (cliente y, si aplica, vehículo).</li>
+ *   <li>Se procesa cada detalle: se descuenta el stock del inventario y se congela
+ *       el precio unitario en el momento de la venta.</li>
+ *   <li>Se calcula el total del servicio sumando los subtotales de cada ítem.</li>
+ *   <li>Se actualiza el kilometraje del vehículo si se proporcionó.</li>
+ *   <li>Se delega en {@link RecordatorioService} para crear los recordatorios
+ *       del próximo servicio.</li>
+ * </ul>
+ */
 @Service
 public class ServiciosService {
 
@@ -47,25 +61,26 @@ public class ServiciosService {
     private RecordatorioService recordatorioService;
 
     /**
-     * Mapea una entidad Servicios a ServicioResponseDTO,
-     * resolviendo manualmente las relaciones con nombres distintos
-     * (entity: vehiculos/clientes → DTO: vehiculo/cliente)
+     * Mapea {@link Servicios} → {@link ServicioResponseDTO} resolviendo manualmente
+     * las relaciones cuyo nombre difiere entre entidad y DTO:
+     * {@code entity.vehiculos} → {@code dto.vehiculo} y
+     * {@code entity.clientes} → {@code dto.cliente}.
+     *
+     * <p>El nombre del producto en cada detalle también se resuelve manualmente porque
+     * ModelMapper en modo STRICT no puede navegar la ruta
+     * {@code detalle → producto → nombre}.
      */
     private ServicioResponseDTO mapearServicioADTO(Servicios servicio) {
         ServicioResponseDTO dto = modelMapper.map(servicio, ServicioResponseDTO.class);
 
-        // Mapeo manual: entity.getVehiculos() → dto.setVehiculo()
         if (servicio.getVehiculos() != null) {
             dto.setVehiculo(modelMapper.map(servicio.getVehiculos(), VehiculosResponseDTO.class));
         }
 
-        // Mapeo manual: entity.getClientes() → dto.setCliente()
         if (servicio.getClientes() != null) {
             dto.setCliente(modelMapper.map(servicio.getClientes(), ClienteResponseDTO.class));
         }
 
-        // Mapeo manual de detalles: ModelMapper no resuelve nombre_producto
-        // porque viene de la relación detalle → producto → nombre
         if (servicio.getDetalles() != null) {
             List<DetalleServicioResponseDTO> detallesDTO = servicio.getDetalles().stream()
                     .map(detalle -> {
@@ -74,7 +89,6 @@ public class ServiciosService {
                         d.setCantidad(detalle.getCantidad());
                         d.setPrecio_unitario_congelado(detalle.getPrecio_unitario_congelado());
                         d.setTipoItem(detalle.getTipo() != null ? detalle.getTipo().name() : "PRODUCTO");
-                        // Nombre del producto desde la relación
                         if (detalle.getProducto() != null) {
                             d.setNombre_producto(detalle.getProducto().getNombre());
                         }
@@ -87,14 +101,26 @@ public class ServiciosService {
         return dto;
     }
 
+    /**
+     * Crea un nuevo servicio con todos sus detalles de productos/mano de obra.
+     *
+     * <p>El precio unitario de cada ítem se congela en el momento de la creación:
+     * si el DTO trae precio, se usa ese; si no, se usa el precio de venta actual del producto.
+     * El stock se descuenta usando techo ({@code CEILING}) para cantidades decimales,
+     * de modo que 1.5 unidades descuenta 2 unidades del inventario entero.
+     *
+     * @param dto datos del servicio a crear, incluyendo sus detalles
+     * @return DTO del servicio creado con total calculado
+     * @throws RuntimeException si el cliente, vehículo o algún producto no existen,
+     *                          o si hay stock insuficiente
+     */
     @Transactional
     public ServicioResponseDTO crearServicio(ServicioRequestDTO dto) {
 
-        // 1. Validar y Buscar Entidades Padre
         Clientes cliente = clienteRepository.findById(dto.getCliente_id())
                 .orElseThrow(() -> new RuntimeException("Cliente no encontrado con ID: " + dto.getCliente_id()));
 
-        // Vehiculo obligatorio solo para MANO_DE_OBRA
+        // El vehículo es obligatorio únicamente para servicios de MANO_DE_OBRA
         if ("MANO_DE_OBRA".equals(dto.getTipo_servicio()) && dto.getVehiculo_id() == null) {
             throw new RuntimeException("El vehiculo es obligatorio para servicios de mano de obra");
         }
@@ -105,15 +131,12 @@ public class ServiciosService {
                     .orElseThrow(() -> new RuntimeException("Vehiculo no encontrado con ID: " + dto.getVehiculo_id()));
         }
 
-        // 2. Crear Entidad Servicio Base
         Servicios servicio = new Servicios();
         servicio.setFecha_servicio(dto.getFecha_servicio());
         servicio.setKilometraje_servicio(dto.getKilometraje_servicio());
         servicio.setTipo_servicio(dto.getTipo_servicio() != null ? dto.getTipo_servicio() : "PRODUCTO");
         servicio.setObservaciones(dto.getObservaciones());
         servicio.setCreado_en(LocalDateTime.now());
-
-        // Asignar Relaciones
         servicio.setClientes(cliente);
         servicio.setVehiculos(vehiculo);
 
@@ -121,7 +144,6 @@ public class ServiciosService {
             actualizarKilometrajeVehiculo(vehiculo, servicio.getKilometraje_servicio());
         }
 
-        // 3. Procesar Detalles y Calcular Total
         BigDecimal totalServicio = BigDecimal.ZERO;
         List<Detalle_Servicio> listaDetalles = new ArrayList<>();
 
@@ -129,31 +151,25 @@ public class ServiciosService {
 
             for (DetalleServicioRequestDTO detalleDto : dto.getDetalles()) {
 
-                // Buscar el producto
                 Productos producto = productosRepository.findById(detalleDto.getProducto_id())
                         .orElseThrow(
                                 () -> new RuntimeException("Producto no encontrado: " + detalleDto.getProducto_id()));
 
-                // Crear entidad detalle
                 Detalle_Servicio detalle = new Detalle_Servicio();
                 detalle.setProducto(producto);
-                detalle.setServicio(servicio); // Vincular al padre
-
-                // Datos del detalle
+                detalle.setServicio(servicio);
                 detalle.setCantidad(detalleDto.getCantidad());
 
-                // PRECIO: Usar el enviado o el del producto actual (congelamiento de precio)
+                // Precio congelado: se usa el del DTO si viene; si no, el precio de venta actual del producto
                 BigDecimal precioFinal = (detalleDto.getPrecio_unitario_congelado() != null)
                         ? detalleDto.getPrecio_unitario_congelado()
                         : producto.getPrecio_venta();
 
                 detalle.setPrecio_unitario_congelado(precioFinal);
-
-                // Definir tipo (usando el Enum de tu entidad)
                 detalle.setTipo(Detalle_Servicio.tipoItem.valueOf(detalleDto.getTipoItem()));
 
-                // Lógica de Stock (Descontar inventario)
-                // Se usa ceiling para cantidades decimales: 1.5 unidades descuenta 2 del stock entero
+                // Descuento de inventario: se usa CEILING para cantidades decimales
+                // (ej: 1.5 litros descuenta 2 unidades del stock entero)
                 if (producto.getInventario() != null) {
                     int cantidadADescontar = detalleDto.getCantidad()
                             .setScale(0, java.math.RoundingMode.CEILING).intValue();
@@ -163,7 +179,6 @@ public class ServiciosService {
                     producto.getInventario().setCantidad_disponible(nuevaCantidad);
                 }
 
-                // Sumar al total (Precio * Cantidad)
                 BigDecimal subtotal = precioFinal.multiply(detalleDto.getCantidad());
                 totalServicio = totalServicio.add(subtotal);
 
@@ -172,28 +187,38 @@ public class ServiciosService {
         }
 
         servicio.setDetalles(listaDetalles);
-        servicio.setTotal(totalServicio); // Asignar el total calculado
+        servicio.setTotal(totalServicio);
 
-        // 4. Guardar (Cascade guardará los detalles)
+        // Cascade guarda automáticamente los detalles junto con el servicio
         Servicios servicioGuardado = serviciosRepository.save(servicio);
 
         try {
             recordatorioService.procesarServicioParaRecordatorios(servicioGuardado);
         } catch (Exception e) {
-            System.err.println("⚠️ Error creando recordatorio: " + e.getMessage());
+            System.err.println("Error creando recordatorio: " + e.getMessage());
         }
 
-        // 5. Retornar DTO con mapeo correcto
         return mapearServicioADTO(servicioGuardado);
     }
 
-    // Listar todos
+    /**
+     * Devuelve todos los servicios registrados sin paginación.
+     *
+     * @return lista de todos los servicios mapeados a DTO
+     */
     public List<ServicioResponseDTO> obtenerTodos() {
         return serviciosRepository.findAll().stream()
                 .map(this::mapearServicioADTO)
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Devuelve los servicios paginados, con búsqueda opcional por nombre de cliente o placa.
+     *
+     * @param pageable configuración de paginación y orden
+     * @param busqueda término de búsqueda (puede ser nulo o vacío para listar todos)
+     * @return página de servicios mapeados a DTO
+     */
     public Page<ServicioResponseDTO> obtenerTodosPaginado(Pageable pageable, String busqueda) {
         if (busqueda != null && !busqueda.trim().isEmpty()) {
             return serviciosRepository.buscarPaginado(busqueda.trim(), pageable)
@@ -203,13 +228,25 @@ public class ServiciosService {
                 .map(this::mapearServicioADTO);
     }
 
-    // Obtener por ID
+    /**
+     * Obtiene un servicio por su ID, incluyendo sus detalles de productos.
+     *
+     * @param id ID del servicio
+     * @return DTO del servicio con sus detalles
+     * @throws RuntimeException si el servicio no existe
+     */
     public ServicioResponseDTO obtenerServicioPorId(Integer id) {
         Servicios servicio = serviciosRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Servicio no encontrado con ID: " + id));
         return mapearServicioADTO(servicio);
     }
 
+    /**
+     * Elimina un servicio y sus detalles asociados (vía cascade).
+     *
+     * @param idServicio ID del servicio a eliminar
+     * @throws RuntimeException si el servicio no existe
+     */
     public void eliminarServicio(Integer idServicio) {
         if (!serviciosRepository.existsById(idServicio)) {
             throw new RuntimeException("El servicio con ID " + idServicio + " no existe.");
@@ -217,6 +254,9 @@ public class ServiciosService {
         serviciosRepository.deleteById(idServicio);
     }
 
+    /**
+     * Actualiza el kilometraje actual de un vehículo si el valor no está vacío.
+     */
     private void actualizarKilometrajeVehiculo(Vehiculos vehiculo, String kilometrajeNuevo) {
         if (kilometrajeNuevo == null || kilometrajeNuevo.trim().isEmpty()) {
             return;

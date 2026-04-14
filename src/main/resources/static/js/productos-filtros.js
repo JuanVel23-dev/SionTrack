@@ -1,7 +1,4 @@
-/**
- * SionTrack - Filtros de Productos
- * Busqueda por texto + chips de filtro (stock)
- */
+
 (function() {
     'use strict';
 
@@ -13,7 +10,7 @@
 
         if (!rows.length) return;
 
-        // Inicializar chips de filtro
+        
         chips.forEach(function(chip) {
             chip.addEventListener('click', function() {
                 var grupo = this.dataset.filter;
@@ -21,7 +18,7 @@
 
                 filtrosActivos[grupo] = valor;
 
-                // Actualizar estado visual del grupo
+                
                 chips.forEach(function(c) {
                     if (c.dataset.filter === grupo) {
                         c.classList.toggle('active', c.dataset.value === valor);
@@ -34,7 +31,7 @@
 
         function aplicarFiltros() {
             rows.forEach(function(row) {
-                // Filtro por stock
+                
                 var coincideStock = true;
                 if (filtrosActivos.stock) {
                     coincideStock = (row.getAttribute('data-stock') || '') === filtrosActivos.stock;

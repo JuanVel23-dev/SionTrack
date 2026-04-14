@@ -1,14 +1,10 @@
-/**
- * SionTrack — Notificaciones Tabs
- * Sliding entre paneles, búsqueda por tab, modal de edición de fecha
- * y gestión de usuarios pendientes de consentimiento
- */
+
 (function() {
     'use strict';
 
     document.addEventListener('DOMContentLoaded', function() {
 
-        /* ── Tabs: sliding entre paneles ── */
+        
         var tabs = document.querySelectorAll('.ntab-btn');
         var track = document.getElementById('ntab-track');
         var pendientesCargados = false;
@@ -23,14 +19,14 @@
 
                     track.style.transform = 'translateX(-' + (index * 100) + '%)';
 
-                    // Cargar pendientes la primera vez que se accede al tab
+                    
                     if (tab.dataset.tab === 'pendientes' && !pendientesCargados) {
                         cargarPendientes();
                     }
                 });
             });
 
-            // Activar tab según parámetro del servidor
+            
             var container = document.querySelector('.table-container[data-tab-activo]');
             var tabActivo = container ? container.getAttribute('data-tab-activo') : null;
             if (tabActivo && tabActivo !== 'promociones') {
@@ -39,7 +35,7 @@
             }
         }
 
-        /* ── Búsqueda independiente por panel ── */
+        
         document.querySelectorAll('.ntab-search').forEach(function(input) {
             input.addEventListener('input', SionUtils.debounce(function() {
                 var target = input.dataset.target;
@@ -75,7 +71,7 @@
             }, 200));
         });
 
-        /* ── Mensajes flash del servidor (success/error) ── */
+        
         var flash = document.getElementById('flashMessages');
         if (flash) {
             var sMsg = flash.getAttribute('data-success');
@@ -84,7 +80,7 @@
             if (eMsg && typeof showToast === 'function') showToast(eMsg, 'error');
         }
 
-        /* ── Toast desde envío AJAX de promoción (sessionStorage) ── */
+        
         try {
             var toastData = sessionStorage.getItem('promoToast');
             if (toastData) {
@@ -96,9 +92,7 @@
             }
         } catch(e) {}
 
-        /* ══════════════════════════════════════════
-           USUARIOS PENDIENTES DE CONSENTIMIENTO
-           ══════════════════════════════════════════ */
+        
 
         var pendientesData = [];
         var pendientesPageActual = 0;
@@ -153,7 +147,7 @@
                 tablaWrap.style.display = 'none';
                 vacio.style.display = 'block';
                 footer.style.display = 'none';
-                // Eliminar paginación si existe
+                
                 var pagVieja = document.getElementById('pendientes-paginacion');
                 if (pagVieja) pagVieja.remove();
                 return;
@@ -205,7 +199,7 @@
             container.id = 'pendientes-paginacion';
             container.className = 'table-pagination';
 
-            // Info
+            
             var info = document.createElement('div');
             info.className = 'pagination-info';
             var desde = (current * size) + 1;
@@ -213,16 +207,16 @@
             info.innerHTML = 'Mostrando <strong>' + desde + '</strong> a <strong>' + hasta + '</strong> de <strong>' + totalElements + '</strong>';
             container.appendChild(info);
 
-            // Controles
+            
             var controls = document.createElement('div');
             controls.className = 'pagination-controls';
 
-            // Primera
+            
             controls.appendChild(crearBtnPag('«', 0, current === 0));
-            // Anterior
+            
             controls.appendChild(crearBtnPag('‹', current - 1, current === 0));
 
-            // Números (ventana de 5)
+            
             var start = Math.max(0, current - 2);
             var end = Math.min(total - 1, start + 4);
             start = Math.max(0, end - 4);
@@ -247,14 +241,14 @@
                 controls.appendChild(dots2);
             }
 
-            // Siguiente
+            
             controls.appendChild(crearBtnPag('›', current + 1, current >= total - 1));
-            // Última
+            
             controls.appendChild(crearBtnPag('»', total - 1, current >= total - 1));
 
             container.appendChild(controls);
 
-            // Insertar después de la tabla
+            
             tablaWrap.parentNode.insertBefore(container, tablaWrap.nextSibling);
         }
 

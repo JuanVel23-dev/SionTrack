@@ -1,7 +1,4 @@
-/**
- * SionTrack — Módulo de Reportes
- * Gestiona la descarga de reportes PDF con fechas obligatorias y selección de período
- */
+
 var SionReportes = (function() {
     'use strict';
 
@@ -13,9 +10,7 @@ var SionReportes = (function() {
         return activo ? activo.getAttribute('data-periodo') : 'general';
     }
 
-    /**
-     * Obtiene y valida las fechas de la tarjeta. Retorna null si no son válidas.
-     */
+    
     function obtenerFechasDeCard(card) {
         var desdeInput = card.querySelector('.rpt-date-desde');
         var hastaInput = card.querySelector('.rpt-date-hasta');
@@ -23,7 +18,7 @@ var SionReportes = (function() {
         var desdeVal = desdeInput ? desdeInput.value : '';
         var hastaVal = hastaInput ? hastaInput.value : '';
 
-        // Campos vacios
+        
         if (!desdeVal && !hastaVal) {
             showToast('Debes seleccionar la fecha de inicio y la fecha fin', 'error');
             return null;
@@ -37,7 +32,7 @@ var SionReportes = (function() {
             return null;
         }
 
-        // Fechas futuras
+        
         var hoy = new Date().toISOString().slice(0, 10);
         if (desdeVal > hoy && hastaVal > hoy) {
             showToast('Ambas fechas son futuras, selecciona fechas válidas', 'error');
@@ -52,7 +47,7 @@ var SionReportes = (function() {
             return null;
         }
 
-        // Limite inferior 1980
+        
         if (desdeVal < '1980-01-01' && hastaVal < '1980-01-01') {
             showToast('Ambas fechas son anteriores a 1980, selecciona fechas válidas', 'error');
             return null;
@@ -66,13 +61,13 @@ var SionReportes = (function() {
             return null;
         }
 
-        // Rango invertido
+        
         if (desdeVal > hastaVal) {
             showToast('La fecha de inicio no puede ser posterior a la fecha fin', 'error');
             return null;
         }
 
-        // Rango maximo de 2 años
+        
         var desde = new Date(desdeVal);
         var hasta = new Date(hastaVal);
         var dosAnios = 2 * 365.25 * 24 * 60 * 60 * 1000;
@@ -119,9 +114,7 @@ var SionReportes = (function() {
             });
     }
 
-    /**
-     * Convierte texto dd/mm/aaaa a YYYY-MM-DD. Retorna '' si no es válido.
-     */
+    
     function textoAIso(texto) {
         var partes = texto.split('/');
         if (partes.length !== 3) return '';
@@ -134,19 +127,14 @@ var SionReportes = (function() {
         return y + '-' + String(m).padStart(2, '0') + '-' + String(d).padStart(2, '0');
     }
 
-    /**
-     * Convierte YYYY-MM-DD a dd/mm/aaaa.
-     */
+    
     function isoATexto(iso) {
         if (!iso) return '';
         var p = iso.split('-');
         return String(parseInt(p[2], 10)).padStart(2, '0') + '/' + String(parseInt(p[1], 10)).padStart(2, '0') + '/' + p[0];
     }
 
-    /**
-     * Convierte los spans de texto en inputs editables para escribir la fecha.
-     * Sincroniza con el input hidden y el calendario del sion-datepicker.
-     */
+    
     function hacerCamposEditables() {
         document.querySelectorAll('.rpt-date-group .sion-datepicker').forEach(function(dp) {
             var span = dp.querySelector('.sion-datepicker-texto');
@@ -154,7 +142,7 @@ var SionReportes = (function() {
             var btn = dp.querySelector('.sion-datepicker-btn');
             if (!span || !hiddenInput) return;
 
-            // Crear input de texto que reemplaza el span
+            
             var textInput = document.createElement('input');
             textInput.type = 'text';
             textInput.placeholder = 'dd/mm/aaaa';
@@ -163,7 +151,7 @@ var SionReportes = (function() {
             textInput.setAttribute('maxlength', '10');
             span.parentNode.replaceChild(textInput, span);
 
-            // Click en el input de texto NO debe abrir/cerrar el calendario
+            
             textInput.addEventListener('click', function(e) {
                 e.stopPropagation();
             });
@@ -171,7 +159,7 @@ var SionReportes = (function() {
                 e.stopPropagation();
             });
 
-            // Autoformato: solo numeros, max 8 digitos, "/" automatica
+            
             textInput.addEventListener('input', function() {
                 var digitos = textInput.value.replace(/[^0-9]/g, '');
                 if (digitos.length > 8) digitos = digitos.substring(0, 8);
@@ -182,18 +170,18 @@ var SionReportes = (function() {
                 }
                 textInput.value = resultado;
 
-                // Si completo dd/mm/aaaa, sincronizar
+                
                 if (resultado.length === 10) {
                     var iso = textoAIso(resultado);
                     hiddenInput.value = iso;
                     if (iso) btn.classList.add('has-value');
                 } else {
-                    // Incompleto, limpiar hidden
+                    
                     hiddenInput.value = '';
                 }
             });
 
-            // Cuando el calendario selecciona una fecha, actualizar el campo de texto
+            
             hiddenInput.addEventListener('change', function() {
                 if (!hiddenInput.value) {
                     textInput.value = '';
@@ -204,7 +192,7 @@ var SionReportes = (function() {
                 btn.classList.add('has-value');
             });
 
-            // Al salir del campo, sincronizar
+            
             textInput.addEventListener('blur', function() {
                 var val = textInput.value.trim();
                 if (!val) {
@@ -221,7 +209,7 @@ var SionReportes = (function() {
                 }
             });
 
-            // Enter confirma la fecha
+            
             textInput.addEventListener('keydown', function(e) {
                 if (e.key === 'Enter') {
                     e.preventDefault();
@@ -231,14 +219,10 @@ var SionReportes = (function() {
         });
     }
 
-    /**
-     * Mueve los dropdowns del datepicker al body y los posiciona con fixed.
-     * sion-datepicker.js ya creo los dropdowns en DOMContentLoaded (se ejecuta antes),
-     * asi que aqui ya existen y los podemos mover directamente.
-     */
+    
     function posicionarDropdowns() {
         var TRANSITION = 'opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.25s';
-        var pares = []; // {dp, dropdown} de cada datepicker
+        var pares = []; 
 
         document.querySelectorAll('.rpt-date-group .sion-datepicker').forEach(function(dp) {
             var dropdown = dp.querySelector('.sdp-dropdown');
@@ -253,11 +237,11 @@ var SionReportes = (function() {
 
             new MutationObserver(function() {
                 if (dp.classList.contains('abierto')) {
-                    // Posicionar sin animacion
+                    
                     dropdown.style.transition = 'none';
                     ubicarDropdown(dp, dropdown);
 
-                    // Animacion de entrada
+                    
                     dropdown.style.opacity = '0';
                     dropdown.style.visibility = 'visible';
                     dropdown.style.transform = 'translateY(8px) scale(0.97)';
@@ -277,7 +261,7 @@ var SionReportes = (function() {
             }).observe(dp, { attributes: true, attributeFilter: ['class'] });
         });
 
-        // Reposicionar al hacer scroll para que siga al campo
+        
         var scrollable = document.querySelector('.main-content') || window;
         scrollable.addEventListener('scroll', function() {
             pares.forEach(function(par) {
@@ -286,7 +270,7 @@ var SionReportes = (function() {
                 }
             });
         }, { passive: true });
-        // Tambien en el scroll del window por si el scroll es global
+        
         if (scrollable !== window) {
             window.addEventListener('scroll', function() {
                 pares.forEach(function(par) {
@@ -315,7 +299,7 @@ var SionReportes = (function() {
         hacerCamposEditables();
         posicionarDropdowns();
 
-        // Selector de período para productos populares
+        
         var selector = document.getElementById('periodoSelector');
         if (selector) {
             selector.addEventListener('click', function(e) {
@@ -328,7 +312,7 @@ var SionReportes = (function() {
             });
         }
 
-        // Botones de descarga
+        
         document.addEventListener('click', function(e) {
             var btn = e.target.closest('.btn-descargar');
             if (!btn) return;
@@ -338,14 +322,14 @@ var SionReportes = (function() {
 
             var url;
 
-            // Productos populares usa su propio selector de período
+            
             if (tipo === 'productos-populares') {
                 url = '/api/reportes/productos-populares?periodo=' + obtenerPeriodo();
                 ejecutarDescarga(btn, url);
                 return;
             }
 
-            // Todos los demás reportes requieren fechas
+            
             var card = btn.closest('.rpt-card');
             if (!card) return;
 

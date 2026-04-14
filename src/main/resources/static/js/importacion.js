@@ -1,11 +1,8 @@
-/* ============================================
-   SIONTRACK - Importacion de Datos
-   Logica de drag-drop, upload y resultados
-   ============================================ */
+
 (function () {
     'use strict';
 
-    // --- Referencias al DOM ---
+    
     var tiposGrid = document.getElementById('tiposGrid');
     var dropzone = document.getElementById('dropzone');
     var dropzoneContenido = document.getElementById('dropzoneContenido');
@@ -26,7 +23,7 @@
     var erroresLista = document.getElementById('erroresLista');
     var btnNueva = document.getElementById('btnNueva');
 
-    // --- Estado ---
+    
     var tipoSeleccionado = null;
     var endpointSeleccionado = null;
     var archivoSeleccionado = null;
@@ -35,7 +32,7 @@
 
     var extensionesValidas = ['.xlsx', '.xls', '.csv'];
 
-    // --- Seleccion de tipo ---
+    
     tiposGrid.addEventListener('click', function (e) {
         var card = e.target.closest('.importacion-tipo-card');
         if (!card || cargando) return;
@@ -49,14 +46,14 @@
         actualizarBoton();
     });
 
-    // --- Dropzone: clic para abrir selector ---
+    
     dropzone.addEventListener('click', function (e) {
         if (cargando) return;
         if (e.target.closest('.importacion-archivo-quitar')) return;
         fileInput.click();
     });
 
-    // --- Drag & drop (con counter para evitar flicker en hijos) ---
+    
     dropzone.addEventListener('dragenter', function (e) {
         e.preventDefault();
         dragCounter++;
@@ -86,32 +83,32 @@
         if (files.length > 0) procesarArchivo(files[0]);
     });
 
-    // --- Input file change ---
+    
     fileInput.addEventListener('change', function () {
         if (fileInput.files.length > 0) {
             procesarArchivo(fileInput.files[0]);
         }
     });
 
-    // --- Quitar archivo con animacion ---
+    
     quitarArchivo.addEventListener('click', function (e) {
         e.stopPropagation();
         if (cargando) return;
         limpiarArchivoAnimado();
     });
 
-    // --- Boton importar ---
+    
     btnImportar.addEventListener('click', function () {
         if (!tipoSeleccionado || !archivoSeleccionado || cargando) return;
         importarDatos();
     });
 
-    // --- Boton nueva importacion ---
+    
     btnNueva.addEventListener('click', function () {
         reiniciarTodo();
     });
 
-    // --- Funciones auxiliares ---
+    
 
     function procesarArchivo(file) {
         var nombre = file.name.toLowerCase();
@@ -129,7 +126,7 @@
         archivoSeleccionado = file;
         archivoNombre.textContent = SionUtils.esc(file.name);
 
-        // Animar salida del contenido default y entrada del archivo
+        
         dropzoneContenido.classList.add('saliendo');
 
         setTimeout(function () {
@@ -209,7 +206,7 @@
         });
     }
 
-    // Animacion de conteo para los stats
+    
     function animarContador(elemento, valorFinal) {
         var duracion = 600;
         var inicio = performance.now();
@@ -235,7 +232,7 @@
         void resultados.offsetWidth;
         resultados.classList.add('animate-in');
 
-        // Animar contadores con delay escalonado
+        
         setTimeout(function () {
             animarContador(statProcesados, data.registrosProcesados || 0);
         }, 200);
@@ -249,7 +246,7 @@
             animarContador(statOmitidos, data.registrosOmitidos || 0);
         }, 650);
 
-        // Advertencias (registros omitidos) con animacion escalonada
+        
         advertenciasLista.innerHTML = '';
         if (data.advertencias && data.advertencias.length > 0) {
             advertenciasContainer.style.display = '';
@@ -264,7 +261,7 @@
             advertenciasContainer.style.display = 'none';
         }
 
-        // Errores con animacion escalonada
+        
         erroresLista.innerHTML = '';
         if (data.errores && data.errores.length > 0) {
             erroresContainer.style.display = '';
@@ -279,7 +276,7 @@
             erroresContainer.style.display = 'none';
         }
 
-        // Toast de resumen
+        
         if (data.registrosFallidos > 0) {
             showToast(
                 data.registrosExitosos + ' importados, ' + data.registrosFallidos + ' con errores' +
@@ -298,20 +295,20 @@
             );
         }
 
-        // Scroll hacia resultados
+        
         setTimeout(function () {
             resultados.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }, 100);
     }
 
     function reiniciarTodo() {
-        // Limpiar seleccion de tipo
+        
         tipoSeleccionado = null;
         endpointSeleccionado = null;
         var cards = tiposGrid.querySelectorAll('.importacion-tipo-card');
         cards.forEach(function (c) { c.classList.remove('activo'); });
 
-        // Limpiar archivo
+        
         archivoSeleccionado = null;
         fileInput.value = '';
         archivoInfo.classList.remove('visible', 'saliendo');
@@ -319,17 +316,17 @@
         dropzone.classList.remove('tiene-archivo');
         actualizarBoton();
 
-        // Ocultar resultados
+        
         resultados.style.display = 'none';
         resultados.classList.remove('animate-in');
 
-        // Resetear contadores
+        
         statProcesados.textContent = '0';
         statExitosos.textContent = '0';
         statFallidos.textContent = '0';
         statOmitidos.textContent = '0';
 
-        // Scroll arriba
+        
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 

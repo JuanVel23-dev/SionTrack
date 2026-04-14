@@ -1,18 +1,8 @@
-/**
- * ============================================
- *  SIONTRACK v2.1 — Productos Populares
- *  Dashboard widget — fetch + render + charts
- * ============================================
- *
- *  Consume: GET /api/productos/populares?limite={n}&periodo={p}
- *  Response: [{ productoId, nombre, categoria, totalVendido }]
- *
- *  Requiere: Chart.js (CDN)
- */
+
 
 document.addEventListener('DOMContentLoaded', () => {
 
-    // Chart.js 4.x UMD: registrar todos los componentes
+    
     if (typeof Chart !== 'undefined' && Chart.register) {
         Chart.register(...Chart.registerables || []);
     }
@@ -21,12 +11,9 @@ document.addEventListener('DOMContentLoaded', () => {
     widget.init();
 });
 
-
 class ProductosPopulares {
 
-    /* ----------------------------------------
-       Config
-       ---------------------------------------- */
+    
     static DEFAULTS = {
         limite:  5,
         periodo: 'mes',
@@ -50,18 +37,18 @@ class ProductosPopulares {
         { key: 'radar',      label: 'Radar',       icon: 'radar' }
     ];
 
-    // Paleta premium SionTrack
+    
     static COLORS = [
-        'rgba(212, 175, 55, 0.85)',   // Gold
-        'rgba(59, 130, 246, 0.85)',    // Blue
-        'rgba(16, 185, 129, 0.85)',    // Emerald
-        'rgba(244, 63, 94, 0.85)',     // Rose
-        'rgba(168, 85, 247, 0.85)',    // Purple
-        'rgba(251, 146, 60, 0.85)',    // Orange
-        'rgba(34, 211, 238, 0.85)',    // Cyan
-        'rgba(163, 230, 53, 0.85)',    // Lime
-        'rgba(232, 121, 249, 0.85)',   // Fuchsia
-        'rgba(253, 224, 71, 0.85)'    // Yellow
+        'rgba(212, 175, 55, 0.85)',   
+        'rgba(59, 130, 246, 0.85)',    
+        'rgba(16, 185, 129, 0.85)',    
+        'rgba(244, 63, 94, 0.85)',     
+        'rgba(168, 85, 247, 0.85)',    
+        'rgba(251, 146, 60, 0.85)',    
+        'rgba(34, 211, 238, 0.85)',    
+        'rgba(163, 230, 53, 0.85)',    
+        'rgba(232, 121, 249, 0.85)',   
+        'rgba(253, 224, 71, 0.85)'    
     ];
 
     static COLORS_BORDER = [
@@ -77,10 +64,7 @@ class ProductosPopulares {
         'rgba(253, 224, 71, 1)'
     ];
 
-
-    /* ----------------------------------------
-       Constructor
-       ---------------------------------------- */
+    
     constructor(selector) {
         this.container = document.querySelector(selector);
         if (!this.container) {
@@ -94,10 +78,7 @@ class ProductosPopulares {
         this.chartInstance = null;
     }
 
-
-    /* ----------------------------------------
-       Init
-       ---------------------------------------- */
+    
     init() {
         if (!this.container) return;
         this._buildSkeleton();
@@ -106,10 +87,7 @@ class ProductosPopulares {
         this.fetchData();
     }
 
-
-    /* ----------------------------------------
-       Skeleton
-       ---------------------------------------- */
+    
     _buildSkeleton() {
         this.container.innerHTML = `
         <div class="popular-card">
@@ -193,10 +171,7 @@ class ProductosPopulares {
         this.footerTx      = this.container.querySelector('#popular-footer-text');
     }
 
-
-    /* ----------------------------------------
-       SVG icons for chart types
-       ---------------------------------------- */
+    
     _getChartIcon(type) {
         const icons = {
             list: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -228,10 +203,7 @@ class ProductosPopulares {
         return icons[type] || icons.bar;
     }
 
-
-    /* ----------------------------------------
-       Event bindings
-       ---------------------------------------- */
+    
     _bindPeriodButtons() {
         const wrap = this.container.querySelector('#popular-periods');
         if (!wrap) return;
@@ -258,10 +230,7 @@ class ProductosPopulares {
         });
     }
 
-
-    /* ----------------------------------------
-       Fetch
-       ---------------------------------------- */
+    
     async fetchData() {
         this._showLoading();
         try {
@@ -276,10 +245,7 @@ class ProductosPopulares {
         }
     }
 
-
-    /* ----------------------------------------
-       View switcher
-       ---------------------------------------- */
+    
     _updateView() {
         if (!this.data || this.data.length === 0) {
             this._showEmpty();
@@ -299,10 +265,7 @@ class ProductosPopulares {
         this._updateFooter();
     }
 
-
-    /* ----------------------------------------
-       Render LIST (original)
-       ---------------------------------------- */
+    
     _renderList() {
         const maxVendido = this.data[0].totalVendido || 1;
 
@@ -312,7 +275,7 @@ class ProductosPopulares {
             const pct      = Math.round((p.totalVendido / maxVendido) * 100);
             const categoria = p.categoria || 'Sin categoría';
 
-            // Insignia de estrella compacta (igual que en la campana)
+            
             const starTag = rank <= 3
                 ? `<span class="popular-star-tag top-${rank}" title="Top ${rank} más vendido">
                        <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
@@ -358,14 +321,11 @@ class ProductosPopulares {
         });
     }
 
-
-    /* ----------------------------------------
-       Render CHART
-       ---------------------------------------- */
+    
     _renderChart() {
         this._destroyChart();
 
-        // Resetear el canvas para evitar problemas de contexto
+        
         const parent = this.chartCanvas.parentNode;
         const oldCanvas = this.chartCanvas;
         const newCanvas = document.createElement('canvas');
@@ -379,14 +339,14 @@ class ProductosPopulares {
         const borders   = ProductosPopulares.COLORS_BORDER.slice(0, this.data.length);
         const ctx       = this.chartCanvas.getContext('2d');
 
-        // Detect dark mode
+        
         const isDark = getComputedStyle(document.documentElement)
                        .getPropertyValue('--bg-surface').trim() !== '#ffffff';
 
         const textColor = isDark ? 'rgba(255,255,255,0.75)' : 'rgba(0,0,0,0.7)';
         const gridColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)';
 
-        // Chart.js global defaults
+        
         Chart.defaults.color = textColor;
         Chart.defaults.font.family = getComputedStyle(document.body).fontFamily || 'system-ui, sans-serif';
 
@@ -575,10 +535,7 @@ class ProductosPopulares {
         this.chartInstance = new Chart(ctx, config);
     }
 
-
-    /* ----------------------------------------
-       Chart helpers
-       ---------------------------------------- */
+    
     _tooltipConfig() {
         return {
             backgroundColor: 'rgba(20,20,20,0.9)',
@@ -622,10 +579,7 @@ class ProductosPopulares {
         }
     }
 
-
-    /* ----------------------------------------
-       States
-       ---------------------------------------- */
+    
     _showLoading() {
         this.listEl.style.display = '';
         this.chartWrap.style.display = 'none';
@@ -669,10 +623,7 @@ class ProductosPopulares {
                    ?.addEventListener('click', () => this.fetchData());
     }
 
-
-    /* ----------------------------------------
-       Helpers
-       ---------------------------------------- */
+    
     _updateFooter() {
         const label = ProductosPopulares.PERIODOS
             .find(p => p.key === this.periodo)?.label || this.periodo;

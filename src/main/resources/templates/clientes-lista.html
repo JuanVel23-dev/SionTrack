@@ -6,7 +6,7 @@
 <th:block layout:fragment="customCSS"></th:block>
 
 <th:block layout:fragment="content">
-    <!-- Page Header -->
+    
     <div class="page-header animate-in">
         <div class="page-header-content">
             <h1 class="page-header-title">Clientes</h1>
@@ -21,7 +21,7 @@
         </a>
     </div>
 
-    <!-- Table Container -->
+    
     <div class="table-container animate-in delay-1">
         <div class="table-toolbar">
             <div class="table-toolbar-left">
@@ -54,9 +54,9 @@
             </div>
         </div>
 
-        <!-- Filtros rápidos -->
+        
         <div class="filter-chips" id="filterChips">
-            <!-- Tipo de cliente -->
+            
             <button type="button" class="filter-chip active" data-filter="tipo" data-value="">Todos</button>
             <button type="button" class="filter-chip" data-filter="tipo" data-value="Persona Natural">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -69,7 +69,7 @@
 
             <span class="filter-chips-divider"></span>
 
-            <!-- Notificaciones -->
+            
             <button type="button" class="filter-chip" data-filter="notif" data-value="1">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
                 Notificaciones activas
@@ -81,7 +81,7 @@
 
             <span class="filter-chips-divider"></span>
 
-            <!-- Vehículos -->
+            
             <button type="button" class="filter-chip" data-filter="vehiculo" data-value="1">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.24a2 2 0 0 0-1.8 1.1l-.8 1.63A6 6 0 0 0 2 12.42V16h2"/><circle cx="6.5" cy="16.5" r="2.5"/><circle cx="16.5" cy="16.5" r="2.5"/></svg>
                 Con vehículo
@@ -118,16 +118,16 @@
                     th:data-notif="${cliente.recibe_notificaciones ? '1' : '0'}"
                     th:data-vehiculo="${cliente.vehiculos != null AND !cliente.vehiculos.isEmpty() ? '1' : '0'}"
                     class="data-row">
-                    <!-- Nombre -->
+                    
                     <td data-label="Nombre" class="al-left cell-nombre"
                         th:text="${cliente.nombre}"
                         th:title="${cliente.nombre}">Juan Perez</td>
 
-                    <!-- Cédula / NIT -->
+                    
                     <td data-label="Cedula/NIT" class="cell-cedula"
                         th:text="${cliente.cedula_ruc}">1234567890</td>
 
-                    <!-- Tipo -->
+                    
                     <td data-label="Tipo">
                         <span th:if="${cliente.tipo_cliente == 'Empresa'}" 
                               class="badge badge-info"
@@ -137,7 +137,7 @@
                               th:text="${cliente.tipo_cliente}">Persona Natural</span>
                     </td>
 
-                    <!-- Contacto -->
+                    
                     <td data-label="Contacto" class="al-left">
                         <div class="contact-cell">
                             <div th:if="${!cliente.telefonos.isEmpty()}" class="contact-row">
@@ -157,7 +157,7 @@
                         </div>
                     </td>
 
-                    <!-- Notificaciones -->
+                    
                     <td data-label="Notificaciones">
                         <span th:if="${cliente.recibe_notificaciones}" class="badge badge-success">
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:4px;vertical-align:-1px;">
@@ -176,7 +176,7 @@
                         </span>
                     </td>
 
-                    <!-- Acciones -->
+                    
                     <td data-label="Acciones">
                         <div class="table-actions">
                             <button type="button"
@@ -223,10 +223,10 @@
             </tbody>
         </table>
 
-        <!-- Paginación -->
+        
         <div th:if="${page != null}" th:replace="~{fragments/paginacion :: paginacion(${page}, '/web/clientes', 'page', ${search != null ? '&amp;search=' + search : ''})}"></div>
 
-        <!-- Empty State -->
+        
         <div th:if="${clientes == null OR clientes.isEmpty()}" class="table-empty">
             <div class="empty-state">
                 <div class="empty-state-icon">
@@ -252,12 +252,10 @@
         </div>
     </div>
 
-    <!-- ============================================
-         MODAL DE DETALLE DE CLIENTE
-         ============================================ -->
+    
     <div class="cli-modal-overlay" id="cli-modal-overlay">
         <div class="cli-modal">
-            <!-- Header -->
+            
             <div class="cli-modal-header">
                 <div class="cli-modal-header-left">
                     <div class="cli-modal-icon">
@@ -282,11 +280,11 @@
                 </div>
             </div>
 
-            <!-- Body -->
+            
             <div class="cli-modal-body" id="cli-modal-body">
             </div>
 
-            <!-- Footer -->
+            
             <div class="cli-modal-footer">
                 <div class="cli-modal-footer-info">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -296,12 +294,10 @@
             </div>
         </div>
     </div>
-    <!-- ============================================
-         MODAL DE BÚSQUEDA DE VEHÍCULOS POR PLACA
-         ============================================ -->
+    
     <div class="placa-overlay" id="placa-modal-overlay">
         <div class="placa-panel">
-            <!-- Header -->
+            
             <div class="placa-panel-header">
                 <div class="placa-panel-header-left">
                     <div class="placa-panel-icon">
@@ -323,7 +319,7 @@
                 </button>
             </div>
 
-            <!-- Buscador -->
+            
             <div class="placa-search-bar">
                 <svg class="placa-search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="11" cy="11" r="8"/>
@@ -336,9 +332,9 @@
                        spellcheck="false">
             </div>
 
-            <!-- Body con resultados -->
+            
             <div class="placa-panel-body" id="placa-modal-body">
-                <!-- Estado inicial -->
+                
                 <div class="placa-state" id="placa-initial-state">
                     <div class="placa-state-icon">
                         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -350,10 +346,10 @@
                     <p class="placa-state-desc">Escribe letras o números de la placa</p>
                 </div>
 
-                <!-- Resultados -->
+                
                 <div id="placa-results" style="display:none;"></div>
 
-                <!-- Sin resultados -->
+                
                 <div class="placa-state" id="placa-no-results" style="display:none;">
                     <div class="placa-state-icon placa-state-icon--empty">
                         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -365,14 +361,14 @@
                     <p class="placa-state-desc">No se encontraron vehículos con esa placa</p>
                 </div>
 
-                <!-- Cargando -->
+                
                 <div class="placa-state" id="placa-loading" style="display:none;">
                     <div class="placa-spinner"></div>
                     <p class="placa-state-desc">Buscando vehículos...</p>
                 </div>
             </div>
 
-            <!-- Footer -->
+            
             <div class="placa-panel-footer">
                 <button class="btn btn-secondary btn-sm" id="placa-modal-close-btn">Cerrar</button>
             </div>

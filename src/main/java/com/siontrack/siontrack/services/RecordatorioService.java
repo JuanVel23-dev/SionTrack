@@ -14,12 +14,32 @@ import com.siontrack.siontrack.repository.NotificacionesRepository;
 
 import jakarta.transaction.Transactional;
 
+/**
+ * Gestiona la creación automática de recordatorios de servicio para los clientes.
+ *
+ * <p>Cada vez que se registra un servicio con kilometraje, se programan hasta dos
+ * notificaciones por WhatsApp:
+ * <ul>
+ *   <li><b>Primer recordatorio</b>: {@value #mes_primer_recordatorio} mes antes de la
+ *       fecha estimada del próximo servicio.</li>
+ *   <li><b>Segundo recordatorio</b>: el día de la fecha estimada del próximo servicio.</li>
+ * </ul>
+ *
+ * <p>La fecha estimada del próximo servicio se calcula sumando
+ * {@value #meses_proximo_servicio} meses a la fecha del servicio registrado.
+ *
+ * <p>Si el cliente ya tiene recordatorios pendientes para el mismo vehículo, estos se
+ * reemplazan con los valores del servicio más reciente para mantener la vigencia.
+ */
 @Service
 public class RecordatorioService {
 
     private static final Logger log = LoggerFactory.getLogger(RecordatorioService.class);
 
+    /** Meses que se estiman entre un servicio y el siguiente. */
     private static final int meses_proximo_servicio = 8;
+
+    /** Meses de anticipación con los que se envía el primer recordatorio. */
     private static final int mes_primer_recordatorio = 1;
 
     private final NotificacionesRepository notificacionesRepository;
@@ -28,9 +48,19 @@ public class RecordatorioService {
         this.notificacionesRepository = notificacionesRepository;
     }
 
+    /**
+     * Punto de entrada principal. Recibe un servicio recién guardado, valida que tenga
+     * kilometraje (requisito de negocio para generar recordatorios) y delega en
+     * {@link #crearNotificaciones(Servicios)}.
+     *
+     * <p>Si ya existen recordatorios pendientes para el mismo cliente y vehículo,
+     * se eliminan antes de crear los nuevos para que siempre reflejen el último servicio.
+     *
+     * @param servicio servicio persistido desde el que se calcularán los recordatorios
+     */
     @Transactional
     public void procesarServicioParaRecordatorios(Servicios servicio) {
-        log.info("📋 Procesando servicio {} para recordatorios", servicio.getServicio_id());
+        log.info("Procesando servicio {} para recordatorios", servicio.getServicio_id());
 
         String kilometraje = servicio.getKilometraje_servicio();
         if (kilometraje == null || kilometraje.trim().isEmpty()) {
@@ -46,13 +76,13 @@ public class RecordatorioService {
         Integer clienteId = servicio.getClientes().getCliente_id();
         Integer vehiculoId = servicio.getVehiculos() != null ? servicio.getVehiculos().getVehiculo_id() : null;
 
-        // Verificar si ya existen recordatorios pendientes para este cliente+vehículo
         List<Notificaciones> pendientesExistentes = notificacionesRepository
                 .findRecordatoriosPendientesByClienteVehiculo(clienteId, vehiculoId);
 
         if (!pendientesExistentes.isEmpty()) {
-            // Eliminar los recordatorios desactualizados y recrearlos con el nuevo servicio
-            log.info("🔄 Se encontraron {} recordatorio(s) pendiente(s) para cliente {} / vehículo {}. Reemplazando...",
+            // Los recordatorios existentes se eliminan y se recrean con el nuevo servicio
+            // para que siempre apunten al mantenimiento más reciente del vehículo
+            log.info("Se encontraron {} recordatorio(s) pendiente(s) para cliente {} / vehículo {}. Reemplazando...",
                     pendientesExistentes.size(), clienteId, vehiculoId);
             notificacionesRepository.deleteAll(pendientesExistentes);
         }
@@ -60,37 +90,49 @@ public class RecordatorioService {
         crearNotificaciones(servicio);
     }
 
+    /**
+     * Calcula las fechas de los recordatorios a partir de la fecha del servicio y los
+     * persiste si aún están en el futuro.
+     */
     private void crearNotificaciones(Servicios servicio) {
         LocalDate fechaServicio = servicio.getFecha_servicio();
         LocalDate fechaProximoServicio = fechaServicio.plusMonths(meses_proximo_servicio);
         LocalDate fechaPrimerRecordatorio = fechaProximoServicio.minusMonths(mes_primer_recordatorio);
         LocalDate fechaSegundoRecordatorio = fechaProximoServicio;
 
-        log.info("📅 Servicio: {} | Próximo: {} | Recordatorios: {} y {}",
+        log.info("Servicio: {} | Próximo: {} | Recordatorios: {} y {}",
                 fechaServicio, fechaProximoServicio, fechaPrimerRecordatorio, fechaSegundoRecordatorio);
 
         Integer clienteId = servicio.getClientes().getCliente_id();
         Integer vehiculoId = servicio.getVehiculos() != null ? servicio.getVehiculos().getVehiculo_id() : null;
         Timestamp fechaProximoServicioTs = Timestamp.valueOf(fechaProximoServicio.atStartOfDay());
 
-        // Verificar si ya existe un recordatorio para este cliente+vehículo con la misma fecha objetivo
         if (notificacionesRepository.existsRecordatorioDuplicado(clienteId, vehiculoId, fechaProximoServicioTs)) {
             log.info("Ya existen recordatorios para cliente {} y vehículo {} con fecha objetivo {}",
                     clienteId, vehiculoId, fechaProximoServicio);
             return;
         }
 
-        // Primer recordatorio: 1 mes antes
+        // Primer recordatorio: 1 mes antes del próximo servicio estimado
         if (fechaPrimerRecordatorio.isAfter(LocalDate.now()) || fechaPrimerRecordatorio.equals(LocalDate.now())) {
             crearNotificacion(servicio, fechaPrimerRecordatorio, fechaProximoServicio, 1);
         }
 
-        // Segundo recordatorio: el día del próximo servicio
+        // Segundo recordatorio: el día del próximo servicio estimado
         if (fechaSegundoRecordatorio.isAfter(LocalDate.now())) {
             crearNotificacion(servicio, fechaSegundoRecordatorio, fechaProximoServicio, 2);
         }
     }
 
+    /**
+     * Construye y persiste una {@link Notificaciones} de tipo {@code RECORDATORIO_SERVICIO}
+     * programada para la fecha indicada.
+     *
+     * @param servicio             servicio de referencia
+     * @param fechaRecordatorio    fecha en que se enviará el mensaje
+     * @param fechaProximoServicio fecha estimada del próximo servicio (incluida en el mensaje)
+     * @param numeroRecordatorio   número de secuencia (1 o 2) para el log
+     */
     private void crearNotificacion(Servicios servicio, LocalDate fechaRecordatorio,
                                     LocalDate fechaProximoServicio, int numeroRecordatorio) {
         Notificaciones notificacion = new Notificaciones();
@@ -108,6 +150,6 @@ public class RecordatorioService {
 
         notificacionesRepository.save(notificacion);
 
-        log.info("✅ Recordatorio #{} creado para: {}", numeroRecordatorio, fechaRecordatorio);
+        log.info("Recordatorio #{} creado para: {}", numeroRecordatorio, fechaRecordatorio);
     }
 }

@@ -1,7 +1,4 @@
-/**
- * SionTrack - Filtros de Servicios
- * Busqueda por texto + chips de filtro (tipo de servicio)
- */
+
 (function() {
     'use strict';
 
@@ -13,7 +10,7 @@
 
         if (!rows.length) return;
 
-        // Inicializar chips de filtro
+        
         chips.forEach(function(chip) {
             chip.addEventListener('click', function() {
                 var grupo = this.dataset.filter;
@@ -21,7 +18,7 @@
 
                 filtrosActivos[grupo] = valor;
 
-                // Actualizar visual del grupo
+                
                 chips.forEach(function(c) {
                     if (c.dataset.filter === grupo) {
                         c.classList.toggle('active', c.dataset.value === valor);
@@ -34,7 +31,7 @@
 
         function aplicarFiltros() {
             rows.forEach(function(row) {
-                // Filtro por tipo de servicio
+                
                 var coincideTipo = true;
                 if (filtrosActivos['tipo-servicio']) {
                     coincideTipo = (row.getAttribute('data-tipo-servicio') || '') === filtrosActivos['tipo-servicio'];

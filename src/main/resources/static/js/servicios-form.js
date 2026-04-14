@@ -1,11 +1,4 @@
-/**
- * SionTrack - Servicios Form
- *
- * Toggle tipo de servicio (PRODUCTO / MANO_DE_OBRA)
- * Cliente: busqueda AJAX paginada en /api/clientes/buscar
- * Vehiculos: cascada via FETCH a /api/clientes/{id}/vehiculos
- * Productos: busqueda AJAX paginada en /api/productos/buscar
- */
+
 (function() {
     'use strict';
 
@@ -42,9 +35,9 @@
         };
     }
 
-    // =============================================
-    // Abrir/cerrar dropdown con animacion
-    // =============================================
+    
+    
+    
     function abrirDropdown(dropdown, toggleBtn) {
         dropdown.classList.add('visible');
         if (toggleBtn) toggleBtn.classList.add('abierto');
@@ -75,12 +68,12 @@
         var totalDisplay = document.getElementById('total-display');
         var form = document.getElementById('servicioForm');
 
-        // Tipo de servicio
+        
         var tipoToggle = document.getElementById('tipoServicioToggle');
         var tipoInput = document.getElementById('tipo_servicio');
         var tipoBtns = tipoToggle ? tipoToggle.querySelectorAll('.tipo-servicio-btn') : [];
 
-        // Seccion vehiculo
+        
         var vehiculoWrap = document.getElementById('vehiculoWrap');
         var vehiculoSection = document.getElementById('vehiculoSection');
         var vehiculoAddBtn = document.getElementById('toggleVehiculoAdd');
@@ -91,15 +84,15 @@
         var tipoActual = '';
         var vehiculoVisible = false;
 
-        // Fecha de hoy por defecto
+        
         var fechaInput = document.getElementById('fecha_servicio');
         if (fechaInput && !fechaInput.value) {
             fechaInput.value = new Date().toISOString().split('T')[0];
         }
 
-        // =============================================
-        // TOGGLE TIPO DE SERVICIO
-        // =============================================
+        
+        
+        
         tipoBtns.forEach(function(btn) {
             btn.addEventListener('click', function() {
                 var valor = this.dataset.value;
@@ -232,9 +225,9 @@
             });
         }
 
-        // =============================================
-        // BUSQUEDA AJAX DE CLIENTES
-        // =============================================
+        
+        
+        
         var clientePage = 0;
         var clienteQuery = '';
         var clienteTotalElements = 0;
@@ -267,7 +260,7 @@
                     return;
                 }
 
-                // Header con contador y boton cerrar
+                
                 if (!append) {
                     var header = document.createElement('div');
                     header.className = 'ajax-select-dropdown-header';
@@ -294,7 +287,7 @@
                     clienteDropdown.appendChild(div);
                 });
 
-                // Eliminar boton anterior de "cargar mas"
+                
                 var existingMore = clienteDropdown.querySelector('.ajax-select-more');
                 if (existingMore) existingMore.remove();
 
@@ -364,7 +357,7 @@
             });
         }
 
-        // Toggle: abre o cierra el dropdown
+        
         if (clienteToggle) {
             clienteToggle.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -380,16 +373,16 @@
             clienteClear.addEventListener('click', limpiarCliente);
         }
 
-        // Cerrar dropdown al hacer clic fuera
+        
         document.addEventListener('click', function(e) {
             if (clienteDropdown && !e.target.closest('#clienteSelectWrap')) {
                 cerrarDropdown(clienteDropdown, clienteToggle);
             }
         });
 
-        // =============================================
-        // CASCADA CLIENTE → VEHICULOS (via FETCH)
-        // =============================================
+        
+        
+        
         function cargarVehiculos(clienteId) {
             if (!clienteId) {
                 vehiculoSelect.innerHTML = '<option value="">Seleccione primero un cliente</option>';
@@ -423,9 +416,9 @@
             });
         }
 
-        // =============================================
-        // BUSQUEDA AJAX DE PRODUCTOS (en filas de detalle)
-        // =============================================
+        
+        
+        
         function crearBuscadorProducto(fila, idx) {
             var wrap = fila.querySelector('.detalle-producto-search-wrap');
             var searchInput = wrap.querySelector('.detalle-prod-search');
@@ -445,7 +438,7 @@
                 prodQuery = query;
                 prodPage = page;
 
-                // Subir z-index de la fila activa
+                
                 var todasFilas = detallesContainer.querySelectorAll('.detalle-fila');
                 todasFilas.forEach(function(f) { f.classList.remove('dropdown-activo'); });
                 fila.classList.add('dropdown-activo');
@@ -474,7 +467,7 @@
                         return;
                     }
 
-                    // Header con contador y boton cerrar
+                    
                     if (!append) {
                         var header = document.createElement('div');
                         header.className = 'ajax-select-dropdown-header';
@@ -581,7 +574,7 @@
                 buscarProductos(searchInput.value.trim(), 0, false);
             });
 
-            // Toggle: abre o cierra
+            
             toggleBtn.addEventListener('click', function(e) {
                 e.preventDefault();
                 if (isDropdownVisible(dropdown)) {
@@ -594,7 +587,7 @@
 
             clearBtn.addEventListener('click', limpiarProducto);
 
-            // Cerrar dropdown al clic fuera
+            
             document.addEventListener('click', function(e) {
                 if (!wrap.contains(e.target)) {
                     cerrarDropdown(dropdown, toggleBtn);
@@ -603,9 +596,9 @@
             });
         }
 
-        // =============================================
-        // FILAS DE DETALLE DINAMICAS
-        // =============================================
+        
+        
+        
         if (addDetalleBtn) {
             addDetalleBtn.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -658,12 +651,12 @@
 
             detallesContainer.appendChild(fila);
 
-            // Inicializar buscador de producto para esta fila
+            
             crearBuscadorProducto(fila, detalleIndex);
 
             detalleIndex++;
 
-            // Animacion de entrada
+            
             requestAnimationFrame(function() {
                 fila.style.transition = 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)';
                 fila.style.opacity = '1';
@@ -684,9 +677,9 @@
             if (!sinFocus) fila.querySelector('.detalle-prod-search').focus();
         }
 
-        // =============================================
-        // ELIMINAR FILA (event delegation)
-        // =============================================
+        
+        
+        
         detallesContainer.addEventListener('click', function(e) {
             var removeBtn = e.target.closest('.btn-remove-detalle');
             if (!removeBtn) return;
@@ -703,9 +696,9 @@
             }, 200);
         });
 
-        // =============================================
-        // REINDEXAR
-        // =============================================
+        
+        
+        
         function reindexarDetalles() {
             var filas = detallesContainer.querySelectorAll('.detalle-fila');
             filas.forEach(function(fila, idx) {
@@ -717,9 +710,9 @@
             detalleIndex = filas.length;
         }
 
-        // =============================================
-        // RECALCULAR TOTAL
-        // =============================================
+        
+        
+        
         function recalcularTotal() {
             var total = 0;
             detallesContainer.querySelectorAll('.detalle-fila').forEach(function(fila) {
@@ -737,9 +730,9 @@
             }
         }
 
-        // =============================================
-        // VALIDACION
-        // =============================================
+        
+        
+        
         if (form) {
             form.addEventListener('submit', function(e) {
                 var ok = true;
@@ -807,7 +800,7 @@
             });
         }
 
-        // Agregar primera fila por defecto (sin focus para no hacer scroll)
+        
         agregarFilaDetalle(true);
     });
 
