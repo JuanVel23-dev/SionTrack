@@ -91,7 +91,8 @@ public class SecurityConfig {
                                         "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com",
                                         "font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com",
                                         "img-src 'self' data:",
-                                        "connect-src 'self'"
+                                        "connect-src 'self'",
+                                        "frame-src https://app.powerbi.com"
                                 ))));
 
         return http.build();

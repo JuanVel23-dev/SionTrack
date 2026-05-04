@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+
+<th:block layout:fragment="customCSS">
+    <style>
+        /* ============================================
+           POWER BI — Panel analítico embebido
+           Sigue el mismo lenguaje visual que reportes.html
+           ============================================ */
+
+        .pbi-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-xl);
+            overflow: hidden;
+            margin-top: var(--space-5);
+            display: flex;
+            flex-direction: column;
+            transition: border-color var(--duration-normal) ease,
+                        box-shadow var(--duration-normal) ease;
+            position: relative;
+        }
+        .pbi-card:hover {
+            border-color: var(--accent-primary);
+            box-shadow: 0 8px 24px hsla(45, 93%, 58%, 0.1);
+        }
+
+        /* Línea de acento superior — solo amarillo */
+        .pbi-accent {
+            height: 3px;
+            width: 100%;
+            background: var(--accent-primary);
+        }
+
+        /* Cabecera interna — título centrado */
+        .pbi-head {
+            padding: var(--space-4) var(--space-5);
+            border-bottom: 1px solid var(--border-muted);
+            text-align: center;
+        }
+
+        .pbi-title {
+            font-size: var(--text-xl);
+            font-weight: var(--weight-semibold);
+            color: var(--fg-default);
+            line-height: 1.2;
+            letter-spacing: -0.01em;
+        }
+
+        /* Contenedor del iframe — sin padding para que llene la caja */
+        .pbi-frame {
+            background: var(--bg-surface);
+        }
+
+        /* Wrap responsivo:
+           - width: 100% del contenedor (la caja completa)
+           - aspect-ratio mantiene la proporción nativa del informe (600 / 373.5)
+           El iframe llena el wrap mediante position: absolute + inset: 0. */
+        .pbi-iframe-wrap {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 600 / 373.5;
+            background: var(--bg-surface);
+        }
+
+        .pbi-iframe-wrap iframe {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+            display: block;
+            background: var(--bg-surface);
+        }
+
+        /* ============================================
+           RESPONSIVE
+           ============================================ */
+        @media (max-width: 640px) {
+            .pbi-card { margin-top: var(--space-4); }
+            .pbi-head { padding: var(--space-3) var(--space-4); }
+            .pbi-title { font-size: var(--text-lg); }
+        }
+    </style>
+</th:block>
+
+<th:block layout:fragment="content">
+
+    <div class="pbi-card animate-in delay-1">
+        <div class="pbi-accent"></div>
+
+        <div class="pbi-head">
+            <h2 class="pbi-title">Inteligencia de negocio</h2>
+        </div>
+
+        <div class="pbi-frame">
+            <div class="pbi-iframe-wrap">
+                <iframe title="Power BI SionTrack"
+                        src="https://app.powerbi.com/view?r=eyJrIjoiY2UyYTMwYjEtN2E5Yi00NTQ3LWE5NWItYWMzZjQyYjhiYTg2IiwidCI6Ijc0YzBjMjUwLTFjNzctNDA1ZC05YjFlLTlhYzFmNTA4YWJlMyIsImMiOjR9"
+                        frameborder="0"
+                        allowfullscreen></iframe>
+            </div>
+        </div>
+    </div>
+
+</th:block>
+
+</html>
